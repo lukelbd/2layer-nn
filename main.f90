@@ -18,7 +18,7 @@
 
 ! ****** Initialize fields ****  
   
-         call initial1
+         call initial1      ! (initial.f90)
 
         Status = DftiCreateDescriptor( HX, DFTI_DOUBLE, &
           DFTI_REAL, 1, L)
@@ -33,12 +33,12 @@
 
 
         do m = mstart, mend 
-!       do m = 1,20
-         call invert1(HX,HY)              !invert streamfunction from vorticity
-          if((mod(m,md).eq.0).and.(m.ge.mds)) call dataio   !save data
-    !     call energy1                     !eddy energy calculation
-          call prog                        !eddy prognostic equation
-          call forward1                     !time forwarding
+        
+         call invert1(HX,HY)      ! (invert.f90) invert streamfunction from vorticity
+          if((mod(m,md).eq.0).and.(m.ge.mds)) call dataio   ! (io.f90) save data
+    !     call energy1            ! (energy.f90) eddy energy calculation
+          call prog               ! (exec.f90) eddy prognostic equation
+          call forward1           ! (forward.f90) time forwarding
 
          write(6,677) m, energy2
   677   format("normal end m = ",i8,"   eke =",1p1e13.5)

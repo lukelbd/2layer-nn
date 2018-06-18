@@ -26,7 +26,7 @@ contains
         double precision :: qx1r(jmax+1),qx2r(jmax+1),qx1i(jmax+1),qx2i(jmax+1)
         double precision :: qy1r(jmax+1),qy2r(jmax+1),qy1i(jmax+1),qy2i(jmax+1)
         double precision :: p1r(jmax+1),p2r(jmax+1),p1i(jmax+1),p2i(jmax+1)
-        double precision :: ub(jmax+1),uc(jmax+1),umean1(jmax+1),umean2(jmax+1)
+        double precision :: ub(jmax+1),uc(jmax+1)
         double precision :: vqz_1(jmax+1),vqz_2(jmax+1)
         complex :: pb(imax,jmax+1),pc(imax,jmax+1)
         double precision :: u1(imx),u2(imx)
@@ -46,8 +46,8 @@ contains
 
          qbar1(:) = 0.
          qbar2(:) = 0.
-         umean1(:) = 0.
-         umean2(:) = 0.
+         ubar1(:) = 0.
+         ubar2(:) = 0.
          ub(:) = 0.
          uc(:) = 0.
 
@@ -59,12 +59,16 @@ contains
    
            umean1(j) = (ub(j)+uc(j))*0.5
            umean2(j) = (ub(j)-uc(j))*0.5
-           qbar1(j) = -qymean1(j,3)/ell
-           qbar2(j) = -qymean2(j,3)/ell
+           qbar1(j) = qymean1(j,3)/ell
+           qbar2(j) = qymean2(j,3)/ell
+           ubar1(j) = umean1(j)
+           ubar2(j) = umean2(j)
          enddo
          do j = nmax+1,jmax+1
-           umean1(j) = 0.
-           umean2(j) = 0.
+           ubar1(j) = 0.
+           ubar2(j) = 0.
+           qbar1(j) = 0.
+           qbar2(j) = 0.
          enddo
 
 !  Transform zonal mean to physical space 
@@ -74,13 +78,13 @@ contains
 
         tt_type=0
         CALL D_INIT_TRIG_TRANSFORM(jmax,tt_type,ipar,spar,ir)
-        CALL D_COMMIT_TRIG_TRANSFORM(umean1,handle,ipar,spar,ir)
-        CALL D_BACKWARD_TRIG_TRANSFORM(umean1,handle,ipar,spar,ir)
+        CALL D_COMMIT_TRIG_TRANSFORM(ubar1,handle,ipar,spar,ir)
+        CALL D_BACKWARD_TRIG_TRANSFORM(ubar1,handle,ipar,spar,ir)
         CALL FREE_TRIG_TRANSFORM(handle,ipar,ir)
 
         CALL D_INIT_TRIG_TRANSFORM(jmax,tt_type,ipar,spar,ir)
-        CALL D_COMMIT_TRIG_TRANSFORM(umean2,handle,ipar,spar,ir)
-        CALL D_BACKWARD_TRIG_TRANSFORM(umean2,handle,ipar,spar,ir)
+        CALL D_COMMIT_TRIG_TRANSFORM(ubar2,handle,ipar,spar,ir)
+        CALL D_BACKWARD_TRIG_TRANSFORM(ubar2,handle,ipar,spar,ir)
         CALL FREE_TRIG_TRANSFORM(handle,ipar,ir)
 
         CALL D_INIT_TRIG_TRANSFORM(jmax,tt_type,ipar,spar,ir)
@@ -104,18 +108,16 @@ contains
         CALL D_BACKWARD_TRIG_TRANSFORM(qbar2,handle,ipar,spar,ir)
         CALL FREE_TRIG_TRANSFORM(handle,ipar,ir)
 
+! *** compute full zonal-mean PV gradient in physical space ****
       do j = 1,jmax+1
          y = dy*float(j-1)-0.5*width 
-         qbar1(j) = qbar1(j)+beta*y 
-         qbar2(j) = qbar2(j)+beta*y 
+         qbar1(j) = qbar1(j)+(beta+u0/(rd*rd))*y 
+         qbar2(j) = qbar2(j)+(beta-u0/(rd*rd))*y 
       enddo
-!     write(6,*) 'max min',maxval(qbar1),minval(qbar1)
-!     write(6,*) 'max min',maxval(qbar2),minval(qbar2)
     
-      
     if(mod(m,1000).eq.1) then
       do j = 1,jmax+1
-         write(6,*) j,'u1 :',umean1(j),qby_1(j)+beta,qby_2(j)+beta,qbar1(j)
+         write(6,*) j,'u1 :',ubar1(j)+u0,'   qbar1 :',qbar1(j)
       enddo
     endif
 
@@ -140,10 +142,6 @@ contains
           qy_2(i,j) = ell*vort_2(i,j,3)
          enddo
          enddo
-
- !       do j = 1,jmax+1
- !        write(6,*) 'psi_1 test ',j,psi_1(2,j)
- !       enddo
 
          psi_1(:,1) = zero
          psi_2(:,1) = zero
@@ -372,10 +370,6 @@ contains
             pm1(i) = ur*p_1_r(i,j)+ui*p_1_i(i,j)
             pm2(i) = ur*p_2_r(i,j)+ui*p_2_i(i,j)
 
- !   if(j.eq.129.and.i.eq.2) then
- !      write(6,*) 'pm test', pm1(i) 
- !   endif
-
             if(i.gt.1.and.i.lt.imax) then
                fac = 0.5
             else
@@ -492,16 +486,14 @@ contains
 
 !        vl1(:) = v1(:)*(beta+qy_1(j))
 !        vl2(:) = v2(:)*(beta+qy_2(j))
-!        define the jet
-       beta1 = beta - (dy*float(j-1)-0.5*width)*delta
      do i = 1,imx
          v1(i) = vxy1(i,j)*qxy1(i,j)
          v2(i) = vxy2(i,j)*qxy2(i,j)
-         u1(i) = (uxy1(i,j)+umean1(j))*qxx1(i,j)
-         u1(i) = u1(i) + vxy1(i,j)*(qyy1(i,j)+beta1+qby_1(j))
-         u2(i) = (uxy2(i,j)+umean2(j))*qxx2(i,j)
-         u2(i) = u2(i) + vxy2(i,j)*(qyy2(i,j)+beta1+qby_2(j))
-         uf(i,j) = uxy1(i,j)+umean1(j)
+         u1(i) = (uxy1(i,j)+ubar1(j)+u0)*qxx1(i,j)
+         u1(i) = u1(i) + vxy1(i,j)*(qyy1(i,j)+beta+(u0/(rd*rd))+qby_1(j))
+         u2(i) = (uxy2(i,j)+ubar2(j))*qxx2(i,j)
+         u2(i) = u2(i) + vxy2(i,j)*(qyy2(i,j)+beta-(u0/(rd*rd))+qby_2(j))
+         uf(i,j) = uxy1(i,j)+ubar1(j)+u0
      enddo
 
           vqz_1(j) = 0.
@@ -514,14 +506,6 @@ contains
           uav1 = uav1 + u1(i)/float(imx)
           uav2 = uav2 + u2(i)/float(imx)
         enddo
-!       do i = 1,imx
-!         u1(i) = u1(i) - uav1  
-!         u2(i) = u2(i) - uav2 
-!       enddo
-
-!       if(j.eq.150) then
-!         write(6,*) '    test ', vqz_1(j),vqz_2(j)
-!       endif
 
              um1 = zero
              um2 = zero
@@ -548,9 +532,6 @@ contains
           enddo
 
        enddo
-
-! write(6,*) '  test vqz_1  : ',maxval(vqz_1),minval(vqz_1),& 
-!        maxval(vqz_2),minval(vqz_2)
 
        do i = 1,imax
         rkk = rk*float(i-1)
@@ -583,12 +564,7 @@ contains
         CALL FREE_TRIG_TRANSFORM(handle,ipar,ir)
 
 !  finally reconstruct nonlinear jacoian terms in spectral space
-  !     adv_1(i,:,3) = -ui*rkk*(ur*u1r(:)+ui*u1i(:)) &
-  !   - ur*(v1r(:)+vl1r(:)) -    &
-  !                    ui*(v1i(:)+vl1i(:))       
-  !     adv_2(i,:,3) = -ui*rkk*(ur*u2r(:)+ui*u2i(:)) &
-  !   - ur*(v2r(:)+vl2r(:)) -    &
-  !                    ui*(v2i(:)+vl2i(:))       
+
     do j = 1,nmax
         adv_1(i,j,3) = -(ur*u1r(j)+ui*u1i(j)) 
         adv_2(i,j,3) = -(ur*u2r(j)+ui*u2i(j)) 
