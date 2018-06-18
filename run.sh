@@ -24,10 +24,12 @@ cp $nml $scratch/$rundir/
 cd $rundir
 
 # Define project numbers and write namelist
+var1=default1
+var2=default2
 case $num in
-  1) 
+  damp1) var1=new1
 ;;
-  2)
+  damp2) var2=new2
 ;;
   *)
     echo "Error: Unknown project number ${num}."
@@ -40,6 +42,7 @@ cat > input_nml <<EOF
 &input_nml
   var1=$var1,
   var2=$var2,
+  var3=$var3
 /
 EOF
 
