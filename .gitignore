@@ -5,8 +5,6 @@ packages
 # Ignore compiled source, and some other stuff
 .session.vim
   # my vim sessions
-*.o
-*.mod
 .*.swp
 *.nml
 *.log
