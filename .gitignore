@@ -13,3 +13,6 @@ packages
 *.out
 *error
   # last one includes file output
+old
+trash
+  # old stuff here
