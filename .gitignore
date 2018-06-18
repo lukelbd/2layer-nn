@@ -1,0 +1,15 @@
+# Ignore some directories
+mod
+packages
+
+# Ignore compiled source, and some other stuff
+.session.vim
+  # my vim sessions
+*.o
+*.mod
+.*.swp
+*.nml
+*.log
+*.out
+*error
+  # last one includes file output

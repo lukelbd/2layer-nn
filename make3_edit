@@ -1,0 +1,30 @@
+#!/bin/sh
+module purge
+module load intel/16.0
+module load mkl/11.3
+
+# set filename variables
+# do this so we can point to edited files with ease
+main=main_edit
+global=global_variables_edit
+
+# recompile
+rm *.o
+rm *.mod
+rm *.df
+ifort -c ${global}.f90
+ifort -c forward.f90
+ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 ftm.f90
+ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 $MKLROOT/include/mkl_trig_transforms.f90 invert.f90
+ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 $MKLROOT/include/mkl_trig_transforms.f90 initial.f90
+ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 $MKLROOT/include/mkl_trig_transforms.f90 exec.f90
+ifort -c -I/project2/rossby/models/2layer_nn/packages/include \
+  -L/project2/rossby/models/2layer_nn/packages/lib -lmfhdf -ldf -ljpeg -lz  io.f90
+ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 $MKLROOT/include/mkl_trig_transforms.f90 ${main}.f90
+ifort -O3 "./io.o" "exec.o" "./invert.o" "./ftm.o" "./forward.o" \
+  "./${global}.o" "./${main}.o" "./initial.o"  \
+  -mkl -I/project2/rossby/models/2layer_nn/packages/include \
+  -L/project2/rossby/models/2layer_nn/packages/lib \
+  -lmfhdf -ldf -ljpeg -lz -o "./d.out"
+
+
