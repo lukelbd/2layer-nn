@@ -34,7 +34,7 @@ case $num in
   *)
     echo "Error: Unknown project number ${num}."
     exit 1
-  ;;
+;;
 esac
 
 # Write namelist
