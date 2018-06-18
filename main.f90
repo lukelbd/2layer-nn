@@ -32,8 +32,10 @@
 ! ****** Integration starts *****
 
 
+        tseconds = 0
         do m = mstart, mend 
-!       do m = 1,20
+          tseconds += dt
+  !       do m = 1,20
          call invert1(HX,HY)              !invert streamfunction from vorticity
           if((mod(m,md).eq.0).and.(m.ge.mds)) call dataio   !save data
     !     call energy1                     !eddy energy calculation

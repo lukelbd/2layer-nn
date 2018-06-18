@@ -2,40 +2,53 @@ module GLOBAL_VARIABLES
 
 ! ******* global variables for the baroclinic 2 layer model *****
 
-  integer, parameter :: imx = 256, jmax = 256, mmax = 85, nmax = 170
-  integer, parameter :: imax = 1+imx/2
-  integer, parameter :: ndeg = 6  ! degree of hyperdiffusion
+  integer :: imx = 256, jmax = 256, mmax = 85, nmax = 170
+  integer :: imax = 1+imx/2
+  integer :: ndeg = 6  ! degree of hyperdiffusion
 
 ! ******* constants *******
 
 !    ---- run time parameters ---
 
-  real, parameter :: dt=15.             !integration time inclement(s)
-  integer, parameter :: md = 1600        !dataio timestep
-  integer, parameter :: mstart=1        !starting time step
-  integer, parameter :: mend=160001        !terminating time step
+  real :: dt=15.             !integration time increment(s)
+  integer :: md = 1600        !dataio timestep
+  integer :: mds = 0 ! start saving file
+  integer :: mstart=1        !starting time step
+  integer :: mend=160001        !terminating time step
+
+! new parameter that modifies damping rate at certain timestep
+  integer :: tchange = dt
  
 !    ---- model dimensions ----
 !        (change model size ix, iz above)
 
-  real, parameter :: width = 72000000.          !(m)y
-  real, parameter :: wlength = 16000000.          !(m)x
+  real :: width = 72000000.          !(m)y
+  real :: wlength = 16000000.          !(m)x
 !    ---- basic flow parameters ----
 
-  real, parameter :: beta=1.6e-11  !background vorticity gradient (1/(s*m))
-  real, parameter :: delta = 4.4e-18  !linear devrease in beta (1/(s*m*m))
-  real, parameter :: pi=3.141592653589793
-  complex, parameter :: ur = (1.,0.), ui = (0.,1.), zero = (0.,0.)
+  real :: beta=1.6e-11  !background vorticity gradient (1/(s*m))
+  real :: delta = 4.4e-18  !linear decrease in beta (1/(s*m*m))
+  real :: pi=3.141592653589793
+  complex :: ur = (1.,0.), ui = (0.,1.), zero = (0.,0.)
 
+!    ---- energy parameters ----
+  real :: damp_coeff = 0.04
+  real :: dx,dy,energy2,damp,u0
+  integer :: m
+
+!    ---- read namelist, potentially overwrite parameters ---
+namelist /input_nml/ tchange, dt, mstart, mend
+read(unit=2, nml=input_nml) ! simpler way
+! open(unit=2, file='input.nml', form='formatted')
 !    ---- initial amplitude ----
 
-  real, parameter :: amp = 1.e-5  !(1/s)  initial amplitude in vorticity
-! real, parameter :: amp = 1.e-3  !(1/s)  initial amplitude in vorticity
-  real, parameter :: el = pi/width   !(1/m) initial meridional wavenumber
-  real, parameter :: rk = 2.*pi/wlength  !(1/m) initial zonal wavenumber
-  real, parameter :: rd = 800000.  !(m) internal rossby radius
-  real, parameter :: sigma = rd*2.  !(m) width of the jet
-  real, parameter :: del = 1.
+  real :: amp = 1.e-5  !(1/s)  initial amplitude in vorticity
+! real :: amp = 1.e-3  !(1/s)  initial amplitude in vorticity
+  real :: el = pi/width   !(1/m) initial meridional wavenumber
+  real :: rk = 2.*pi/wlength  !(1/m) initial zonal wavenumber
+  real :: rd = 800000.  !(m) internal rossby radius
+  real :: sigma = rd*2.  !(m) width of the jet
+  real :: del = 1.
 
 !    ---- arrays ----
 
@@ -73,10 +86,5 @@ module GLOBAL_VARIABLES
           qxx2(imx,jmax+1),qyy2(imx,jmax+1),&
           pxy2(imx,jmax+1),uxy2(imx,jmax+1),qymean2(jmax+1,4)
   double precision :: qby_2(jmax+1),qbar2(jmax+1)
-
-!    ---- energy parameters ----
-
-  real :: dx,dy,energy2,damp,u0
-  integer :: m
 
 end module
