@@ -6,8 +6,6 @@ packages
 .session.vim
   # my vim sessions
 .*.swp
-*.nml
-*.log
 *error
   # last one includes file output
 old
