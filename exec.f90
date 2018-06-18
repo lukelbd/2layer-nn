@@ -19,15 +19,6 @@ contains
       energy2 = 0.5*sum(vxy1*vxy1 + vxy2*vxy2 +  &
                     uxy1*uxy1 + uxy2*uxy2)/float(imx*(jmax+1))
  
-    ! ***** evaluate advection terms and viscosity in the specral space ****
-
-!    write(6,*) 'test ',maxval(abs(vqm_1(:,3))),maxval(abs(vqm_2(:,3)))
-        
-   
-!  do j = 1,jmax+1
-!    write(6,*) 'test test test ',j,vqm_1(j,3),vqm_1(j,2),vqm_1(j,1)
-!  enddo
-
    do j = 2,nmax
             ell = el*float(j-1)
 !    if(m.eq.mstart) then
@@ -41,6 +32,10 @@ contains
             rkk = rk*float(i-1)
      visc_1(i,j) = -damp*((rkk**2+ell**2)**3)*vort_1(i,j,3)
      visc_2(i,j) = -damp*((rkk**2+ell**2)**3)*vort_2(i,j,3)
+     rad_1(i,j) = -(psi_2(i,j)-psi_1(i,j))/((rd*rd)*tau_r)
+     rad_2(i,j) = (psi_2(i,j)-psi_1(i,j))/((rd*rd)*tau_r)
+     fric_2(i,j) = (rkk**2+ell**2)*psi_2(i,j)/tau_f
+!    fric_2(i,j) = fric_2(i,j)-vort_2(i,j,3)/tau_2
      if(m.eq.mstart) then
        adv_1(i,j,2) = adv_1(i,j,3)
        adv_1(i,j,1) = adv_1(i,j,2)
@@ -50,9 +45,12 @@ contains
      vort_1(i,j,4) = vort_1(i,j,3) +     &
 dt*(23.*adv_1(i,j,3)-16.*adv_1(i,j,2)+5.*adv_1(i,j,1))/12.
      vort_1(i,j,4) = vort_1(i,j,4) + dt*visc_1(i,j)
+     vort_1(i,j,4) = vort_1(i,j,4) + dt*rad_1(i,j)
      vort_2(i,j,4) = vort_2(i,j,3) +     &
 dt*(23.*adv_2(i,j,3)-16.*adv_2(i,j,2)+5.*adv_2(i,j,1))/12.
      vort_2(i,j,4) = vort_2(i,j,4) + dt*visc_2(i,j)
+     vort_2(i,j,4) = vort_2(i,j,4) + dt*rad_2(i,j)
+     vort_2(i,j,4) = vort_2(i,j,4) + dt*fric_2(i,j)
    enddo
 
    do i = mmax+1,imax
@@ -67,11 +65,12 @@ dt*(23.*adv_2(i,j,3)-16.*adv_2(i,j,2)+5.*adv_2(i,j,1))/12.
     qymean1(j,4) = qymean1(j,3) -  &
 dt*(23.*vqm_1(j,3)-16.*vqm_1(j,2)+5.*vqm_1(j,1))/12.
     qymean1(j,4) = qymean1(j,4) - dt*damp*(ell**6)*qymean1(j,3)
+    qymean1(j,4) = qymean1(j,4) - dt*(umean1(j)-umean2(j))/(rd*rd*tau_r)
     qymean2(j,4) = qymean2(j,3) -  &
 dt*(23.*vqm_2(j,3)-16.*vqm_2(j,2)+5.*vqm_2(j,1))/12.
     qymean2(j,4) = qymean2(j,4) - dt*damp*(ell**6)*qymean2(j,3)
-!   qymean1(j,4) = qymean1(j,4)
-!   qymean2(j,4) = qymean2(j,4)
+    qymean2(j,4) = qymean2(j,4) + dt*(umean1(j)-umean2(j))/(rd*rd*tau_r)
+    qymean2(j,4) = qymean2(j,4) - dt*(ell*ell*umean2(j))/tau_f
    enddo
 
    do j = nmax+1,jmax+1
