@@ -1,0 +1,45 @@
+!------------------------------------------------------------------------------!
+! Default namelist for stochastic forcing experiments
+&input_nml
+  ! Timing
+  dt = 15.,     ! integration time increment(s)
+  tstart = 0.,  ! (days) starting time
+  tend = 30.,   ! (days) terminating time
+  tchange = 0., ! modify damping rate at this time; set to -1 to turn off
+  tds = 0,      ! start saving file
+  td  = 1600,   ! dataio timestep
+  ! Model dimensions
+  imx = 256,  ! x-dimension cells
+  jmax = 256, ! y-dimension cells
+  mmax = 85,
+  nmax = 170,
+  width = 72.e3,   ! (km) channel width in y
+  wlength = 16.e3, ! (km) channel length in x
+  ! Damping and stuff
+  tau_r = 30.,       ! (days) radiative damping timescale
+  tau_f = 6.,        ! (days) fricional damping timescale, or Rek Ekman damping
+  tau_2 = 1000.,     ! (days) additional layer2 damping timescale
+  ! Rossby radius
+  rd = 800.,         ! (km) internal rossby radius
+  ! Basic flow parameters
+  beta = 1.6e-11,    ! background vorticity gradient (1/(s*m))
+  delta = 4.4e-18,   ! linear decrease in beta (1/(s*m*m))
+  ! delta = 4.4e-18, ! linear decrease in beta (1/(s*m*m))
+  ! Jet parameters
+  amp = 1.e-5,       ! (1/s)  initial amplitude in vorticity
+  u0 = 5.,           ! (m/s) background (uniform) shear
+  del = 1.,
+  jet_amp = 5.,      ! (m/s) background (uniform) shear
+  jet_sigma = 2.,    ! (in rossby radii) width of the jet
+  ! Stochastic forcing parameters
+  y0 = 0.,           ! (position of center mask)
+  amp_k = 1.e-5,     ! (1/s) maximum amplitude of injections
+  sigma_y = 1.,      ! (fraction of domain) waiting
+  sigma_k = 5.,      ! amplitude decay in wavenumbers; will be normal in 1/k units
+  ! Timing controls for forcing
+  tau_i = 1.,        ! (days) injection timecale
+  ! Hyperviscocity
+  visc = 0.04, ! viscocity coefficient
+  ndeg = 6, ! degree of hyperdiffusion
+/
+

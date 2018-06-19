@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 # This script runs Noboru's 2-layer model for a series of different experiments
 # First, some variables
-pnum=$1
-exe=d.out
 scratch=/scratch/midway2/t-970c07
+exe=d.out     # executable compiled name
+nml=input.nml # nanmelist file name
+pid=$1        # project id
+[ -z "$pid" ] && pid=default
 if [ ! -x "$exe" ]; then
   echo "Error: Executable \"$exe\" does not exist, or is not executable."
-  exit 1
-fi
-if [ -z "$pnum" ]; then
-  echo "Error: run.sh must be called with a \"project number\" argument. See file."
   exit 1
 fi
 if [ ! -d "$scratch" ]; then
@@ -18,33 +16,47 @@ if [ ! -d "$scratch" ]; then
 fi
 
 # Prepare output location
-rundir=$scratch/project$pnum
-cp $exe $scratch/$rundir/
-cp $nml $scratch/$rundir/
+rundir=$scratch/project$pid
+if [ ! -d "$rundir" ]; then
+  echo "Creating empty experiment directory \"$rundir\"."
+else
+  echo "Using existing experiment directory \"$rundir\"."
+fi
+cp $exe $rundir
+cp $nml $rundir
 cd $rundir
 
 # Define project numbers and write namelist
-var1=default1
-var2=default2
-case $num in
-  damp1) var1=new1
-;;
-  damp2) var2=new2
-;;
+echo "Running"
+case $pid in
+  default) updates=""
+    ;;
+  damp1) updates="
+    tau_r=12.
+    tau_i=5."
+    ;;
+  damp2) updates="
+    tau_r=12.
+    tau_i=10."
+    ;;
   *)
-    echo "Error: Unknown project number ${num}."
+    echo "Error: Unknown project identifier \"${pid}\"."
     exit 1
-;;
+    ;;
 esac
 
-# Write namelist
-cat > input_nml <<EOF
-&input_nml
-  var1=$var1,
-  var2=$var2,
-  var3=$var3
-/
-EOF
+# Modify default namelist with strings
+# This is so cool!
+if [ ! -z "$updates" ]; then
+  echo "Overriding default input.nml with these parameters: $updates"
+  for string in $updates; do
+    sed -i 's/^\([[:space:]]*\)'${string%=*}'\(.*\)$/\1'$string'\2/g' $nml
+    if [ $? -ne 0 ]; then
+      echo "Error: Variable not found in namelist."
+    fi
+  done
+fi
 
-# Modify namelist based on project numbers
-./run_model
+# Run experiment; i.e. compiled code
+$exe
+

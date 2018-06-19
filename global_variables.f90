@@ -1,67 +1,28 @@
 module GLOBAL_VARIABLES
+  !----------------------------------------------------------------------------!
+  !    ---- Misc ----
+  real, parameter :: pi=3.141592653589793               ! pi
+  integer :: t                                          ! for time stepping
+  complex :: ur = (1.,0.), ui = (0.,1.), zero = (0.,0.) ! initial flow
 
-! ******* global variables for the baroclinic 2 layer model *****
+  !    ---- To be calculated below ----
+  real :: damp, dx, dy, el, rk, bounds_l, bounds_k
+  integer :: imax, bounds_l, bounds_k
 
-  integer :: imx = 256, jmax = 256, mmax = 85, nmax = 170
-  integer :: imax = 1+imx/2
-  integer :: ndeg = 6  ! degree of hyperdiffusion
+  !    ---- To be supplied by namelist ----
+  real :: energy2, cfl ! for monitoring integration
+  integer :: imx, jmax, mmax, nmax  ! dimensionality
+  real :: width, wlength ! physical dimensions
+  real :: dt, tstart, tend, tchange ! time increment
+  real :: tds, td ! time saving
+  real :: tau_i ! injection timescale
+  real :: amp, rd, tau_r, tau_f, tau_2 ! damping stuff
+  real :: u0, del, jet_amp, jet_sigma ! initial jet an dshear
+  real :: y0 tau_i, amp_k, sigma_y, sigma_k  ! stochastic forcing
+  real :: visc, ndeg ! hyperviscocity
 
-! ******* constants *******
-
-  real, parameter :: pi=3.141592653589793
-
-!    ---- run time parameters ---
-
-  real :: dt=15.             !integration time increment(s)
-  integer :: md = 1600        !dataio timestep
-  integer :: mds = 0 ! start saving file
-  integer :: mstart=1        !starting time step
-  integer :: mend=160001        !terminating time step
-
-! modify damping rate at certain timestep
-  integer :: tchange = dt
-
-!    ---- model dimensions ----
-! (change model size ix, iz above)
-  real :: width = 72000000.                  !(m) channel width in y
-  real :: wlength = 16000000.                !(m) channel length in x
-  real :: dx = wlength/float(imx) !(m) grid resolution in x
-  real :: dy = width/float(jmax)  !(m) grid resolution in y
-
-!    **** hyperviscosity ****
-  real :: damp = 0.04*(dx**ndeg)/(dt*(pi**ndeg))  !(m**ndeg/s)
-!    ---- basic flow parameters ----
-
-  real :: beta=1.6e-11  !background vorticity gradient (1/(s*m))
-  real :: delta = 4.4e-18  !linear decrease in beta (1/(s*m*m))
-  real :: pi=3.141592653589793
-  complex :: ur = (1.,0.), ui = (0.,1.), zero = (0.,0.)
-
-!    ---- energy parameters ----
-  real :: damp_coeff = 0.04
-  real :: energy2,u0
-  integer :: m
-
-!    ---- initial amplitude ----
-  real :: amp = 1.e-5  !(1/s)  initial amplitude in vorticity
-! real :: amp = 1.e-3  !(1/s)  initial amplitude in vorticity
-  real :: el = pi/width   !(1/m) initial meridional wavenumber
-  real :: rk = 2.*pi/wlength  !(1/m) initial zonal wavenumber
-  real :: rd = 800000.  !(m) internal rossby radius
-  real :: tau_r = 30.*24.*3600.  !(s) radiative damping timescale
-  real :: tau_f = 6.*24.*3600.  !(s) fricional damping timescale
-  real :: tau_2 = 1000.*24.*3600.  !(s) additional layer2 damping timescale
-  real :: u0 = 5. !(m/s) background (uniform) shear
-  real :: sigma = rd*2.  !(m) width of the jet
-  real :: del = 1.
-
-!    ---- read namelist, potentially overwrite parameters ---
-namelist /input_nml/ tchange, dt, mstart, mend
-read(unit=2, nml=input_nml) ! simpler way
-! open(unit=2, file='input.nml', form='formatted')
-
-!    ---- arrays ----
-!    wheeeee!
+  !    ---- Arrays ----
+  ! For integraion
   complex :: vort_1(imax,jmax+1,4), &
          psi_1(imax,jmax+1), u_1(imax,jmax+1), v_1(imax,jmax+1), &
          adv_1(imax,jmax+1,3),visc_1(imax,jmax+1),q_1(imax,jmax+1), &
@@ -71,30 +32,61 @@ read(unit=2, nml=input_nml) ! simpler way
          adv_2(imax,jmax+1,3),visc_2(imax,jmax+1),q_2(imax,jmax+1), &
          qx_2(imax,jmax+1),qy_2(imax,jmax+1),rad_2(imax,jmax+1),&
          fric_2(imax,jmax+1)
-
+  ! Layer 1 params
   real :: ueq(jmax+1),uf(imx,jmax+1), &
-          u_1_r(imax,jmax+1),u_1_i(imax,jmax+1),&
-          v_1_r(imax,jmax+1),v_1_i(imax,jmax+1),&
-          q_1_r(imax,jmax+1),q_1_i(imax,jmax+1),&
-          qx_1_r(imax,jmax+1),qx_1_i(imax,jmax+1),&
-          qy_1_r(imax,jmax+1),qy_1_i(imax,jmax+1),&
-          p_1_r(imax,jmax+1),p_1_i(imax,jmax+1),&
-          vqm_1(jmax+1,3), &
-          qxy1(imx,jmax+1),vxy1(imx,jmax+1),&
-          pxy1(imx,jmax+1),uxy1(imx,jmax+1),umean1(jmax+1),&
-          qxx1(imx,jmax+1),qyy1(imx,jmax+1),qymean1(jmax+1,4)
+         u_1_r(imax,jmax+1),u_1_i(imax,jmax+1),&
+         v_1_r(imax,jmax+1),v_1_i(imax,jmax+1),&
+         q_1_r(imax,jmax+1),q_1_i(imax,jmax+1),&
+         qx_1_r(imax,jmax+1),qx_1_i(imax,jmax+1),&
+         qy_1_r(imax,jmax+1),qy_1_i(imax,jmax+1),&
+         p_1_r(imax,jmax+1),p_1_i(imax,jmax+1),&
+         vqm_1(jmax+1,3), &
+         qxy1(imx,jmax+1),vxy1(imx,jmax+1),&
+         pxy1(imx,jmax+1),uxy1(imx,jmax+1),umean1(jmax+1),&
+         qxx1(imx,jmax+1),qyy1(imx,jmax+1),qymean1(jmax+1,4)
   double precision :: qby_1(jmax+1),qbar1(jmax+1),ubar1(jmax+1)
-
+  ! Layer 2 params
   real ::  &
-          u_2_r(imax,jmax+1),u_2_i(imax,jmax+1),&
-          v_2_r(imax,jmax+1),v_2_i(imax,jmax+1),&
-          q_2_r(imax,jmax+1),q_2_i(imax,jmax+1),&
-          qx_2_r(imax,jmax+1),qx_2_i(imax,jmax+1),&
-          qy_2_r(imax,jmax+1),qy_2_i(imax,jmax+1),&
-          p_2_r(imax,jmax+1),p_2_i(imax,jmax+1),&
-          vqm_2(jmax+1,3),&
-          qxy2(imx,jmax+1),vxy2(imx,jmax+1),&
-          qxx2(imx,jmax+1),qyy2(imx,jmax+1),umean2(jmax+1),&
-          pxy2(imx,jmax+1),uxy2(imx,jmax+1),qymean2(jmax+1,4)
+         u_2_r(imax,jmax+1),u_2_i(imax,jmax+1),&
+         v_2_r(imax,jmax+1),v_2_i(imax,jmax+1),&
+         q_2_r(imax,jmax+1),q_2_i(imax,jmax+1),&
+         qx_2_r(imax,jmax+1),qx_2_i(imax,jmax+1),&
+         qy_2_r(imax,jmax+1),qy_2_i(imax,jmax+1),&
+         p_2_r(imax,jmax+1),p_2_i(imax,jmax+1),&
+         vqm_2(jmax+1,3),&
+         qxy2(imx,jmax+1),vxy2(imx,jmax+1),&
+         qxx2(imx,jmax+1),qyy2(imx,jmax+1),umean2(jmax+1),&
+         pxy2(imx,jmax+1),uxy2(imx,jmax+1),qymean2(jmax+1,4)
   double precision :: qby_2(jmax+1),qbar2(jmax+1),ubar2(jmax+1)
+
+  !----------------------------------------------------------------------------!
+  !    ---- Read namelist, potentially overwrite parameters ---
+  namelist /input_nml/ tchange, tstart, tend, dt, tau_r, tau_f, tau_2
+  open(1, file='input.nml', status='old', action='read') ! status='old' requires that file exists, wut
+  read(1, nml=input_nml)
+    ! note 'input.nml' is a filename, input_nml is a declared variable
+  close(1) ! close file
+
+  !    ---- In-place unit scaling ----
+  y0 = jmax/2 + y0*jmax ! coordinates are relative to center
+  tau_r = tau_r*24.*3600. ! radiation
+  tau_f = tau_f*24.*3600. ! friction
+  tau_i = tau_i*24.*3600. ! injection
+  tau_2 = tau_2*24.*3600.
+  rd      = rd*1.e3
+  width   = width*1.e3
+  wlength = wlength*1.e3
+  tchange = tchange*3600.*24.
+  jet_sigma = rd*jet_sigma ! (m) from rossby radii to sigma
+
+  !    ---- Calc previously declared, empty variables ----
+  imax=1+imx/2.,          ! mysterious
+  dx = wlength/float(imx) ! (1000km) grid resolution in x
+  dy = width/float(jmax)  ! (1000km) grid resolution in y
+  el = pi/width           ! (1/m) meridional wavenum scaling
+  rk = 2.*pi/wlength      ! (1/m) zonal wavenum scaling
+  bounds_l = sigma_l*3    ! bounds for sampling k, el wavenumbers; will be truncated
+  bounds_k = sigma_k*3
+  damp = visc*(dx**ndeg)/(dt*(pi**ndeg))  ! (m**ndeg/s) hyperviscocity
+
 end module
