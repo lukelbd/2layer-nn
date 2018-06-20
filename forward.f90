@@ -28,6 +28,7 @@ contains
           vqm_1(:,2) = vqm_1(:,3)
           vqm_2(:,1) = vqm_2(:,2)
           vqm_2(:,2) = vqm_2(:,3)
+          fxy1(:,:,1) = fxy1(:,:,2)
  
        return
         end subroutine

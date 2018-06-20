@@ -22,6 +22,11 @@ contains
         double precision :: spar(3*jmax/2+2)
         type(dfti_descriptor), pointer :: handle
 
+! *** ymask will be used to weight forcing toward the center latitude ***
+        do j = 1,jmax+1
+         y = float(j-1)*dy-0.5*width
+         ymask(j) = exp(-y*y/(sigma*sigma))
+        enddo
 
 ! *** Blow qymean1 and qymean2 are the part of zonal-mean PV gradient that 
 ! excludes the uniform component, namely beta + u0/(rd*rd) and

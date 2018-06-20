@@ -44,9 +44,7 @@
                   write(6,677) m, energy2
  677   format("normal end m = ",i8,"   eke =",1p1e13.5)
                 write(6,*) ' max u = ',maxval(uf)
-        
         endif
-        
         enddo
         
         write(6,*) 'm =',m,'  Yeh'
