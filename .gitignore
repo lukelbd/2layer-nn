@@ -6,7 +6,8 @@ packages
 .session.vim
   # my vim sessions
 .*.swp
-*error
+*error*
+*example*
   # last one includes file output
 old
 trash
