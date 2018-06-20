@@ -23,7 +23,7 @@ case $pid in
     ;;
   test) updates="
     dt=1200
-    tend=1
+    tend=100
     "
     ;;
   *)
@@ -63,3 +63,5 @@ fi
 echo "Running model."
 ./$exe
 
+#echo "run python postprocessing"
+#python 
