@@ -12,10 +12,10 @@ module GLOBAL_VARIABLES
 
 !    ---- run time parameters ---
 
-  real, parameter :: dt=150.             !integration time inclement(s)
-  integer, parameter :: md = 1600!1600        !dataio timestep
+  real, parameter :: dt=400.             !integration time inclement(s)
+  integer, parameter :: md = 200!1600        !dataio timestep
   integer, parameter :: mstart=1        !starting time step
-  integer, parameter :: mend=160001        !terminating time step
+  integer, parameter :: mend=7000        !terminating time step
  
 !    ---- model dimensions ----
 !        (change model size ix, iz above)
@@ -41,13 +41,13 @@ module GLOBAL_VARIABLES
 
 !    ---- initial seeding amplitude ----
 !    --- jet
-  logical, parameter :: init_jet = .false.
+  logical, parameter :: init_jet = .true.
   real, parameter :: init_jet_amp = 1.e-5  !(1/s)  initial amplitude in vorticity
-  real, parameter :: sigma = rd*2.  !(m) width of the jet
+  real, parameter :: sigma = rd*3.  !(m) width of the jet
 
 !    --- random seed in lower layer
   logical, parameter :: random_seed = .true.
-  real, parameter :: rand_seed_amp = 1.e-7  !(1/s)  initial amplitude in vorticity lower layer
+  real, parameter :: rand_seed_amp = 3.e-8  !(1/s)  initial amplitude in vorticity lower layer
 
 !   ---- damping ---- 
   real, parameter :: tau_r = 30.*24.*3600.  !(s) radiative damping timescale
@@ -58,7 +58,7 @@ module GLOBAL_VARIABLES
 
 
 ! --- IO --
-   character(len=*), parameter :: exp_name= "exp_control_naburu"     
+   character(len=*), parameter :: exp_name= "exp_control_naburu2_jet"     
 
 !    ---- arrays ----
 

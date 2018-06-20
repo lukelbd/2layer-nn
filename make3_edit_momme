@@ -1,5 +1,5 @@
 #!/bin/sh
-#SBATCH --job-name=exp_control_naburu
+#SBATCH --job-name=exp_control_naburu2_jet
 #SBATCH --account=rossby
 #SBATCH --partition=rossby
 #SBATCH --ntasks=1
