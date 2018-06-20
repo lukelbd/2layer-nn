@@ -486,17 +486,9 @@ contains
 
     !  ****  stochastic forcing (small-scale narrow band) ****
 
-    if(t.eq.0) then
-      call random_seed(size=isize)
-      allocate(iseed(isize))
-    endif
     call date_and_time(values=idate)
     call random_seed(size=isize)
     iseed=iseed*(idate(8)-500)
-    if (t.eq.0) then
-      iseed(1)=6453
-      iseed(2)=887
-    endif 
     call random_seed(put=iseed)
     call random_number(anglex)  
     call random_number(angley)  
@@ -662,7 +654,7 @@ contains
       write(6,*) j,'ubar = ',ubar1(j)+u0,' qbar = ',qbar1(j)
       enddo
     endif
-    write(6,*) ' umax = ',maxval(uf),' cfl = ',maxval(uf)*dx/dt
+    write(6,*) ' umax = ',maxval(uf),' cfl = ',maxval(uf)/(dx/dt)
     return
 
   end subroutine

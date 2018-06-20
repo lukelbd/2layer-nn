@@ -15,10 +15,30 @@ if [ ! -d "$scratch" ]; then
   exit 1
 fi
 
+################################################################################
+################################################################################
+# Define project numbers and write namelist
+case $pid in
+  default) updates=""
+    ;;
+  test) updates="
+    dt=1200
+    tend=1
+    "
+    ;;
+  *)
+    echo "Error: Unknown project identifier \"${pid}\"."
+    exit 1
+    ;;
+esac
+################################################################################
+################################################################################
+
 # Prepare output location
-rundir=$scratch/project$pid
+rundir=$scratch/2layer_$pid
 if [ ! -d "$rundir" ]; then
   echo "Creating empty experiment directory \"$rundir\"."
+  mkdir $rundir
 else
   echo "Using existing experiment directory \"$rundir\"."
 fi
@@ -26,31 +46,13 @@ cp $exe $rundir
 cp $nml $rundir
 cd $rundir
 
-# Define project numbers and write namelist
-echo "Running"
-case $pid in
-  default) updates=""
-    ;;
-  damp1) updates="
-    tau_r=12.
-    tau_i=5."
-    ;;
-  damp2) updates="
-    tau_r=12.
-    tau_i=10."
-    ;;
-  *)
-    echo "Error: Unknown project identifier \"${pid}\"."
-    exit 1
-    ;;
-esac
-
 # Modify default namelist with strings
 # This is so cool!
 if [ ! -z "$updates" ]; then
   echo "Overriding default input.nml with these parameters: $updates"
   for string in $updates; do
-    sed -i 's/^\([[:space:]]*\)'${string%=*}'\(.*\)$/\1'$string'\2/g' $nml
+    sed -i 's/^\([[:space:]]*\)'${string%=*}'.*$/\1'$string', /g' $nml
+    # sed -i 's/^\([[:space:]]*\)'${string%=*}'\(.*\)$/\1'$string'\2/g' $nml
     if [ $? -ne 0 ]; then
       echo "Error: Variable not found in namelist."
     fi
@@ -58,5 +60,6 @@ if [ ! -z "$updates" ]; then
 fi
 
 # Run experiment; i.e. compiled code
-$exe
+echo "Running model."
+./$exe
 

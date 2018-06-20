@@ -8,10 +8,6 @@
   tend = 0.1,   ! (days) terminating time
   tds = 0.0,     ! (days) start saving file
   ! Model dimensions
-  imx = 256,  ! x-dimension cells
-  jmax = 256, ! y-dimension cells
-  mmax = 85,
-  nmax = 170,
   width = 72.e3,   ! (km) channel width in y
   wlength = 16.e3, ! (km) channel length in x
   ! Damping and stuff

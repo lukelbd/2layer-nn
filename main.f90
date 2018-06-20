@@ -14,7 +14,6 @@ program main
   L(1) = imx
 
   ! ****** Initialize fields ****  
-  write(6,*) "Before"
   write(6,*) "Before initialization.", tstart, dt, tend, tau_r, tau_f, rd
   call init_variables ! (global_variables.f90)
   write(6,*) "After initialization.", tstart, dt, tend, tau_r, tau_f, rd
@@ -30,7 +29,7 @@ program main
   Status = DftiCommitDescriptor( HY )
 
   ! ****** Integration *****
-  do t = tstart, tend, dt ! note that loop is normally end-inclusive
+  do t = tstart, int(tend), int(dt) ! note that loop is normally end-inclusive
   ! Invert data from previous timestep, and print diagnostics
   write(6,*) "Starting integration."
   call invert1(HX,HY)                             ! (invert.f90) invert streamfunction from vorticity
