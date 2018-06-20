@@ -1,19 +1,33 @@
 #!/bin/sh
-module purge
+# Exit immediately if compile step fails
+function check() { # check if error
+  if [ $? -ne 0 ]; then
+    echo "Compile step failed."
+    exit 1
+  fi
+}
+# Load modules
+echo "Loading shell modules."
+module purge 2>/dev/null # always prints some errors
 module load intel/16.0
 module load mkl/11.3
-
-rm *.o
-rm *.mod
-rm *.df
-ifort -c global_variables.f90
-ifort -c forward.f90
-ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 ftm.f90
-ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 $MKLROOT/include/mkl_trig_transforms.f90 invert.f90
-ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 $MKLROOT/include/mkl_trig_transforms.f90 initial.f90
-ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 $MKLROOT/include/mkl_trig_transforms.f90 exec.f90
-ifort -c -I/project2/rossby/models/2layer_nn/packages/include -L/project2/rossby/models/2layer_nn/packages/lib -lmfhdf -ldf -ljpeg -lz  io.f90
-ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 $MKLROOT/include/mkl_trig_transforms.f90 main.f90
-ifort -O3 "./io.o" "exec.o" "./invert.o" "./ftm.o" "./forward.o" "./global_variables.o" "./main.o" "./initial.o"  -mkl -I/project2/rossby/models/2layer_nn/packages/include -L/project2/rossby/models/2layer_nn/packages/lib -lmfhdf -ldf -ljpeg -lz -o "./d.out"
-
+# Recompile
+echo "Compiling fortran modules."
+rm *.o *.mod *.df 2>/dev/null
+ifort -c global_variables.f90; check
+ifort -c forward.f90; check
+ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 ftm.f90; check
+ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 $MKLROOT/include/mkl_trig_transforms.f90 invert.f90; check
+ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 $MKLROOT/include/mkl_trig_transforms.f90 initial.f90; check
+ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 $MKLROOT/include/mkl_trig_transforms.f90 exec.f90; check
+ifort -c -I/project2/rossby/models/2layer_nn/packages/include \
+  -L/project2/rossby/models/2layer_nn/packages/lib -lmfhdf -ldf -ljpeg -lz  io.f90; check
+ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 $MKLROOT/include/mkl_trig_transforms.f90 main.f90; check
+# Create executable
+echo "Creating executable."
+ifort -O3 "./io.o" "exec.o" "./invert.o" "./ftm.o" "./forward.o" \
+  "./global_variables.o" "./main.o" "./initial.o"  \
+  -mkl -I/project2/rossby/models/2layer_nn/packages/include \
+  -L/project2/rossby/models/2layer_nn/packages/lib \
+  -lmfhdf -ldf -ljpeg -lz -o "./d.out"; check
 

@@ -1,4 +1,6 @@
 #!/bin/sh
+# Makefile without requiring module loads
+# Uses /opt HDF files, possibly why file called 'make3o'
 rm *.o
 rm *.mod
 rm *.df

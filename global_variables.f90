@@ -1,83 +1,42 @@
 module GLOBAL_VARIABLES
+  implicit none
+  ! public :: init_variables
+  !----------------------------------------------------------------------------!
+  !    ---- Initial stuff, and dimensions that must be hard-coded ----
+  real, parameter :: pi=3.141592653589793                      ! pi
+  integer :: t                                                 ! time tracker
+  complex :: ur = (1.,0.), ui = (0.,1.), zero = (0.,0.)        ! initial flow
+  integer, parameter :: tstart=0                               ! initial time
+  integer , parameter :: imx=256, jmax=256, mmax=85, nmax=170  ! dimensions
+  integer, parameter :: imax=1+imx/2                           ! myserious
+  real :: energy2, cfl ! for monitoring integration
 
-! ******* global variables for the baroclinic 2 layer model *****
+  !    ---- To be calculated in subroutine below ----
+  real :: damp, dx, dy, el, rk, bounds_l, bounds_k
 
-  integer, parameter :: imx = 256, jmax = 256, mmax = 85, nmax = 170
-  integer, parameter :: imax = 1+imx/2
-  integer, parameter :: ndeg = 6  ! degree of hyperdiffusion
+  !    ---- To be supplied by namelist ----
+  logical :: random_seed_on, init_jet
+  integer :: dt, td                                   ! time steps
+  real :: tend, tchange, tds                  ! timing
+  real :: width, wlength                              ! physical dimensions
+  real :: amp, rd, tau_r, tau_f, tau_2                ! damping stuff
+  real :: bdel, beta, u0, del, jet_amp, jet_sigma     ! background state
+  real :: y0, amp_k, sigma_y, sigma_l, sigma_k, tau_i ! stochastic forcing
+  real :: famp, tau_fc, rand_seed_amp                 ! Noboru's stoshcastic forcing
+  real :: visc, ndeg                                  ! hyperviscocity
 
-! ******* constants *******
-
-  real, parameter :: pi=3.141592653589793
-
-!    ---- run time parameters ---
-
-  real, parameter :: dt=400.             !integration time inclement(s)
-  integer, parameter :: md = 200!1600        !dataio timestep
-  integer, parameter :: mstart=1        !starting time step
-  integer, parameter :: mend=14000        !terminating time step
- 
-!    ---- model dimensions ----
-!        (change model size ix, iz above)
-
-  real, parameter :: width = 72000000.          !(m) channel width in y
-  real, parameter :: wlength = 28000000.        !(m) channel length in x
-  real, parameter :: dx = wlength/float(imx)    !(m) grid resolution in x
-  real, parameter :: dy = width/float(jmax)     !(m) grid resolution in y
-
-! **** hyperviscosity ****
-  real, parameter :: damp = 0.04*(dx**ndeg)/(dt*(pi**ndeg))  !(m**ndeg/s)
-
-! **** forcing amplitude ****
-  real, parameter :: famp = 3.0e-8  !(1/s*s)
-
-!    ---- basic flow parameters ----
-
-  real, parameter :: beta=1.6e-11  !background vorticity gradient (1/(s*m))
-  real, parameter :: delta = 0.  !linear devrease in beta (1/(s*m*m))
-  real, parameter :: u0 = 5. !(m/s) background (uniform) shear
-  complex, parameter :: ur = (1.,0.), ui = (0.,1.), zero = (0.,0.)
-
-  ! real, parameter :: amp = 1.e-5  !(1/s)  initial amplitude in vorticity
-  real, parameter :: el = pi/width   !(1/m) initial meridional wavenumber
-  real, parameter :: rk = 2.*pi/wlength  !(1/m) initial zonal wavenumber
-  real, parameter :: rd = 800000.  !(m) internal rossby radius
-
-!    ---- initial seeding amplitude ----
-!    --- jet
-  logical, parameter :: init_jet = .false.
-  real, parameter :: init_jet_amp = 1.e-5  !(1/s)  initial amplitude in vorticity
-  real, parameter :: sigma = rd*3.  !(m) width of the jet
-
-!    --- random seed in lower layer
-  logical, parameter :: random_seed = .true.
-  real, parameter :: rand_seed_amp = 3.e-8  !(1/s)  initial amplitude in vorticity lower layer
-
-!   ---- damping ---- 
-  real, parameter :: tau_r = 30.*24.*3600.  !(s) radiative damping timescale
-  real, parameter :: tau_f = 6.*24.*3600. !6.*24.*3600.  !(s) fricional damping timescale
-  real, parameter :: tau_2 = 1000.*24.*3600.  !(s) additional layer2 damping timescale
-  real, parameter :: tau_fc = 60.  !(s) forcing correlation timescale
-
-  real, parameter :: u0 = 5 !(m/s) background (uniform) shear
-
-
-! --- IO --
-   character(len=*), parameter :: exp_name= "exp_forcing_naburu"     
-
-!    ---- arrays ----
-
+  !    ---- Noboru's arrays ----
   complex :: vort_1(imax,jmax+1,4),force_1(imax,jmax+1), &
          psi_1(imax,jmax+1), u_1(imax,jmax+1), v_1(imax,jmax+1), &
          adv_1(imax,jmax+1,3),visc_1(imax,jmax+1),q_1(imax,jmax+1), &
-         qx_1(imax,jmax+1),qy_1(imax,jmax+1),rad_1(imax,jmax+1) 
+         qx_1(imax,jmax+1),qy_1(imax,jmax+1),rad_1(imax,jmax+1)
   complex :: vort_2(imax,jmax+1,4), &
          psi_2(imax,jmax+1), u_2(imax,jmax+1), v_2(imax,jmax+1), &
          adv_2(imax,jmax+1,3),visc_2(imax,jmax+1),q_2(imax,jmax+1), &
          qx_2(imax,jmax+1),qy_2(imax,jmax+1),rad_2(imax,jmax+1),&
-         fric_2(imax,jmax+1) 
-            
-  real :: ueq(jmax+1),uf(imx,jmax+1),ymask(jmax+1), & 
+         fric_2(imax,jmax+1)
+
+  real :: ueq(jmax+1),uf(imx,jmax+1),ymask(jmax+1), &
           u_1_r(imax,jmax+1),u_1_i(imax,jmax+1),&
           v_1_r(imax,jmax+1),v_1_i(imax,jmax+1),&
           q_1_r(imax,jmax+1),q_1_i(imax,jmax+1),&
@@ -91,7 +50,7 @@ module GLOBAL_VARIABLES
           qxx1(imx,jmax+1),qyy1(imx,jmax+1),qymean1(jmax+1,4)
   double precision :: qby_1(jmax+1),qbar1(jmax+1),ubar1(jmax+1)
 
-  real ::  & 
+  real ::  &
           u_2_r(imax,jmax+1),u_2_i(imax,jmax+1),&
           v_2_r(imax,jmax+1),v_2_i(imax,jmax+1),&
           q_2_r(imax,jmax+1),q_2_i(imax,jmax+1),&
@@ -104,9 +63,49 @@ module GLOBAL_VARIABLES
           pxy2(imx,jmax+1),uxy2(imx,jmax+1),qymean2(jmax+1,4)
   double precision :: qby_2(jmax+1),qbar2(jmax+1),ubar2(jmax+1)
 
-!    ---- energy parameters ----
+  contains
 
-  real :: energy2
-  integer :: m
+  subroutine init_variables
+    implicit none
+    !    ---- Declare namelist ----
+    namelist /input_nml/ &
+      random_seed_on, init_jet, &
+      width, wlength, &
+      dt, td, &
+      tend, tchange, tds, &
+      amp, rd, tau_r, tau_f, tau_2, &
+      u0, del, jet_amp, jet_sigma, &
+      famp, tau_fc, rand_seed_amp, &
+      y0, amp_k, sigma_y, sigma_l, sigma_k, tau_i, &
+      visc, ndeg, beta, bdel
+    !    ---- Read namelist ----
+    open(1, file='input.nml', status='old', action='read') ! status='old' requires that file exists, wut
+    read(1, nml=input_nml)
+      ! note 'input.nml' is a filename, input_nml is a declared variable
+    close(1) ! close file
 
+    !    ---- In-place unit scaling ----
+    y0 = jmax/2 + y0*jmax ! make coordinates relative to center
+    tend      = tend*3600.*24.
+    tchange   = tchange*3600.*24.
+    tds       = tds*3600.*24.
+    tau_r     = tau_r*24.*3600. ! radiation
+    tau_f     = tau_f*24.*3600. ! friction
+    tau_i     = tau_i*24.*3600. ! injection
+    tau_2     = tau_2*24.*3600.
+    rd        = rd*1.e3
+    width     = width*1.e3
+    wlength   = wlength*1.e3
+    jet_sigma = rd*jet_sigma ! (m) from rossby radii to sigma
+
+    !    ---- Calc previously declared, empty variables ----
+    dx = wlength/float(imx) ! (1000km) grid resolution in x
+    dy = width/float(jmax)  ! (1000km) grid resolution in y
+    el = pi/width           ! (1/m) meridional wavenum scaling
+    rk = 2.*pi/wlength      ! (1/m) zonal wavenum scaling
+    bounds_l = sigma_l*3.   ! bounds for sampling k, el wavenumbers; will be truncated
+    bounds_k = sigma_k*3.
+    damp = visc*(dx**ndeg)/(dt*(pi**ndeg))  ! (m**ndeg/s) hyperviscocity
+
+  end subroutine
 end module
