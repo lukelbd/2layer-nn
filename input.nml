@@ -3,9 +3,9 @@
 &input_nml
   ! Timing
   dt = 600,      ! (s) integration time increment
-  td  = 1600,   ! (s) dataio timestep
+  td  = 1600,    ! (s) dataio timestep
   tchange = 0.0, ! (days) modify damping rate at this time; set to -1 to turn off
-  tend = 0.1,   ! (days) terminating time
+  tend = 0.1,    ! (days) terminating time
   tds = 0.0,     ! (days) start saving file
   ! Model dimensions
   width = 72.e3,   ! (km) channel width in y
@@ -21,7 +21,6 @@
   bdel = 0,   ! linear decrease in beta (1/(s*m*m))
   ! delta = 4.4e-18, ! linear decrease in beta (1/(s*m*m))
   ! Jet parameters
-  amp = 1.e-5,       ! (1/s)  initial amplitude in vorticity
   u0 = 5.,           ! (m/s) background (uniform) shear
   del = 1.,
   init_jet = .false.,
@@ -34,10 +33,10 @@
   sigma_l = 5.,      ! amplitude decay in wavenumbers; will be normal in 1/k units
   sigma_k = 5.,      ! same as above
   ! Noboru's stochastic forcing parameters
-  random_seed_on = .false., ! random seed in lower layer
+  ll_seed_on = .false., ! random seed in lower layer
+  ll_seed_amp = 1.e-7,  !(1/s)  initial amplitude in vorticity lower layer
   famp = 3.0e-8,  !(1/s*s) initial forcing amplitude
   tau_fc = 60.,  !(s) forcing correlation timescale
-  rand_seed_amp = 1.e-7,  !(1/s)  initial amplitude in vorticity lower layer
   ! Timing controls for forcing
   tau_i = 1.,        ! (days) injection timecale
   ! Hyperviscocity

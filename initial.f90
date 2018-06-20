@@ -59,11 +59,10 @@ contains
       enddo
 
     endif
-    !   *** flow add random initial noise in upper layer ****
-    ! 
-    if(random_seed_on) then
+    !   *** flow add random initial noise in lower layer ****
+    if(ll_seed_on) then
       CALL RANDOM_NUMBER(r)
-      vort_2(:,:,1)= vort_2(:,:,1) + (r-0.5) *rand_seed_amp
+      vort_2(:,:,1)= vort_2(:,:,1) + (r-0.5) * ll_seed_amp
     endif 
 
     vort_1(:,:,2) = vort_1(:,:,1)
