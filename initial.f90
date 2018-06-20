@@ -4,7 +4,7 @@
 module INITIAL
 contains
 
-  subroutine initial1
+  subroutine init_arrays
 
     use GLOBAL_VARIABLES
     use mkl_dfti

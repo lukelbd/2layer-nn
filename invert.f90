@@ -594,7 +594,7 @@ contains
 
     ! Write diagnostic output, useful for reference; consider testing v in future
     ! write(6,*) 'max flux',maxval(vqz_1),minval(vqz_1)
-    if(mod(t/dt,1000).eq.1) then
+    if(mod(int(t),int(dt)*1000).eq.1) then
       write(6,*) 'Printing zonal mean diagnostics.'
       do j = 1,jmax+1
         write(6,*) j,'ubar = ',ubar1(j)+u0,' qbar = ',qbar1(j)

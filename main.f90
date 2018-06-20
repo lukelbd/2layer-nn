@@ -14,7 +14,8 @@ program main
   ! implicit none ! don't comment this out you monster
 
   ! ****** Initialize fields ****  
-  call initial1      ! (initial.f90)
+  call init_variables ! (global_variables.f90)
+  call init_arrays    ! (initial.f90)
   Status = DftiCreateDescriptor( HX, DFTI_DOUBLE, &
     DFTI_REAL, 1, L)
   Status = DftiSetValue(HX, DFTI_PLACEMENT, DFTI_NOT_INPLACE)
@@ -29,8 +30,9 @@ program main
     ! Invert data from previous timestep, and print diagnostics
     call invert1(HX,HY)                             ! (invert.f90) invert streamfunction from vorticity
     write(6,677) float(t)/(3600.*24.), energy2, cfl
-    677 format("days = ",1f6.3," eke = ",1p1e13.5,cfl) ! 1p ensures non-zero digit to left of decimal
-    if((mod(t,td).eq.0).and.(t.ge.tds)) call dataio ! (io.f90) save data
+677 format("days = ", 1f4.3, " eke = ", 1p1e13.5, 1f3.3) ! 1p ensures non-zero digit to left of decimal
+    ! Input data
+    if ((mod(t,td).eq.0).and.(t.ge.int(tds))) call dataio ! (io.f90) save data
     ! Iterate and evaluate prognostic data
     ! call energy1                              ! (energy.f90) eddy energy calculation
     call prog                                       ! (exec.f90) eddy prognostic equation

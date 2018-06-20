@@ -2,12 +2,12 @@
 ! Default namelist for stochastic forcing experiments
 &input_nml
   ! Timing
-  dt = 15.,     ! integration time increment(s)
+  dt = 15,      ! (s) integration time increment
+  td  = 1600,   ! (s) dataio timestep
   tstart = 0.,  ! (days) starting time
   tend = 30.,   ! (days) terminating time
-  tchange = 0., ! modify damping rate at this time; set to -1 to turn off
-  tds = 0,      ! start saving file
-  td  = 1600,   ! dataio timestep
+  tchange = 0., ! (days) modify damping rate at this time; set to -1 to turn off
+  tds = 0.,     ! (days) start saving file
   ! Model dimensions
   imx = 256,  ! x-dimension cells
   jmax = 256, ! y-dimension cells
@@ -34,8 +34,9 @@
   ! Stochastic forcing parameters
   y0 = 0.,           ! (position of center mask)
   amp_k = 1.e-5,     ! (1/s) maximum amplitude of injections
-  sigma_y = 1.,      ! (fraction of domain) waiting
-  sigma_k = 5.,      ! amplitude decay in wavenumbers; will be normal in 1/k units
+  sigma_y = 1.,      ! (fraction of domain) fractional vertical extent for meridional forcing
+  sigma_l = 5.,      ! amplitude decay in wavenumbers; will be normal in 1/k units
+  sigma_k = 5.,      ! same as above
   ! Timing controls for forcing
   tau_i = 1.,        ! (days) injection timecale
   ! Hyperviscocity
