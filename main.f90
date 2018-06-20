@@ -40,8 +40,11 @@
           call prog               ! (exec.f90) eddy prognostic equation
           call forward1           ! (forward.f90) time forwarding
 
-         write(6,677) m, energy2, fxy1(125,125,2)
-  677   format("normal end m = ",i8,"   eke & forcing =",1p2e13.5)
+        if((mod(m,md).eq.0).and.(m.ge.mds)) then
+                  write(6,677) m, energy2
+ 677   format("normal end m = ",i8,"   eke =",1p1e13.5)
+                write(6,*) ' max u = ',maxval(uf)
+        endif
         enddo
         
         write(6,*) 'm =',m,'  Yeh'

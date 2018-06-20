@@ -122,7 +122,7 @@ contains
          qbar2(j) = qbar2(j)+(beta-u0/(rd*rd))*y 
       enddo
     
-    if(mod(m,1000).eq.1) then
+    if(mod(m,10000).eq.1) then
       do j = 1,jmax+1
          write(6,*) j,'u1 :',ubar1(j)+u0,'   qbar1 :',qbar1(j)
       enddo
@@ -654,8 +654,10 @@ contains
         vqm_1(j,3) = 0.
         vqm_2(j,3) = 0.
        enddo
-
-       write(6,*) ' max u = ',maxval(uf)
-         return 
+       if(mod(m,1000).eq.1) then
+       !if((mod(m,md).eq.0).and.(m.ge.mds)) then
+        write(6,*) ' max u = ',maxval(uf)
+       endif
+          return 
          end subroutine
 end module

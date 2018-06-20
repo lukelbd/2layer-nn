@@ -12,8 +12,8 @@ module GLOBAL_VARIABLES
 
 !    ---- run time parameters ---
 
-  real, parameter :: dt=15.             !integration time inclement(s)
-  integer, parameter :: md = 1600        !dataio timestep
+  real, parameter :: dt=150.             !integration time inclement(s)
+  integer, parameter :: md = 1600!1600        !dataio timestep
   integer, parameter :: mstart=1        !starting time step
   integer, parameter :: mend=160001        !terminating time step
  
@@ -35,21 +35,33 @@ module GLOBAL_VARIABLES
 
   real, parameter :: beta=1.6e-11  !background vorticity gradient (1/(s*m))
   real, parameter :: delta = 0.  !linear devrease in beta (1/(s*m*m))
+  real, parameter :: u0 = 5. !(m/s) background (uniform) shear
   complex, parameter :: ur = (1.,0.), ui = (0.,1.), zero = (0.,0.)
 
-!    ---- initial amplitude ----
-
-! real, parameter :: amp = 1.e-5  !(1/s)  initial amplitude in vorticity
+  ! real, parameter :: amp = 1.e-5  !(1/s)  initial amplitude in vorticity
   real, parameter :: el = pi/width   !(1/m) initial meridional wavenumber
   real, parameter :: rk = 2.*pi/wlength  !(1/m) initial zonal wavenumber
   real, parameter :: rd = 800000.  !(m) internal rossby radius
-  real, parameter :: tau_r = 30.*24.*3600.  !(s) radiative damping timescale
-  real, parameter :: tau_f = 6.*24.*3600.  !(s) fricional damping timescale
-  real, parameter :: tau_2 = 1000.*24.*3600.  !(s) additional layer2 damping timescale
-  real, parameter :: tau_fc = 60.  !(s) forcing correlation timescale
-  real, parameter :: u0 = 5. !(m/s) background (uniform) shear
+
+!    ---- initial seeding amplitude ----
+!    --- jet
+  logical, parameter :: init_jet = .false.
+  real, parameter :: init_jet_amp = 1.e-5  !(1/s)  initial amplitude in vorticity
   real, parameter :: sigma = rd*2.  !(m) width of the jet
   real, parameter :: del = 1.
+
+!    --- random seed in lower layer
+  logical, parameter :: random_seed = .true.
+  real, parameter :: rand_seed_amp = 1.e-7  !(1/s)  initial amplitude in vorticity lower layer
+
+!   ---- damping ---- 
+  real, parameter :: tau_r = 30.*24.*3600.  !(s) radiative damping timescale
+  real, parameter :: tau_f = 6.*24.*3600. !6.*24.*3600.  !(s) fricional damping timescale
+  real, parameter :: tau_2 = 1000.*24.*3600.  !(s) additional layer2 damping timescale
+  real, parameter :: tau_fc = 60.  !(s) forcing correlation timescale
+
+!    --- IO --
+   character(len=*), parameter :: exp_name= "exp_control_naburu"
 
 !    ---- arrays ----
 

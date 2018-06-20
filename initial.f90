@@ -17,6 +17,8 @@ contains
         integer :: i,j,jj
         real :: y,yh,yph,phi,sech2
         real :: x,xph,rer,ell,aap 
+
+        real :: r(imax,jmax+1)
         double precision :: spar(3*jmax/2+2)
         type(dfti_descriptor), pointer :: handle
 
@@ -38,18 +40,47 @@ contains
 ! *** Below eddy streamfunction psi_1 and psi_2 and eddy PV vort_1 and vort_2
 ! will be initialized to zero. Eddy will be introduced later through stochastic
 ! forcing. 
-   !    psi_1 = zero
-   !    vort_1 = zero
-   !    psi_2 = zero
-   !    vort_2 = zero
+        psi_1 = zero
+        vort_1 = zero
+        psi_2 = zero
+        vort_2 = zero
 
-   ! test 
-       do i = 2,46
-        do j = 2,46
-          vort_1(i,j,:) = ur*1.e-10
-          vort_2(i,j,:) = ur*1.e-10
-        enddo
-       enddo
+
+!   *** flow (uniform PV perturbation, symmetric mode only) ****
+    if(init_jet) then
+
+      do j = 1,nmax/2
+         jj = 2*j-1
+         ell = el * float(jj)
+         aap = ((-1)**(j+1))*exp(-ell*ell*sigma*sigma)
+         do i = 2,9
+            vort_1(i,2*j,1) = ur*init_jet_amp*aap/float(nmax/2)
+            vort_2(i,2*j,1) = ur*init_jet_amp*aap/float(nmax/2)
+         enddo
+      enddo
+
+    endif
+!   *** flow add random initial noise in upper layer ****
+! 
+    if(random_seed) then
+        CALL RANDOM_NUMBER(r)
+        vort_2(:,:,1)= vort_2(:,:,1) + (r-0.5) *rand_seed_amp
+    endif 
+
+    vort_1(:,:,2) = vort_1(:,:,1)
+    vort_1(:,:,3) = vort_1(:,:,1)
+
+    vort_2(:,:,2) = vort_2(:,:,1)
+    vort_2(:,:,3) = vort_2(:,:,1)
+
+
+  !  test 
+  !do i = 6,6
+  !   do j = 2,2
+  !     vort_1(i,j,:) = ur*amp
+  !     vort_2(i,j,:) = -ur*amp
+  !   enddo
+  !enddo
         
       return
       end subroutine
