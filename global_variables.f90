@@ -28,6 +28,9 @@ module GLOBAL_VARIABLES
 ! **** hyperviscosity ****
   real, parameter :: damp = 0.04*(dx**ndeg)/(dt*(pi**ndeg))  !(m**ndeg/s)
 
+! **** forcing amplitude ****
+  real, parameter :: famp = 3.0e-8  !(1/s*s)
+
 !    ---- basic flow parameters ----
 
   real, parameter :: beta=1.6e-11  !background vorticity gradient (1/(s*m))
@@ -36,21 +39,21 @@ module GLOBAL_VARIABLES
 
 !    ---- initial amplitude ----
 
-  real, parameter :: amp = 1.e-5  !(1/s)  initial amplitude in vorticity
-! real, parameter :: amp = 1.e-3  !(1/s)  initial amplitude in vorticity
+! real, parameter :: amp = 1.e-5  !(1/s)  initial amplitude in vorticity
   real, parameter :: el = pi/width   !(1/m) initial meridional wavenumber
   real, parameter :: rk = 2.*pi/wlength  !(1/m) initial zonal wavenumber
   real, parameter :: rd = 800000.  !(m) internal rossby radius
   real, parameter :: tau_r = 30.*24.*3600.  !(s) radiative damping timescale
   real, parameter :: tau_f = 6.*24.*3600.  !(s) fricional damping timescale
   real, parameter :: tau_2 = 1000.*24.*3600.  !(s) additional layer2 damping timescale
+  real, parameter :: tau_fc = 60.  !(s) forcing correlation timescale
   real, parameter :: u0 = 5. !(m/s) background (uniform) shear
   real, parameter :: sigma = rd*2.  !(m) width of the jet
   real, parameter :: del = 1.
 
 !    ---- arrays ----
 
-  complex :: vort_1(imax,jmax+1,4), &
+  complex :: vort_1(imax,jmax+1,4),force_1(imax,jmax+1), &
          psi_1(imax,jmax+1), u_1(imax,jmax+1), v_1(imax,jmax+1), &
          adv_1(imax,jmax+1,3),visc_1(imax,jmax+1),q_1(imax,jmax+1), &
          qx_1(imax,jmax+1),qy_1(imax,jmax+1),rad_1(imax,jmax+1) 
@@ -60,14 +63,15 @@ module GLOBAL_VARIABLES
          qx_2(imax,jmax+1),qy_2(imax,jmax+1),rad_2(imax,jmax+1),&
          fric_2(imax,jmax+1) 
             
-  real :: ueq(jmax+1),uf(imx,jmax+1), & 
+  real :: ueq(jmax+1),uf(imx,jmax+1),ymask(jmax+1), & 
           u_1_r(imax,jmax+1),u_1_i(imax,jmax+1),&
           v_1_r(imax,jmax+1),v_1_i(imax,jmax+1),&
           q_1_r(imax,jmax+1),q_1_i(imax,jmax+1),&
+          f_1_r(imax,jmax+1),f_1_i(imax,jmax+1),&
           qx_1_r(imax,jmax+1),qx_1_i(imax,jmax+1),&
           qy_1_r(imax,jmax+1),qy_1_i(imax,jmax+1),&
           p_1_r(imax,jmax+1),p_1_i(imax,jmax+1),&
-          vqm_1(jmax+1,3), &
+          vqm_1(jmax+1,3), fxy1(imx,jmax+1,2),&
           qxy1(imx,jmax+1),vxy1(imx,jmax+1),&
           pxy1(imx,jmax+1),uxy1(imx,jmax+1),umean1(jmax+1),&
           qxx1(imx,jmax+1),qyy1(imx,jmax+1),qymean1(jmax+1,4)

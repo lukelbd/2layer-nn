@@ -46,6 +46,7 @@ contains
 dt*(23.*adv_1(i,j,3)-16.*adv_1(i,j,2)+5.*adv_1(i,j,1))/12.
      vort_1(i,j,4) = vort_1(i,j,4) + dt*visc_1(i,j)
      vort_1(i,j,4) = vort_1(i,j,4) + dt*rad_1(i,j)
+     vort_1(i,j,4) = vort_1(i,j,4) + dt*force_1(i,j)
      vort_2(i,j,4) = vort_2(i,j,3) +     &
 dt*(23.*adv_2(i,j,3)-16.*adv_2(i,j,2)+5.*adv_2(i,j,1))/12.
      vort_2(i,j,4) = vort_2(i,j,4) + dt*visc_2(i,j)

@@ -18,9 +18,10 @@ contains
         real :: rk2,rkn,x,y,phi,uav1,uav2,beta1
         type(dfti_descriptor), pointer :: hx,hy,handle
 
-        integer :: i,j
+        integer :: i,j,k,l
         real :: rkk,ell,fac,as
         double precision :: v1r(jmax+1),v2r(jmax+1),v1i(jmax+1),v2i(jmax+1)
+        double precision :: f1r(jmax+1),f1i(jmax+1)
         double precision :: u1r(jmax+1),u1i(jmax+1),u2r(jmax+1),u2i(jmax+1)
         double precision :: q1r(jmax+1),q2r(jmax+1),q1i(jmax+1),q2i(jmax+1)
         double precision :: qx1r(jmax+1),qx2r(jmax+1),qx1i(jmax+1),qx2i(jmax+1)
@@ -35,12 +36,18 @@ contains
         double precision :: qx1(imx),qx2(imx)
         double precision :: qy1(imx),qy2(imx)
         double precision :: p1(imx),p2(imx)
+        double precision :: f1(imx)
         double complex :: um1(imax),um2(imax)
         double complex :: vm1(imax),vm2(imax)
         double complex :: qm1(imax),qm2(imax)
         double complex :: qxm1(imax),qxm2(imax)
         double complex :: qym1(imax),qym2(imax)
         double complex :: pm1(imax),pm2(imax)
+        double complex :: fm1(imax)
+
+        integer::isize,idate(8)
+        integer,allocatable::iseed(:)
+        real::anglex,angley,ampl
 
 !  Obtain zonal mean u from PV gradient
 
@@ -478,14 +485,41 @@ contains
          pxy1(:,j) = p1(:)
          pxy2(:,j) = p2(:)
 
-!if(j.eq.129) then
-!   do i = 1,imx
-!     write(6,*) 'itest ',i,v1(i),p1(i)
-!   enddo
-!endif
+!  ****  stochastic forcing (small-scale narrow band) ****
 
-!        vl1(:) = v1(:)*(beta+qy_1(j))
-!        vl2(:) = v2(:)*(beta+qy_2(j))
+         if(m.eq.0) then
+           call random_seed(size=isize)
+           allocate(iseed(isize))
+         endif
+         call date_and_time(values=idate)
+         call random_seed(size=isize)
+         iseed=iseed*(idate(8)-500)
+         if (m.eq.0) then
+           iseed(1)=6453
+           iseed(2)=887
+         endif 
+         call random_seed(put=iseed)
+         call random_number(anglex)  
+         call random_number(angley)  
+
+     do i = 1,imx
+!        fxy1(i,j,2) = exp(-dt/tau_fc)*fxy1(i,j,1)
+         fxy1(i,j,2) = 0.5*fxy1(i,j,1)
+     do k = 41,46
+            rkk = rk*float(k-1)
+     do l = 41,46
+            ell = el*float(l-1)
+         call random_number(ampl)  
+         fxy1(i,j,2) = fxy1(i,j,2)             &
+!       + (1.-exp(-dt/tau_fc))*famp*ymask(j)*  &
+        + 0.5*famp*ampl*ymask(j)*  &
+          sin(float(j-1)*ell/float(jmax)+angley)*  &
+          cos(rkk*(float(i-1)/float(imx)+anglex)) 
+     enddo
+     enddo
+     enddo
+
+
      do i = 1,imx
          v1(i) = vxy1(i,j)*qxy1(i,j)
          v2(i) = vxy2(i,j)*qxy2(i,j)
@@ -494,6 +528,7 @@ contains
          u2(i) = (uxy2(i,j)+ubar2(j))*qxx2(i,j)
          u2(i) = u2(i) + vxy2(i,j)*(qyy2(i,j)+beta-(u0/(rd*rd))+qby_2(j))
          uf(i,j) = uxy1(i,j)+ubar1(j)+u0
+         f1(i) = fxy1(i,j,2)
      enddo
 
           vqz_1(j) = 0.
@@ -509,11 +544,13 @@ contains
 
              um1 = zero
              um2 = zero
+             fm1 = zero
 
    !   Forward FT   
             as = 1./float(imx)
             call srcft(u1,um1,imx,as,hy)
             call srcft(u2,um2,imx,as,hy)
+            call srcft(f1,fm1,imx,as,hy)
 
          do i = 1,imax
             if(i.gt.1.and.i.lt.imax) then
@@ -528,6 +565,8 @@ contains
             u_1_i(i,j) = fac*aimag(um1(i))
             u_2_r(i,j) = fac*real(um2(i))
             u_2_i(i,j) = fac*aimag(um2(i))
+            f_1_r(i,j) = fac*real(fm1(i))
+            f_1_i(i,j) = fac*aimag(fm1(i))
 
           enddo
 
@@ -539,6 +578,8 @@ contains
         u1i(:) = u_1_i(i,:)
         u2r(:) = u_2_r(i,:)
         u2i(:) = u_2_i(i,:)
+        f1r(:) = f_1_r(i,:)
+        f1i(:) = f_1_i(i,:)
 
  !  Transform back to spectral space
 
@@ -554,6 +595,16 @@ contains
         CALL FREE_TRIG_TRANSFORM(handle,ipar,ir)
 
         CALL D_INIT_TRIG_TRANSFORM(jmax,tt_type,ipar,spar,ir)
+        CALL D_COMMIT_TRIG_TRANSFORM(f1r,handle,ipar,spar,ir)
+        CALL D_FORWARD_TRIG_TRANSFORM(f1r,handle,ipar,spar,ir)
+        CALL FREE_TRIG_TRANSFORM(handle,ipar,ir)
+
+        CALL D_INIT_TRIG_TRANSFORM(jmax,tt_type,ipar,spar,ir)
+        CALL D_COMMIT_TRIG_TRANSFORM(f1i,handle,ipar,spar,ir)
+        CALL D_FORWARD_TRIG_TRANSFORM(f1i,handle,ipar,spar,ir)
+        CALL FREE_TRIG_TRANSFORM(handle,ipar,ir)
+
+        CALL D_INIT_TRIG_TRANSFORM(jmax,tt_type,ipar,spar,ir)
         CALL D_COMMIT_TRIG_TRANSFORM(u2r,handle,ipar,spar,ir)
         CALL D_FORWARD_TRIG_TRANSFORM(u2r,handle,ipar,spar,ir)
         CALL FREE_TRIG_TRANSFORM(handle,ipar,ir)
@@ -563,16 +614,18 @@ contains
         CALL D_FORWARD_TRIG_TRANSFORM(u2i,handle,ipar,spar,ir)
         CALL FREE_TRIG_TRANSFORM(handle,ipar,ir)
 
-!  finally reconstruct nonlinear jacoian terms in spectral space
+!  finally reconstruct nonlinear jacoian and forcing terms in spectral space
 
     do j = 1,nmax
         adv_1(i,j,3) = -(ur*u1r(j)+ui*u1i(j)) 
         adv_2(i,j,3) = -(ur*u2r(j)+ui*u2i(j)) 
+        force_1(i,j) = ur*f1r(j)+ui*f1i(j) 
     enddo
 
     do j = nmax+1,mmax
         adv_1(i,j,3) = (0.,0.)
         adv_2(i,j,3) = (0.,0.)
+        force_1(i,j) = (0.,0.)
     enddo
 
     enddo
