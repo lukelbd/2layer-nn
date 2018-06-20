@@ -2,10 +2,10 @@
 ! Default namelist for stochastic forcing experiments
 &input_nml
   ! Timing
-  dt = 15,      ! (s) integration time increment
+  dt = 600,      ! (s) integration time increment
   td  = 1600,   ! (s) dataio timestep
   tstart = 0.,  ! (days) starting time
-  tend = 30.,   ! (days) terminating time
+  tend = 0.1,   ! (days) terminating time
   tchange = 0., ! (days) modify damping rate at this time; set to -1 to turn off
   tds = 0.,     ! (days) start saving file
   ! Model dimensions
@@ -23,7 +23,7 @@
   rd = 800.,         ! (km) internal rossby radius
   ! Basic flow parameters
   beta = 1.6e-11,    ! background vorticity gradient (1/(s*m))
-  delta = 4.4e-18,   ! linear decrease in beta (1/(s*m*m))
+  bdel = 0,   ! linear decrease in beta (1/(s*m*m))
   ! delta = 4.4e-18, ! linear decrease in beta (1/(s*m*m))
   ! Jet parameters
   amp = 1.e-5,       ! (1/s)  initial amplitude in vorticity

@@ -15,7 +15,7 @@ program main
 
   ! ****** Initialize fields ****  
   call init_variables ! (global_variables.f90)
-  call init_arrays    ! (initial.f90)
+  call init_data      ! (initial.f90)
   Status = DftiCreateDescriptor( HX, DFTI_DOUBLE, &
     DFTI_REAL, 1, L)
   Status = DftiSetValue(HX, DFTI_PLACEMENT, DFTI_NOT_INPLACE)
@@ -26,7 +26,9 @@ program main
   Status = DftiCommitDescriptor( HY )
 
   ! ****** Integration *****
+  write(6,*) tstart, tend, dt
   do t = tstart, tend, dt ! note that loop is normally end-inclusive
+    write(6,*) t
     ! Invert data from previous timestep, and print diagnostics
     call invert1(HX,HY)                             ! (invert.f90) invert streamfunction from vorticity
     write(6,677) float(t)/(3600.*24.), energy2, cfl

@@ -18,8 +18,8 @@ module GLOBAL_VARIABLES
   real :: tstart, tend, tchange, tds         ! timing
   real :: width, wlength                     ! physical dimensions
   real :: amp, rd, tau_r, tau_f, tau_2       ! damping stuff
-  real :: beta, u0, del, jet_amp, jet_sigma  ! background state
-  real :: y0, amp_k, sigma_l, sigma_k, tau_i ! stochastic forcing
+  real :: bdel, beta, u0, del, jet_amp, jet_sigma  ! background state
+  real :: y0, amp_k, sigma_y, sigma_l, sigma_k, tau_i ! stochastic forcing
   real :: visc, ndeg                         ! hyperviscocity
 
   !    ---- Declare namelist parameters ---
@@ -29,8 +29,8 @@ module GLOBAL_VARIABLES
     tstart, tend, tchange, tds, &
     amp, rd, tau_r, tau_f, tau_2, &
     u0, del, jet_amp, jet_sigma, &
-    y0, amp_k, sigma_l, sigma_k, tau_i, &
-    visc, ndeg, beta
+    y0, amp_k, sigma_y, sigma_l, sigma_k, tau_i, &
+    visc, ndeg, beta, bdel
 
   !    ---- Arrays; make alloctable ----
   ! Layer 1, complex
