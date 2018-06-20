@@ -1,0 +1,51 @@
+!------------------------------------------------------------------------------!
+! Default namelist for stochastic forcing experiments
+&input_nml
+  ! Timing
+  dt = 600,      ! (s) integration time increment
+  td  = 1600,   ! (s) dataio timestep
+  tchange = 0.0, ! (days) modify damping rate at this time; set to -1 to turn off
+  tend = 0.1,   ! (days) terminating time
+  tds = 0.0,     ! (days) start saving file
+  ! Model dimensions
+  imx = 256,  ! x-dimension cells
+  jmax = 256, ! y-dimension cells
+  mmax = 85,
+  nmax = 170,
+  width = 72.e3,   ! (km) channel width in y
+  wlength = 16.e3, ! (km) channel length in x
+  ! Damping and stuff
+  tau_r = 30.,       ! (days) radiative damping timescale
+  tau_f = 6.,        ! (days) fricional damping timescale, or Rek Ekman damping
+  tau_2 = 1000.,     ! (days) additional layer2 damping timescale
+  ! Rossby radius
+  rd = 800.,         ! (km) internal rossby radius
+  ! Basic flow parameters
+  beta = 1.6e-11,    ! background vorticity gradient (1/(s*m))
+  bdel = 0,   ! linear decrease in beta (1/(s*m*m))
+  ! delta = 4.4e-18, ! linear decrease in beta (1/(s*m*m))
+  ! Jet parameters
+  amp = 1.e-5,       ! (1/s)  initial amplitude in vorticity
+  u0 = 5.,           ! (m/s) background (uniform) shear
+  del = 1.,
+  init_jet = .false.,
+  jet_amp = 5.,      ! (m/s) background (uniform) shear
+  jet_sigma = 2.,    ! (in rossby radii) width of the jet
+  ! Stochastic forcing parameters
+  y0 = 0.,           ! (position of center mask)
+  amp_k = 1.e-5,     ! (1/s) maximum amplitude of injections
+  sigma_y = 1.,      ! (fraction of domain) fractional vertical extent for meridional forcing
+  sigma_l = 5.,      ! amplitude decay in wavenumbers; will be normal in 1/k units
+  sigma_k = 5.,      ! same as above
+  ! Noboru's stochastic forcing parameters
+  random_seed_on = .false., ! random seed in lower layer
+  famp = 3.0e-8,  !(1/s*s) initial forcing amplitude
+  tau_fc = 60.,  !(s) forcing correlation timescale
+  rand_seed_amp = 1.e-7,  !(1/s)  initial amplitude in vorticity lower layer
+  ! Timing controls for forcing
+  tau_i = 1.,        ! (days) injection timecale
+  ! Hyperviscocity
+  visc = 0.04, ! viscocity coefficient
+  ndeg = 6, ! degree of hyperdiffusion
+/
+

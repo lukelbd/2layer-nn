@@ -7,6 +7,7 @@ packages
   # my vim sessions
 .*.swp
 *error*
+*empty*
 *example*
   # last one includes file output
 old
