@@ -1,19 +1,1 @@
 Seq	Host	Starttime	JobRuntime	Send	Receive	Exitval	Signal	Command
-14	:	1529599335.358	  3681.550	0	0	0	0	srun --exclusive -N1 -n1 -c1 ./run.sh tau_f\=0.5 tauf_0.5 &>tauf_0.5.log
-4	:	1529599333.153	  3695.575	0	0	0	0	srun --exclusive -N1 -n1 -c1 ./run.sh u0\=20 u0_20 &>u0_20.log
-2	:	1529599332.729	  4298.404	0	0	0	0	srun --exclusive -N1 -n1 -c1 ./run.sh u0\=5 u0_5 &>u0_5.log
-8	:	1529599334.043	  4326.280	0	0	0	0	srun --exclusive -N1 -n1 -c1 ./run.sh famp\=3e-9 famp_3e-9 &>famp_3e-9.log
-6	:	1529599333.588	  4600.641	0	0	0	0	srun --exclusive -N1 -n1 -c1 ./run.sh famp\=3e-10 famp_3e-10 &>famp_3e-10.log
-15	:	1529599335.575	  4606.726	0	0	0	0	srun --exclusive -N1 -n1 -c1 ./run.sh tau_f\=1 tauf_1 &>tauf_1.log
-10	:	1529599334.456	  4722.223	0	0	0	0	srun --exclusive -N1 -n1 -c1 ./run.sh famp\=3e-8 famp_3e-8 &>famp_3e-8.log
-5	:	1529599333.363	  4727.478	0	0	0	0	srun --exclusive -N1 -n1 -c1 ./run.sh famp\=1e-10 famp_1e-10 &>famp_1e-10.log
-3	:	1529599332.942	  4858.159	0	0	0	0	srun --exclusive -N1 -n1 -c1 ./run.sh u0\=10 u0_10 &>u0_10.log
-1	:	1529599332.488	  4861.219	0	0	0	0	srun --exclusive -N1 -n1 -c1 ./run.sh u0\=2 u0_2 &>u0_2.log
-12	:	1529599334.908	  4880.176	0	0	0	0	srun --exclusive -N1 -n1 -c1 ./run.sh tau_f\=0.1 tauf_0.1 &>tauf_0.1.log
-11	:	1529599334.695	  5055.684	0	0	0	0	srun --exclusive -N1 -n1 -c1 ./run.sh famp\=1e-7 famp_1e-7 &>famp_1e-7.log
-13	:	1529599335.116	  5078.809	0	0	0	0	srun --exclusive -N1 -n1 -c1 ./run.sh tau_f\=0.2 tauf_0.2 &>tauf_0.2.log
-16	:	1529599335.786	  5088.227	0	0	0	0	srun --exclusive -N1 -n1 -c1 ./run.sh tau_f\=2 tauf_2 &>tauf_2.log
-9	:	1529599334.252	  5107.273	0	0	0	0	srun --exclusive -N1 -n1 -c1 ./run.sh famp\=1e-8 famp_1e-8 &>famp_1e-8.log
-7	:	1529599333.829	  5140.068	0	0	0	0	srun --exclusive -N1 -n1 -c1 ./run.sh famp\=1e-9 famp_1e-9 &>famp_1e-9.log
-18	:	1529603028.733	  2338.763	0	0	0	0	srun --exclusive -N1 -n1 -c1 ./run.sh tau_f\=10 tauf_10 &>tauf_10.log
-17	:	1529603016.913	  2356.483	0	0	0	0	srun --exclusive -N1 -n1 -c1 ./run.sh tau_f\=5 tauf_5 &>tauf_5.log

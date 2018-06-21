@@ -12,17 +12,18 @@ import m_tools as MT
 import m_general as M
 import matplotlib.pyplot as plt
 #%matplotlib inline
-import imp
 import xarray as xr
+import imp
 load_path = sys.argv[1]
 key_name = load_path.split('/')[-1]
+load_path += '/' # add slash to end
 save_path=base+'/model_outputs_netCDF/'+key_name+'/'
 print('Diagnostics for experiment: ',key_name)
 MT.mkdirs_r(save_path)
 # print('Current directory:', os.getcwd())
 print('Retrieving data from: ',load_path)
 print('Experiment name: ',key_name)
-print('Files present: ',glob.glob(load_path+'/*'))
+# print('Files present: ',glob.glob(load_path+'/*'))
 
 # In[]
 class experiment(object):

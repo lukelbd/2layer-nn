@@ -5,7 +5,7 @@
   dt = 180,      ! (s) integration time increment
   td  = 1800,     ! (s) dataio timestep 
   tchange = 0.0, ! (days) modify damping rate at this time; set to -1 to turn off
-  tend = .1,   ! (days) terminating time
+  tend = 30.,   ! (days) terminating time
   tds = 0.0,     ! (days) start saving file
   ! Model dimensions
   width = 72.e3,   ! (km) channel width in y

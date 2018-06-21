@@ -40,8 +40,8 @@ contains
     ret = dsadata('psi1.df',2,shape2,psi_1)
     ret = dsadata('psi2.df',2,shape2,psi_2)
 
-    !ret = dsadata('q1_zonalmean.df',1,(/jmax+1/),qbar1)
-    !ret = dsadata('q2_zonalmean.df',1,(/jmax+1/),qbar2)
+    ret = dsadata('q1_zonalmean.df',1,(/jmax+1/),qbar1)
+    ret = dsadata('q2_zonalmean.df',1,(/jmax+1/),qbar2)
 
     !ret = dsadata('dqdy1.df',1,jmax+1,qbar1)
     !ret = dsadata('dqdy2.df',1,jmax+1,qbar2)
