@@ -5,6 +5,8 @@ packages
 # Ignore compiled source, and some other stuff
 .session.vim
   # my vim sessions
+*.out
+*.err
 .*.swp
 *error*
 *empty*

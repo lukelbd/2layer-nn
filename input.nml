@@ -5,7 +5,7 @@
   dt = 200,      ! (s) integration time increment
   td  = 1800,   ! (s) dataio timestep 
   tchange = 0.0, ! (days) modify damping rate at this time; set to -1 to turn off
-  tend = 30,   ! (days) terminating time
+  tend = 30.0,   ! (days) terminating time
   tds = 0.0,     ! (days) start saving file
   ! Model dimensions
   width = 72.e3,   ! (km) channel width in y
@@ -20,11 +20,11 @@
   beta = 1.6e-11,    ! background vorticity gradient (1/(s*m))
   bdel = 0,   ! linear decrease in beta (1/(s*m*m))
   ! delta = 4.4e-18, ! linear decrease in beta (1/(s*m*m))
-  ! Jet parameters
-  u0 = 5.,           ! (m/s) background (uniform) shear
-  init_jet = .false.,  
-  jet_amp = 5.,      ! (m/s) background (uniform) shear
-  jet_sigma = 2.,    ! (in rossby radii) width of the jet
+  ! Basic-state jet parameters
+  init_jet = .false., ! jet on or off
+  u0 = 5.,            ! (m/s) background (uniform) shear
+  jet_amp = 5.,       ! (m/s) background (uniform) shear
+  jet_sigma = 2.,     ! (in rossby radii) width of the jet
   ! Stochastic forcing parameters Sam, Momme, and Luke came up with
   ! These are not used, but might want to implement them in the future
   y0 = 0.,           ! (position of center mask)

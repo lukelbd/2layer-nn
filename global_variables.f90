@@ -1,6 +1,5 @@
 module GLOBAL_VARIABLES
   implicit none
-  ! public :: init_variables
   !----------------------------------------------------------------------------!
   !    ---- Initial stuff, and dimensions that must be hard-coded ----
   real, parameter :: pi=3.141592653589793                      ! pi
@@ -66,7 +65,7 @@ module GLOBAL_VARIABLES
 
   contains
 
-  subroutine init_variables
+  subroutine read_namelist
     implicit none
     !    ---- Declare namelist ----
     namelist /input_nml/ &

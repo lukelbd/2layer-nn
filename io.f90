@@ -7,9 +7,11 @@ contains
 
     use GLOBAL_VARIABLES
     implicit none
-
-    integer :: i,j,ret,shape(2), shape2(2), dsadata  
-    character :: expname  
+    integer :: i,j,ret,shape(2),shape2(2),dsadata
+    character (len=8) :: tstring ! time string with leading zeros
+    write(tstring, '(i8.8)'), t  ! flexible, allows for a few hundred days
+    ! character (len=6) :: tstring   ! or just use timesteps
+    ! write(tstring, '(i6.6)'), t/dt
 
     shape(1) = imx
     shape(2) = jmax+1
@@ -23,24 +25,23 @@ contains
         qxy2(i,j) = qxy2(i,j) + qbar2(j) ! total PV
       enddo
     enddo
-    !print('/scratch/midway2/t-970c07/'//expname//'/')
-    ret = dsadata("q1_total.df",2,shape,qxy1)
-    ret = dsadata('q2_total.df',2,shape,qxy2)
+    ret = dsadata("q1_total_t"//tstring//".df",2,shape,qxy1)
+    ret = dsadata('q2_total_t'//tstring//'.df',2,shape,qxy2)
 
-    ret = dsadata('v1.df',2,shape,vxy1*qxy1)
-    ret = dsadata('v2.df',2,shape,vxy2*qxy2)
+    ret = dsadata('v1_t'//tstring//'.df',2,shape,vxy1*qxy1)
+    ret = dsadata('v2_t'//tstring//'.df',2,shape,vxy2*qxy2)
 
-    ret = dsadata('u1.df',2,shape,uxy1*qxy1)
-    ret = dsadata('u2.df',2,shape,uxy2*qxy2)
+    ret = dsadata('u1_t'//tstring//'.df',2,shape,uxy1*qxy1)
+    ret = dsadata('u2_t'//tstring//'.df',2,shape,uxy2*qxy2)
 
-    ret = dsadata('u1_total.df',2,shape2,u_1_r)
-    ret = dsadata('u2_total.df',2,shape2,u_2_r)
+    ret = dsadata('u1_total_t'//tstring//'.df',2,shape2,u_1_r)
+    ret = dsadata('u2_total_t'//tstring//'.df',2,shape2,u_2_r)
 
-    ret = dsadata('psi1.df',2,shape2,psi_1)
-    ret = dsadata('psi2.df',2,shape2,psi_2)
+    ret = dsadata('psi1_t'//tstring//'.df',2,shape2,psi_1)
+    ret = dsadata('psi2_t'//tstring//'.df',2,shape2,psi_2)
 
-    ret = dsadata('q1_zonalmean.df',1,jmax+1,qbar1)
-    ret = dsadata('q2_zonalmean.df',1,jmax+1,qbar2)
+    ret = dsadata('q1_zonalmean_t'//tstring//'.df',1,jmax+1,qbar1)
+    ret = dsadata('q2_zonalmean_t'//tstring//'.df',1,jmax+1,qbar2)
 
     !ret = dsadata('dqdy1.df',1,jmax+1,qbar1)
     !ret = dsadata('dqdy2.df',1,jmax+1,qbar2)
