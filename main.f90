@@ -32,7 +32,7 @@ program main
   ! Invert data from previous timestep, and print diagnostics
   call invert1(HX,HY)                             ! (invert.f90) invert streamfunction from vorticity
   write(6,677) float(t)/(3600.*24.), energy2, cfl
-  677 format("days = ", 1f4.3, " eke = ", 1p1e13.5, 1f3.3) ! 1p ensures non-zero digit to left of decimal
+  677 format("days = ", 1f8.3, " eke = ", 1p1e13.5, 1f3.3) ! 1p ensures non-zero digit to left of decimal
   ! Input data
   if ((mod(t,td).eq.0).and.(t.ge.int(tds))) then 
     write(6,*) "Writing data."

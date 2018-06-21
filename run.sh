@@ -54,6 +54,8 @@ fi
 cp $exe $rundir
 cp $nml $rundir
 cd $rundir
+echo "Removing previous data."
+rm *.df
 
 #------------------------------------------------------------------------------#
 # Modify default namelist with strings

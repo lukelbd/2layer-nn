@@ -12,7 +12,7 @@ module load parallel
 # srun="srun --exclusive -N1 -n16 -c1" # complex
 srun="srun --exclusive -N1 -n1 -c1"    # simple
 # srun="" # srun not even necessary, perhaps
-parallel="parallel --delay .2 -j $SLURM_NTASKS --joblog run_sweep.log --resume"
+parallel="parallel --delay .2 -j $SLURM_NTASKS --joblog run_sweep.log"
 
 # Parameter sweeps
 # Loop through each of the below parameters, setting the others to their default values
@@ -42,4 +42,4 @@ done
 # Run job, using the parameter series and output files passed above
 # For more information on GNU parallel, see:
 # https://www.gnu.org/software/parallel/parallel_tutorial.html
-$parallel --link "$srun ./run.sh {1} {2} &>{2}.out" ::: $params ::: $outfiles
+$parallel --link "$srun ./run.sh {1} {2} &>{2}.log" ::: $params ::: $outfiles
