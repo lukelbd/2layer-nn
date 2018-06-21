@@ -1,13 +1,12 @@
 module GLOBAL_VARIABLES
   implicit none
-  ! public :: init_variables
   !----------------------------------------------------------------------------!
   !    ---- Initial stuff, and dimensions that must be hard-coded ----
   real, parameter :: pi=3.141592653589793                      ! pi
   integer :: t                                                 ! time tracker
   complex :: ur = (1.,0.), ui = (0.,1.), zero = (0.,0.)        ! initial flow
   integer, parameter :: tstart=0                               ! initial time
-  integer , parameter :: imx=256, jmax=256, mmax=85, nmax=170  ! dimensions
+  integer, parameter :: imx=256, jmax=256, mmax=85, nmax=170  ! dimensions
   integer, parameter :: imax=1+imx/2                           ! myserious
   real :: energy2, cfl ! for monitoring integration
 
@@ -15,14 +14,15 @@ module GLOBAL_VARIABLES
   real :: damp, dx, dy, el, rk, bounds_l, bounds_k
 
   !    ---- To be supplied by namelist ----
-  logical :: random_seed_on, init_jet
+  logical :: ll_seed_on, init_jet ! flags
   integer :: dt, td                                   ! time steps
-  real :: tend, tchange, tds                  ! timing
+  real :: tend, tchange, tds                          ! timing
   real :: width, wlength                              ! physical dimensions
-  real :: amp, rd, tau_r, tau_f, tau_2                ! damping stuff
-  real :: bdel, beta, u0, del, jet_amp, jet_sigma     ! background state
+  real :: rd, tau_r, tau_f, tau_2                     ! damping stuff
+  real :: bdel, beta, u0, jet_amp, jet_sigma          ! background state
   real :: y0, amp_k, sigma_y, sigma_l, sigma_k, tau_i ! stochastic forcing
-  real :: famp, tau_fc, rand_seed_amp                 ! Noboru's stoshcastic forcing
+  real :: famp, tau_fc                                ! Noboru's stoshcastic forcing
+  real :: ll_seed_amp                                 ! lower level forcing
   real :: visc, ndeg                                  ! hyperviscocity
 
   !    ---- Noboru's arrays ----
@@ -65,17 +65,17 @@ module GLOBAL_VARIABLES
 
   contains
 
-  subroutine init_variables
+  subroutine read_namelist
     implicit none
     !    ---- Declare namelist ----
     namelist /input_nml/ &
-      random_seed_on, init_jet, &
+      ll_seed_on, init_jet, &
       width, wlength, &
       dt, td, &
       tend, tchange, tds, &
-      amp, rd, tau_r, tau_f, tau_2, &
-      u0, del, jet_amp, jet_sigma, &
-      famp, tau_fc, rand_seed_amp, &
+      rd, tau_r, tau_f, tau_2, &
+      u0, jet_amp, jet_sigma, &
+      famp, tau_fc, ll_seed_amp, &
       y0, amp_k, sigma_y, sigma_l, sigma_k, tau_i, &
       visc, ndeg, beta, bdel
     !    ---- Read namelist ----

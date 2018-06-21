@@ -1,0 +1,19 @@
+Seq	Host	Starttime	JobRuntime	Send	Receive	Exitval	Signal	Command
+5	:	1529596355.346	     1.276	0	0	0	0	srun --exclusive -N1 -n16 -c1 ./run.sh famp\=1e-10 famp_1e-10 &>famp_1e-10.out
+2	:	1529596354.711	     4.473	0	0	0	0	srun --exclusive -N1 -n16 -c1 ./run.sh u0\=5 u0_5 &>u0_5.out
+11	:	1529596356.669	     3.972	0	0	0	0	srun --exclusive -N1 -n16 -c1 ./run.sh famp\=1e-7 famp_1e-7 &>famp_1e-7.out
+8	:	1529596356.026	     5.099	0	0	0	0	srun --exclusive -N1 -n16 -c1 ./run.sh famp\=3e-9 famp_3e-9 &>famp_3e-9.out
+18	:	1529596359.189	     2.434	0	0	0	0	srun --exclusive -N1 -n16 -c1 ./run.sh tau_f\=10 tauf_10 &>tauf_10.out
+1	:	1529596354.472	     7.578	0	0	0	0	srun --exclusive -N1 -n16 -c1 ./run.sh u0\=2 u0_2 &>u0_2.out
+15	:	1529596357.587	     4.897	0	0	0	0	srun --exclusive -N1 -n16 -c1 ./run.sh tau_f\=1 tauf_1 &>tauf_1.out
+3	:	1529596354.924	     8.056	0	0	0	0	srun --exclusive -N1 -n16 -c1 ./run.sh u0\=10 u0_10 &>u0_10.out
+6	:	1529596355.571	     7.837	0	0	0	0	srun --exclusive -N1 -n16 -c1 ./run.sh famp\=3e-10 famp_3e-10 &>famp_3e-10.out
+13	:	1529596357.137	     6.697	0	0	0	0	srun --exclusive -N1 -n16 -c1 ./run.sh tau_f\=0.2 tauf_0.2 &>tauf_0.2.out
+7	:	1529596355.812	     8.523	0	0	0	0	srun --exclusive -N1 -n16 -c1 ./run.sh famp\=1e-9 famp_1e-9 &>famp_1e-9.out
+4	:	1529596355.136	     9.620	0	0	0	0	srun --exclusive -N1 -n16 -c1 ./run.sh u0\=20 u0_20 &>u0_20.out
+14	:	1529596357.375	     7.898	0	0	0	0	srun --exclusive -N1 -n16 -c1 ./run.sh tau_f\=0.5 tauf_0.5 &>tauf_0.5.out
+10	:	1529596356.444	     9.335	0	0	0	0	srun --exclusive -N1 -n16 -c1 ./run.sh famp\=3e-8 famp_3e-8 &>famp_3e-8.out
+16	:	1529596357.793	     8.453	0	0	0	0	srun --exclusive -N1 -n16 -c1 ./run.sh tau_f\=2 tauf_2 &>tauf_2.out
+12	:	1529596356.899	     9.788	0	0	0	0	srun --exclusive -N1 -n16 -c1 ./run.sh tau_f\=0.1 tauf_0.1 &>tauf_0.1.out
+17	:	1529596358.035	     9.153	0	0	0	0	srun --exclusive -N1 -n16 -c1 ./run.sh tau_f\=5 tauf_5 &>tauf_5.out
+9	:	1529596356.235	    11.375	0	0	0	0	srun --exclusive -N1 -n16 -c1 ./run.sh famp\=1e-8 famp_1e-8 &>famp_1e-8.out
