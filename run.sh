@@ -3,6 +3,7 @@
 # This script runs Noboru's 2-layer model for a series of different experiments
 # scratch=/scratch/midway2/t-970c07 # Momme's folder
 scratch=/scratch/midway2/holo # Sam's folder
+prefix=runs2  # or 2layer
 exe=d.out     # executable compiled name
 nml=input.nml # nanmelist file name
 cwd="$(pwd)"  # directory this script was called in
@@ -35,6 +36,12 @@ else
   echo "Using template \"$expname\" for namelist modification."
   case $expname in
     default) updates=""
+      ;;
+    quick) updates="
+      dt=100
+      td=500
+      tend=.1
+      "
       ;;
     test1) updates="
       dt=1500
@@ -78,7 +85,7 @@ else
   esac
 fi
 # Running directory
-rundir="$scratch/2layer_$expname"
+rundir="$scratch/${prefix}_$expname"
 
 #------------------------------------------------------------------------------#
 # Prepare output location

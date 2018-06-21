@@ -99,46 +99,32 @@ class experiment(object):
             q1=xr.open_mfdataset(load_path+'q1.df')[time1].data # q1
             q2=xr.open_mfdataset(load_path+'q2.df')[time1].data # q2
 
-            u1_total=xr.open_mfdataset(load_path+'u1_total.df')[time1].data
-            u2_total=xr.open_mfdataset(load_path+'u2_total.df')[time1].data
+            u1_zm=xr.open_mfdataset(load_path+'u1_zonalmean.df')[time1].data
+            u2_zm=xr.open_mfdataset(load_path+'u2_zonalmean.df')[time1].data
 
             #psi1=xr.open_mfdataset(load_path+'psi1.df')[time1].data
             #psi2=xr.open_mfdataset(load_path+'psi2.df')[time1].data
-
-            #q1_total=xr.open_mfdataset(load_path+'q1_total.df')[time1].data # q1
-            #q2_total=xr.open_mfdataset(load_path+'q2_total.df')[time1].data # q2
-
 
             q1_zm=xr.open_mfdataset(load_path+'q1_zonalmean.df')[time1].data #\bar q 1
             q2_zm=xr.open_mfdataset(load_path+'q2_zonalmean.df')[time1].data #\bar q 2
 
             eke=xr.open_mfdataset(load_path+'eke.df')[time1].data #\bar q 2
             # print(np.arange(0,(nx)*dx, dx ).shape, np.arange(0,(ny)*dy, dy ).shape )
-            #
-            # print(time1_real.shape)
-            # print('total u1' +str(totalu1.T.shape) )
-            # print('total u2' +str(totalu2.T.shape) )
-            # print('q1 total' +str(q1_total.T.shape) )
-            #
-            # print('psi1' +str(psi1.T.shape) )
 
             return xr.Dataset({'u1': (['x', 'y'],  u1.T),
-                             'u2': (['x', 'y'],  u2.T)  ,
+                              'u2': (['x', 'y'],  u2.T)  ,
 
-                             'v1': (['x', 'y'],  v1.T)  ,
-                             'v2': (['x', 'y'],  v2.T)  ,
+                              'v1': (['x', 'y'],  v1.T)  ,
+                              'v2': (['x', 'y'],  v2.T)  ,
 
                               'q1': (['x', 'y'],   q1.T)  ,
                               'q2': (['x', 'y'],  q2.T)  ,
 
-                              'u1_total': (['x', 'y'],  u1_total.T)  ,
-                              'u2_total': (['x', 'y'],  u2_total.T)  ,
+                              #'psi1': (['x', 'y'],  psi1.T) ,
+                              #'psi2': (['x', 'y'],  psi2.T) ,
 
-                             #'psi1': (['x', 'y'],  psi1.T) ,
-                             #'psi2': (['x', 'y'],  psi2.T) ,
-
-                              #'totalq1': (['x', 'y'],   q1_total.T)  ,
-                              #'totalq2': (['x', 'y'],  q2_total.T)  ,
+                              'u1_zm': (['y'],  u1_zm.T)  ,
+                              'u2_zm': (['y'],  u2_zm.T)  ,
 
                               'q1_zm': (['y'], q1_zm)  ,
                               'q2_zm': (['y'], q2_zm),

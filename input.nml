@@ -13,7 +13,7 @@
   ! Damping and stuff
   tau_r = 30.,       ! (days) radiative damping timescale
   tau_f = 6.,        ! (days) fricional damping timescale, or Rek Ekman damping
-  tau_2 = 10.,     ! (days) additional layer2 damping timescale
+  tau_2 = 1000.,       ! (days) additional layer2 damping timescale
   ! Rossby radius
   rd = 800.,         ! (km) internal rossby radius
   ! Basic flow parameters
