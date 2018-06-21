@@ -21,9 +21,12 @@ fi
 case $pid in
   default) updates=""
     ;;
-  test) updates="
-    dt=1200
-    tend=100
+  test2) updates="
+    dt=100
+    td=3600
+    tend=2.0
+    tds = 1.0    
+    init_jet = .true.
     "
     ;;
   *)
@@ -42,6 +45,8 @@ if [ ! -d "$rundir" ]; then
 else
   echo "Using existing experiment directory \"$rundir\"."
 fi
+
+chmod 777 $rundir
 cp $exe $rundir
 cp $nml $rundir
 cd $rundir
@@ -61,6 +66,7 @@ fi
 
 # Run experiment; i.e. compiled code
 echo "Running model."
+sleep 3
 ./$exe
 
 #echo "run python postprocessing"
