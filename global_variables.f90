@@ -7,7 +7,7 @@ module GLOBAL_VARIABLES
   integer :: t                                                 ! time tracker
   complex :: ur = (1.,0.), ui = (0.,1.), zero = (0.,0.)        ! initial flow
   integer, parameter :: tstart=0                               ! initial time
-  integer , parameter :: imx=256, jmax=256, mmax=85, nmax=170  ! dimensions
+  integer, parameter :: imx=256, jmax=256, mmax=85, nmax=170  ! dimensions
   integer, parameter :: imax=1+imx/2                           ! myserious
   real :: energy2, cfl ! for monitoring integration
 
