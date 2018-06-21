@@ -34,8 +34,10 @@ contains
     ret = dsadata('u1.df',2,shape,uxy1)
     ret = dsadata('u2.df',2,shape,uxy2)
 
-    ret = dsadata('u1_total.df',2,shape,u_1_r)
-    ret = dsadata('u2_total.df',2,shape,u_2_r)
+    ! ret = dsadata('u1_total.df',2,shape,u_1_r)
+    ! ret = dsadata('u2_total.df',2,shape,u_2_r)
+    ret = dsadata('u1_zonalmean.df',1,(/jmax+1/),ubar1)
+    ret = dsadata('u2_zonalmean.df',1,(/jmax+1/),ubar2)
 
     ret = dsadata('psi1.df',2,shape2,psi_1)
     ret = dsadata('psi2.df',2,shape2,psi_2)
