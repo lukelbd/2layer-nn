@@ -18,15 +18,24 @@ fi
 ################################################################################
 ################################################################################
 # Define project numbers and write namelist
+# !!! NO space between variable and Value! var=value
 case $pid in
   default) updates=""
     ;;
+  default2) updates=""
+    ;;
   test2) updates="
-    dt=100
-    td=3600
+    dt=200
+    td=4000
     tend=2.0
-    tds = 1.0    
-    init_jet = .true.
+    tds=0.0    
+    init_jet=.false.
+    random_seed_on=.true.
+    "
+    ;;
+  test) updates="
+    dt=1200
+    tend=1
     "
     ;;
   *)
@@ -44,6 +53,8 @@ if [ ! -d "$rundir" ]; then
   mkdir $rundir
 else
   echo "Using existing experiment directory \"$rundir\"."
+  rm $rundir/*
+  echo "remove all files in exsting dir"
 fi
 
 chmod 777 $rundir
@@ -66,8 +77,10 @@ fi
 
 # Run experiment; i.e. compiled code
 echo "Running model."
-sleep 3
+sleep 4
 ./$exe
 
-#echo "run python postprocessing"
-#python 
+echo "run python postprocessing"
+python /home/t-970c07/project/group07/2layer_nn_analysis/diagnostics/master_convert_to_netCDF.py $rundir
+
+echo "done"
