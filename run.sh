@@ -10,6 +10,7 @@ nml=input.nml # nanmelist file name
 
 #------------------------------------------------------------------------------#
 # Update namelist parameters depending on 'experiment name' (standard input 1)
+# Do not put spaces around = signs!
 # [ -z "$1" ] && pid=default || pid=$1 # project id
 # case $pid in
 #   default) updates=""
@@ -19,6 +20,20 @@ nml=input.nml # nanmelist file name
 #     tend=100
 #     "
 #     ;;
+#  test2) updates="
+#    dt=200
+#    td=4000
+#    tend=2.0
+#    tds=0.0    
+#    init_jet=.false.
+#    random_seed_on=.true.
+#    "
+#    ;;
+#  test) updates="
+#    dt=1200
+#    tend=1
+#    "
+#    ;;
 #   *)
 #     echo "Error: Unknown project identifier \"${pid}\"."
 #     exit 1
@@ -44,13 +59,17 @@ if [ ! -d "$rundir" ]; then
   echo "Creating empty experiment directory \"$rundir\"."
   mkdir $rundir
 else
+  echo "Using existing experiment directory \"$rundir\"."
+  echo "Remove all files in exsting dir"
   # Uncomment stuff below to enforce user confirmation
-  echo "Warning: Using existing experiment directory \"$rundir\". Previous results may be overwritten."
   # read -p "Want to continue? (y/n) " -n 1 -r
   # if [[ ! $REPLY =~ ^[Yy]$ ]]; then
   #   echo; echo "Cancelling run."; exit 1
   # fi; echo
+  rm $rundir/*
 fi
+
+chmod 777 $rundir
 cp $exe $rundir
 cp $nml $rundir
 cd $rundir
@@ -73,7 +92,10 @@ fi
 #------------------------------------------------------------------------------#
 # Run experiment; i.e. compiled code
 echo "Running model."
+sleep 4
 ./$exe
 
-#echo "run python postprocessing"
-#python 
+echo "run python postprocessing"
+python /home/t-970c07/project/group07/2layer_nn_analysis/diagnostics/master_convert_to_netCDF.py $rundir
+
+echo "done"
