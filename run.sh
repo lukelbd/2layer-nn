@@ -37,15 +37,41 @@ else
     default) updates=""
       ;;
     test1) updates="
-      dt=1200
-      tend=100
+      dt=1500
+      tend=.5
       "
       ;;
    test2) updates="
      dt=200
-     td=4000
-     tend=2.0
+     td=432000
+     tend=20.0
      tds=0.0
+     u0=0.1
+     "
+     ;;
+   fastwinds) updates="
+     dt=200
+     td=432000
+     tend=20.0
+     tds=0.0
+     u0=10
+     "
+     ;;
+   highdamping) updates="
+     dt=200
+     td=432000
+     tend=20.0
+     tds=0.0
+     tau_2=3     
+     "
+     ;;
+   long_run) updates="
+     dt=400
+     td=864000
+     tend=360.0
+     tds=0.0
+     tau_2=5
+     u0=2     
      "
      ;;
     *) echo "Error: Unknown project identifier \"${1}\"." && exit 1 ;;
@@ -96,5 +122,10 @@ sleep 3
 ./$exe
 
 echo "Run python postprocessing."
+
+module load Anaconda2/4.3.0
+
+source activate /project2/rossby/group07/.conda
+
 python $cwd/convert_netcdf.py $rundir
 echo "Done."
