@@ -33,6 +33,10 @@ updates="$(echo $1 | tr ',' ' ')"
 [ -z "$updates" ] && rundir="default" || rundir="$2"
 [ -z "$rundir" ]  && echo "Error: You must pass an output directory." && exit 1
 rundir="$scratch/2layer_$rundir"
+# echo "Experiment:"
+# echo $updates
+# echo $rundir
+# exit
 
 #------------------------------------------------------------------------------#
 # Prepare output location
