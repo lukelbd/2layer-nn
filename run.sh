@@ -40,7 +40,14 @@ if [ ! -d "$rundir" ]; then
   echo "Creating empty experiment directory \"$rundir\"."
   mkdir $rundir
 else
-  echo "Using existing experiment directory \"$rundir\"."
+  echo "Warning: Using existing experiment directory \"$rundir\". Previous results may be overwritten."
+  read -p "Want to continue? (y/n) " -n 1 -r
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo
+    echo "Cancelling run."
+    exit 1
+  fi
+  echo
 fi
 cp $exe $rundir
 cp $nml $rundir

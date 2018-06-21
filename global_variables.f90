@@ -15,14 +15,15 @@ module GLOBAL_VARIABLES
   real :: damp, dx, dy, el, rk, bounds_l, bounds_k
 
   !    ---- To be supplied by namelist ----
-  logical :: ll_seed_on, ll_seed_amp, init_jet
+  logical :: ll_seed_on, init_jet ! flags
   integer :: dt, td                                   ! time steps
-  real :: tend, tchange, tds                  ! timing
+  real :: tend, tchange, tds                          ! timing
   real :: width, wlength                              ! physical dimensions
-  real :: rd, tau_r, tau_f, tau_2                ! damping stuff
-  real :: bdel, beta, u0, del, jet_amp, jet_sigma     ! background state
+  real :: rd, tau_r, tau_f, tau_2                     ! damping stuff
+  real :: bdel, beta, u0, jet_amp, jet_sigma          ! background state
   real :: y0, amp_k, sigma_y, sigma_l, sigma_k, tau_i ! stochastic forcing
-  real :: famp, tau_fc ! Noboru's stoshcastic forcing
+  real :: famp, tau_fc                                ! Noboru's stoshcastic forcing
+  real :: ll_seed_amp                                 ! lower level forcing
   real :: visc, ndeg                                  ! hyperviscocity
 
   !    ---- Noboru's arrays ----
@@ -74,7 +75,7 @@ module GLOBAL_VARIABLES
       dt, td, &
       tend, tchange, tds, &
       rd, tau_r, tau_f, tau_2, &
-      u0, del, jet_amp, jet_sigma, &
+      u0, jet_amp, jet_sigma, &
       famp, tau_fc, ll_seed_amp, &
       y0, amp_k, sigma_y, sigma_l, sigma_k, tau_i, &
       visc, ndeg, beta, bdel
