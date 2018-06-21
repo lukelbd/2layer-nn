@@ -10,6 +10,6 @@
 
 
 # Initial stuff
-#sh run.sh fastwinds 
-#sh run.sh highdamping
-sh run.sh long_run
+sh run.sh fastwinds 
+sh run.sh highdamping
+#sh run.sh long_run
