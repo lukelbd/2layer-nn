@@ -43,3 +43,4 @@ done
 # For more information on GNU parallel, see:
 # https://www.gnu.org/software/parallel/parallel_tutorial.html
 $parallel --link "$srun ./run.sh {1} {2} &>{2}.log" ::: $params ::: $outfiles
+

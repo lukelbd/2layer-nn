@@ -5,53 +5,54 @@
 scratch=/scratch/midway2/holo # Sam's folder
 exe=d.out     # executable compiled name
 nml=input.nml # nanmelist file name
+cwd="$(pwd)"  # directory this script was called in
 [ ! -x "$exe" ]     && echo "Error: Executable \"$exe\" does not exist, or is not executable." && exit 1
 [ ! -d "$scratch" ] && echo "Error: Scratch directory \"$scratch\" does not exist." && exit 1
 
 #------------------------------------------------------------------------------#
-# Update namelist parameters depending on 'experiment name' (standard input 1)
-# Do not put spaces around = signs!
-# [ -z "$1" ] && pid=default || pid=$1 # project id
-# case $pid in
-#   default) updates=""
-#     ;;
-#   test) updates="
-#     dt=1200
-#     tend=100
-#     "
-#     ;;
-#  test2) updates="
-#    dt=200
-#    td=4000
-#    tend=2.0
-#    tds=0.0    
-#    init_jet=.false.
-#    random_seed_on=.true.
-#    "
-#    ;;
-#  test) updates="
-#    dt=1200
-#    tend=1
-#    "
-#    ;;
-#   *)
-#     echo "Error: Unknown project identifier \"${pid}\"."
-#     exit 1
-#     ;;
-# esac
-# rundir=$scratch/2layer_$pid
-
-#------------------------------------------------------------------------------#
-# Allow user to input arbitrary x=y statements
-# Should be comma delimited (e.g. a=b,c=d)
-updates="$(echo $1 | tr ',' ' ')"
-[ -z "$updates" ] && rundir="default" || rundir="$2"
-[ -z "$rundir" ]  && echo "Error: You must pass an output directory." && exit 1
-rundir="$scratch/2layer_$rundir"
-# echo "Experiment:"
-# echo $updates
-# echo $rundir
-# exit
+# Two different options for running the model here
+# Option 1:
+#   User inputs arbitrary x=y statements
+#   Should be comma delimited (e.g. a=b,c=d)
+# Option 2:
+#   Update namelist parameters depending on 'experiment name' (standard input 1)
+#   Do not put spaces around = signs!
+if [ -z "$1" ]; then
+  # Default run
+  echo "Using default namelist."
+  expname="default"
+  updates=""
+elif [[ "$1" =~ "=" ]]; then
+  # Option 1: Arbitrary x=y statements
+  echo "Updating namelist with the x=y statements you passed."
+  expname="$2" # experiment name
+  [ -z "$expname" ]  && echo "Error: Must pass an experiment name as the second argument." && exit 1
+  updates="$(echo $1 | tr ',' ' ')"
+else
+  # Option 2: Use templates
+  # WARNING: Assignments cannot have spaces!
+  expname="$1"
+  echo "Using template \"$expname\" for namelist modification."
+  case $expname in
+    default) updates=""
+      ;;
+    test1) updates="
+      dt=1200
+      tend=100
+      "
+      ;;
+   test2) updates="
+     dt=200
+     td=4000
+     tend=2.0
+     tds=0.0
+     "
+     ;;
+    *) echo "Error: Unknown project identifier \"${1}\"." && exit 1 ;;
+  esac
+fi
+# Running directory
+rundir="$scratch/2layer_$expname"
 
 #------------------------------------------------------------------------------#
 # Prepare output location
@@ -60,42 +61,40 @@ if [ ! -d "$rundir" ]; then
   mkdir $rundir
 else
   echo "Using existing experiment directory \"$rundir\"."
-  echo "Remove all files in exsting dir"
   # Uncomment stuff below to enforce user confirmation
   # read -p "Want to continue? (y/n) " -n 1 -r
   # if [[ ! $REPLY =~ ^[Yy]$ ]]; then
   #   echo; echo "Cancelling run."; exit 1
   # fi; echo
-  rm $rundir/*
+  echo "Remove all files in existing dir."
+  rm -f $rundir/*
 fi
 
 chmod 777 $rundir
 cp $exe $rundir
 cp $nml $rundir
 cd $rundir
-echo "Removing previous data."
-rm *.df
 
 #------------------------------------------------------------------------------#
 # Modify default namelist with strings
 # This is so cool!
 if [ ! -z "$updates" ]; then
-  echo "Overriding default input.nml with these parameters: $updates"
-  sleep 3 # so you can verify
+  echo "Overriding default input.nml with these parameters: $(echo $updates | xargs)"
   for string in $updates; do
-    sed -i 's/^\([[:space:]]*\)'${string%=*}'.*$/\1'$string', /g' $nml
-    # sed -i 's/^\([[:space:]]*\)'${string%=*}'\(.*\)$/\1'$string'\2/g' $nml
-    [ $? -ne 0 ] && echo "Error: Variable not found in namelist." && exit 1
+    if ! grep '^\s*'${string%=*} $nml &>/dev/null; then
+      echo "Error: Param \"${string%=*}\" not found in namelist." && exit 1
+    else
+      sed -i 's/^\([[:space:]]*\)'${string%=*}'\W.*$/\1'$string', /g' $nml
+    fi # sed -i 's/^\([[:space:]]*\)'${string%=*}'\(.*\)$/\1'$string'\2/g' $nml
   done
 fi
 
 #------------------------------------------------------------------------------#
 # Run experiment; i.e. compiled code
 echo "Running model."
-sleep 4
+sleep 3
 ./$exe
 
-echo "run python postprocessing"
-python /home/t-970c07/project/group07/2layer_nn_analysis/diagnostics/master_convert_to_netCDF.py $rundir
-
-echo "done"
+echo "Run python postprocessing."
+python $cwd/convert_netcdf.py $rundir
+echo "Done."
