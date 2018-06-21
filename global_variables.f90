@@ -6,7 +6,7 @@ module GLOBAL_VARIABLES
   integer :: t                                                 ! time tracker
   complex :: ur = (1.,0.), ui = (0.,1.), zero = (0.,0.)        ! initial flow
   integer, parameter :: tstart=0                               ! initial time
-  integer, parameter :: imx=256, jmax=256, mmax=85, nmax=170  ! dimensions
+  integer, parameter :: imx=256, jmax=256, mmax=85, nmax=170   ! dimensions
   integer, parameter :: imax=1+imx/2                           ! myserious
   real :: energy2, cfl ! for monitoring integration
 
@@ -18,7 +18,7 @@ module GLOBAL_VARIABLES
   integer :: dt, td                                   ! time steps
   real :: tend, tchange, tds                          ! timing
   real :: width, wlength                              ! physical dimensions
-  real :: rd, tau_r, tau_f, tau_2                     ! damping stuff
+  real :: rd, tau_r, tau_f, tau_sponge, tau_2                     ! damping stuff
   real :: bdel, beta, u0, jet_amp, jet_sigma          ! background state
   real :: y0, amp_k, sigma_y, sigma_l, sigma_k, tau_i ! stochastic forcing
   real :: famp, tau_fc                                ! Noboru's stoshcastic forcing
@@ -68,12 +68,13 @@ module GLOBAL_VARIABLES
   subroutine read_namelist
     implicit none
     !    ---- Declare namelist ----
+    real :: tau_f2sponge(jmax)
     namelist /input_nml/ &
       ll_seed_on, init_jet, &
       width, wlength, &
       dt, td, &
       tend, tchange, tds, &
-      rd, tau_r, tau_f, tau_2, &
+      rd, tau_r, tau_f, tau_sponge, tau_2, &
       u0, jet_amp, jet_sigma, &
       famp, tau_fc, ll_seed_amp, &
       y0, amp_k, sigma_y, sigma_l, sigma_k, tau_i, &
