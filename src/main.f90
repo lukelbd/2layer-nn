@@ -42,6 +42,10 @@ program main
   ! call energy1                              ! (energy.f90) eddy energy calculation
   call prog                                       ! (exec.f90) eddy prognostic equation
   call forward1                                   ! (forward.f90) time forwarding
+  ! Test
+  print *, y0, tend, tchange, tds, tau_r, tau_f, tau_i, tau_2, rd, width, wlength, jet_sigma
+  stop
+  ! Test
   enddo
   write(6,*) 'Final Day = ', float(t)/(3600.*24.)
   close(11)

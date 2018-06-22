@@ -55,7 +55,7 @@ elif [[ ! -z "$updates" ]]; then
   # Option 1: Arbitrary x=y statements
   echo "Updating namelist with the x=y statements you passed."
   [ -z "$expname" ]  && echo "Error: Must pass an explicit experiment name." && exit 1
-else
+elif ! $pponly; then
   # Option 2: Use templates
   # WARNING: Assignments cannot have spaces!
   echo "Using template \"$expname\" for namelist modification."
@@ -164,6 +164,9 @@ rundir="$scratch/${prefix}_$expname"
 #------------------------------------------------------------------------------#
 # Prepare output location
 if [ ! -d "$rundir" ]; then
+  if $pponly; then
+    echo "Error: Directory \"$rundir\" does not exist." && exit 1
+  fi
   echo "Creating empty experiment directory \"$rundir\"."
   mkdir $rundir
 else
@@ -212,9 +215,13 @@ if ! $ppoff; then
   echo "Running python post-processing."
   sleep 3
   # These lines should just be in sbatch
-  # module load Anaconda2
-  # source activate /project2/rossby/group07/.conda
-  python $cwd/convert_netcdf.py $rundir
+  # I tried processing those parameter sweeps with Momme's new .py script
+  # and it crashed/ran out of memory. I copied your old version from the git history
+  # into the _simple.py file; tried running it overnight.
+  module load Anaconda2
+  source activate /project2/rossby/group07/.conda
+  # python $cwd/convert_netcdf.py $rundir
+  python $cwd/convert_netcdf_simple.py $rundir
   echo "Post-processing finished."
 else echo "Skipping post-processing."
 fi

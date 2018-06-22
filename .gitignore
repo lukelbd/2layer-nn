@@ -5,6 +5,8 @@ packages
 # Ignore compiled source, and some other stuff
 .session.vim
   # my vim sessions
+*.pyc
+  # python compiled
 *.log
 *.out
 *.err

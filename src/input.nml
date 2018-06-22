@@ -33,7 +33,7 @@
   sigma_y = 1.,      ! (fraction of domain) fractional vertical extent for meridional forcing
   sigma_l = 5.,      ! amplitude decay in wavenumbers; will be normal in 1/k units
   sigma_k = 5.,      ! same as above
-  !	
+  !
   ! Momme's lower level initial random forcing
   ! 
   ll_seed_on = .true., ! random seed in lower layer

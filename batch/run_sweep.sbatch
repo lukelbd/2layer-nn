@@ -3,8 +3,8 @@
 #SBATCH --partition=broadwl
 #SBATCH --ntasks=16
 #SBATCH --cpus-per-task=1
-#SBATCH --error=run_exp.err
-#SBATCH --output=run_exp.out
+#SBATCH --error=logs/sbatch_sweep2.err
+#SBATCH --output=logs/sbatch_sweep2.out
 #SBATCH --job-name=run_exp
 
 # Initial stuff
@@ -45,5 +45,5 @@ done
 # Run job, using the parameter series and output files passed above
 # For more information on GNU parallel, see:
 # https://www.gnu.org/software/parallel/parallel_tutorial.html
-$parallel --link "$srun ./run.sh {1} {2} &>{2}.log" ::: $params ::: $outfiles
+$parallel --link "$srun ./run.sh {1} {2} &>logs/{2}.log" ::: $params ::: $outfiles
 
