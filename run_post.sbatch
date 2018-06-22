@@ -1,21 +1,27 @@
 #!/bin/bash
 #SBATCH --account=rossby
 #SBATCH --partition=broadwl
-#SBATCH --ntasks=16
+#SBATCH --ntasks=20
+#SBATCH --time=4:00:00
 #SBATCH --cpus-per-task=1
-#SBATCH --error=run_exp.err
-#SBATCH --output=run_exp.out
-#SBATCH --job-name=run_exp
+#SBATCH --error=post.err
+#SBATCH --output=post.out
+#SBATCH --job-name=post
 
+################################################################################
+# Use this script for batch post-processing results, if shit failed before
+################################################################################
 # Initial stuff
 module purge
 module load parallel
 module load intel/16.0
 module load mkl/11.3
+module load Anaconda2
+source activate /project2/rossby/group07/.conda
 # srun="srun --exclusive -N1 -n16 -c1" # complex
 srun="srun --exclusive -N1 -n1 -c1"    # simple
 # srun="" # srun not even necessary, perhaps
-parallel="parallel --delay .2 -j $SLURM_NTASKS --joblog run_sweep.log"
+parallel="parallel --delay .2 -j $SLURM_NTASKS --joblog run_post.log"
 
 # Parameter sweeps
 # Loop through each of the below parameters, setting the others to their default values
@@ -37,13 +43,10 @@ for tau_f in $tau_fs; do
   params+=" tau_f=$tau_f "
   outfiles+=" tauf_$tau_f "
 done
-# echo $params
-# echo $outfiles
-# parallel --link "echo {1} {2}" ::: $params ::: $outfiles
-# exit
+# echo "$params" | wc -w; exit
 
 # Run job, using the parameter series and output files passed above
 # For more information on GNU parallel, see:
 # https://www.gnu.org/software/parallel/parallel_tutorial.html
-$parallel --link "$srun ./run.sh {1} {2} &>{2}.log" ::: $params ::: $outfiles
+$parallel --link "$srun ./run.sh -p {1} {2} &>post_{2}.log" ::: $params ::: $outfiles
 

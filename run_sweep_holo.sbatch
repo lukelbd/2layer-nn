@@ -7,7 +7,10 @@
 #SBATCH --job-name=run_exp
 
 # Initial stuff
+module purge
+module load mkl/11.3
 module load parallel
+# module load Anaconda2
 # srun="srun --exclusive -N1 -n16 -c1" # complex
 srun="srun --exclusive -N1 -n1 -c1"    # simple
 # srun="" # srun not even necessary, perhaps
@@ -18,7 +21,7 @@ parallel="parallel --delay .2 -j $SLURM_NTASKS --joblog run_sweep.log"
 # The runscript will interpret an empty dash '-' as the default parameter
 params=""
 outfiles=""
-u0s="2 5 10 20" # background shear
+u0s="0 0.5 1 2 5 10" # background shear
 famps="1e-10 3e-10 1e-9 3e-9 1e-8 3e-8 1e-7" # forcing amplitude
 tau_fs="0.1 0.2 0.5 1 2 5 10" # friction damping
 for u0 in $u0s; do

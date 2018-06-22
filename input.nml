@@ -2,10 +2,10 @@
 ! Default namelist for stochastic forcing experiments
 &input_nml
   ! Timing
-  dt = 300,      ! (s) integration time increment
-  td  = 1800,     ! (s) dataio timestep 
+  dt = 1200,      ! (s) integration time increment
+  td  = 21600,    ! (s) dataio timestep 
   tchange = 0.0, ! (days) modify damping rate at this time; set to -1 to turn off
-  tend = 90.,   ! (days) terminating time
+  tend = 300.,   ! (days) terminating time
   tds = 0.0,     ! (days) start saving file
   ! Model dimensions
   width = 72.e3,   ! (km) channel width in y
@@ -13,7 +13,7 @@
   ! Damping and stuff
   tau_r = 30.,       ! (days) radiative damping timescale
   tau_f = 6.,        ! (days) fricional damping timescale, or Rek Ekman damping
-  tau_2 = 1000.,       ! (days) additional layer2 damping timescale
+  tau_2 = 1000.,     ! (days) additional layer2 damping timescale
   ! Rossby radius
   rd = 800.,         ! (km) internal rossby radius
   ! Basic flow parameters
@@ -21,8 +21,8 @@
   bdel = 0,   ! linear decrease in beta (1/(s*m*m))
   ! delta = 4.4e-18, ! linear decrease in beta (1/(s*m*m))
   ! Basic-state jet parameters
+  u0 = 3.,            ! (m/s) background (uniform) shear
   init_jet = .false., ! jet on or off
-  u0 = 5.,            ! (m/s) background (uniform) shear
   jet_amp = 5.,       ! (m/s) background (uniform) shear
   jet_sigma = 2.,     ! (in rossby radii) width of the jet
   !
