@@ -33,7 +33,7 @@ while [[ $# -gt 0 ]]; do
 done
 updates="$(echo $updates | tr ',' ' ')" # allow comment separation
 if ! $ppoff && ! python -c "import xarray" &>/dev/null; then # i.e. import failed
-  echo "Error: XArray unavailable. Conda environments do not seem to work "\
+  echo "Error: XArray unavailable. Conda environments do not seem to work" \
     "inside sbatch subissions; try using pip install --user xarray instead."
   exit 1
 fi
@@ -58,105 +58,11 @@ elif [[ ! -z "$updates" ]]; then
 elif ! $pponly; then
   # Option 2: Use templates
   # WARNING: Assignments cannot have spaces!
+  templates=experiments.txt
   echo "Using template \"$expname\" for namelist modification."
-  case $expname in
-    default) updates=""
-      ;;
-    quick) updates="
-      dt=100
-      td=500
-      tend=.1
-      "
-      ;;
-    test1) updates="
-      dt=1500
-      tend=.5
-      "
-      ;;
-   noboru_standart) updates="
-     dt=500
-     td=21000
-     tend=300.0
-     tds=0.0
-     u0=2
-     famp=3.0e-8
-     tau_2=10     
-     "
-     ;;
-   noboru_standart2) updates="
-     dt=1000
-     td=21000
-     tend=300.0
-     tds=0.0
-     u0=1
-     famp=3.0e-8
-     tau_2=10     
-     "
-     ;;
-   noboru_standart3) updates="
-     dt=1000
-     td=21000
-     tend=90.0
-     tds=0.0
-     u0=5
-     famp=3.0e-8
-     tau_2=10     
-     "
-     ;;
-   test2) updates="
-     dt=200
-     td=432000
-     tend=20.0
-     tds=0.0
-     u0=0.1
-     "
-     ;;
-   fastwinds) updates="
-     dt=200
-     td=432000
-     tend=20.0
-     tds=0.0
-     u0=10
-     "
-     ;;
-   highdamping) updates="
-     dt=300
-     td=20000
-     tend=500.0
-     tds=0.0
-     u0=3
-     tau_2=3     
-     "
-     ;;
-   lowdamping) updates="
-     dt=300
-     td=20000
-     tend=500.0
-     tds=0.0
-     u0=3
-     tau_2=30     
-     "
-     ;;
-   long_run) updates="
-     dt=300
-     td=5000
-     tend=360.0
-     tds=0.0
-     tau_2=5
-     u0=5     
-     "
-     ;;
-   long_run_2) updates="
-     dt=300
-     td=10000
-     tend=500.0
-     tds=0.0
-     tau_2=5
-     u0=10     
-     "
-     ;;
-    *) echo "Error: Unknown project identifier \"${1}\"." && exit 1 ;;
-  esac
+  [ ! -r "$templates" ] && echo "Error: Experiments file \"$templates\" available." && exit 1
+  updates="$(cat $templates | sed '/^'"$expname"':/,/^[[:space:]]*$/!d;//d')"
+  [ -z "$updates" ] && echo "Error: Unknown project identifier \"$expname\"." && exit 1
 fi
 # Running directory
 rundir="$scratch/${prefix}_$expname"
