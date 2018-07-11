@@ -13,8 +13,6 @@ packages
 .*.swp
 *error*
 *empty*
-*example*
-  # last one includes file output
 old
 trash
   # old stuff here
