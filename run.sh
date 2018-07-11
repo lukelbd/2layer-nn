@@ -11,6 +11,34 @@ cwd="$(pwd)"  # directory this script was called in
 [ ! -d "$scratch" ] && echo "Error: Scratch directory \"$scratch\" does not exist." && exit 1
 
 #------------------------------------------------------------------------------#
+# Parse input
+# For great tutorial on arg parsing, see:
+# https://stackoverflow.com/a/14203146/4970632
+expname=""
+updates=""
+pponly=false
+ppoff=false
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -p|--post-process) # *only* do post-processing (i.e. don't run model, process old results)
+      pponly=true; shift ;;
+    -n|--no-post-process) # *skip* post-processing (i.e. just run model)
+      ppoff=true; shift ;;
+    *=*) # namelist modification
+      updates+=" $1 "; shift ;;
+    *) # experiment name
+      [ ! -z "$expname" ] && echo "Error: Multiple experiment names specified: \"$1\" and \"$expname\"." && exit 1
+      expname="$1"; shift ;;
+  esac
+done
+updates="$(echo $updates | tr ',' ' ')" # allow comment separation
+if ! $ppoff && ! python -c "import xarray" &>/dev/null; then # i.e. import failed
+  echo "Error: XArray unavailable. Conda environments do not seem to work" \
+    "inside sbatch subissions; try using pip install --user xarray instead."
+  exit 1
+fi
+
+#------------------------------------------------------------------------------#
 # Two different options for running the model here
 # Option 1:
 #   User inputs arbitrary x=y statements
@@ -18,71 +46,23 @@ cwd="$(pwd)"  # directory this script was called in
 # Option 2:
 #   Update namelist parameters depending on 'experiment name' (standard input 1)
 #   Do not put spaces around = signs!
-if [ -z "$1" ]; then
+if [[ -z "$expname" && -z "$updates" ]]; then
   # Default run
   echo "Using default namelist."
   expname="default"
   updates=""
-elif [[ "$1" =~ "=" ]]; then
+elif [[ ! -z "$updates" ]]; then
   # Option 1: Arbitrary x=y statements
   echo "Updating namelist with the x=y statements you passed."
-  expname="$2" # experiment name
-  [ -z "$expname" ]  && echo "Error: Must pass an experiment name as the second argument." && exit 1
-  updates="$(echo $1 | tr ',' ' ')"
-else
+  [ -z "$expname" ]  && echo "Error: Must pass an explicit experiment name." && exit 1
+elif ! $pponly; then
   # Option 2: Use templates
   # WARNING: Assignments cannot have spaces!
-  expname="$1"
+  templates=experiments.txt
   echo "Using template \"$expname\" for namelist modification."
-  case $expname in
-    default) updates=""
-      ;;
-    quick) updates="
-      dt=100
-      td=500
-      tend=.1
-      "
-      ;;
-    test1) updates="
-      dt=1500
-      tend=.5
-      "
-      ;;
-   test2) updates="
-     dt=200
-     td=432000
-     tend=20.0
-     tds=0.0
-     u0=0.1
-     "
-     ;;
-   fastwinds) updates="
-     dt=200
-     td=432000
-     tend=20.0
-     tds=0.0
-     u0=10
-     "
-     ;;
-   highdamping) updates="
-     dt=200
-     td=432000
-     tend=20.0
-     tds=0.0
-     tau_2=3     
-     "
-     ;;
-   long_run) updates="
-     dt=400
-     td=864000
-     tend=360.0
-     tds=0.0
-     tau_2=5
-     u0=2     
-     "
-     ;;
-    *) echo "Error: Unknown project identifier \"${1}\"." && exit 1 ;;
-  esac
+  [ ! -r "$templates" ] && echo "Error: Experiments file \"$templates\" available." && exit 1
+  updates="$(cat $templates | sed '/^'"$expname"':/,/^[[:space:]]*$/!d;//d')"
+  [ -z "$updates" ] && echo "Error: Unknown project identifier \"$expname\"." && exit 1
 fi
 # Running directory
 rundir="$scratch/${prefix}_$expname"
@@ -90,17 +70,17 @@ rundir="$scratch/${prefix}_$expname"
 #------------------------------------------------------------------------------#
 # Prepare output location
 if [ ! -d "$rundir" ]; then
+  if $pponly; then
+    echo "Error: Directory \"$rundir\" does not exist." && exit 1
+  fi
   echo "Creating empty experiment directory \"$rundir\"."
   mkdir $rundir
 else
   echo "Using existing experiment directory \"$rundir\"."
-  # Uncomment stuff below to enforce user confirmation
-  # read -p "Want to continue? (y/n) " -n 1 -r
-  # if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-  #   echo; echo "Cancelling run."; exit 1
-  # fi; echo
-  echo "Remove all files in existing dir."
-  rm -f $rundir/*
+  if ! $pponly; then
+    echo "Removing files in existing dir."
+    rm -f $rundir/*
+  fi
 fi
 
 chmod 777 $rundir
@@ -110,12 +90,16 @@ cd $rundir
 
 #------------------------------------------------------------------------------#
 # Modify default namelist with strings
-# This is so cool!
+# Need grep because it returns exit code 1 if no match
+# Need sed to actually to the replacement
+# Annoyingly they both have different regex syntaxes
 if [ ! -z "$updates" ]; then
   echo "Overriding default input.nml with these parameters: $(echo $updates | xargs)"
   for string in $updates; do
-    if ! grep '^\s*'${string%=*} $nml &>/dev/null; then
-      echo "Error: Param \"${string%=*}\" not found in namelist." && exit 1
+    if ! grep '^\s*'${string%=*}'\b' $nml &>/dev/null; then
+      echo "Error: Param \"${string%=*}\" not found in namelist."
+      rm -r $rundir
+      exit 1
     else
       sed -i 's/^\([[:space:]]*\)'${string%=*}'\W.*$/\1'$string', /g' $nml
     fi # sed -i 's/^\([[:space:]]*\)'${string%=*}'\(.*\)$/\1'$string'\2/g' $nml
@@ -124,15 +108,26 @@ fi
 
 #------------------------------------------------------------------------------#
 # Run experiment; i.e. compiled code
-echo "Running model."
-sleep 3
-./$exe
+if ! $pponly; then
+  echo "Running model."
+  sleep 3
+  ./$exe
+else echo "Using existing model results."
+fi
 
-echo "Run python postprocessing."
-
-module load Anaconda2/4.3.0
-
-source activate /project2/rossby/group07/.conda
-
-python $cwd/convert_netcdf.py $rundir
-echo "Done."
+#------------------------------------------------------------------------------#
+# Post-process results
+if ! $ppoff; then
+  echo "Running python post-processing."
+  sleep 3
+  # These lines should just be in sbatch
+  # I tried processing those parameter sweeps with Momme's new .py script
+  # and it crashed/ran out of memory. I copied your old version from the git history
+  # into the _simple.py file; tried running it overnight.
+  module load Anaconda2
+  source activate /project2/rossby/group07/.conda
+  # python $cwd/convert_netcdf.py $rundir
+  python $cwd/convert_netcdf_simple.py $rundir
+  echo "Post-processing finished."
+else echo "Skipping post-processing."
+fi

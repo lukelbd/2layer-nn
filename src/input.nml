@@ -2,10 +2,10 @@
 ! Default namelist for stochastic forcing experiments
 &input_nml
   ! Timing
-  dt = 1200,     ! (s) integration time increment
-  td  = 21600,   ! (s) dataio timestep 
+  dt = 1200,      ! (s) integration time increment
+  td  = 21600,    ! (s) dataio timestep 
   tchange = 0.0, ! (days) modify damping rate at this time; set to -1 to turn off
-  tend = 100.,    ! (days) terminating time
+  tend = 300.,   ! (days) terminating time
   tds = 0.0,     ! (days) start saving file
   ! Model dimensions
   width = 72.e3,   ! (km) channel width in y
@@ -22,10 +22,11 @@
   bdel = 0,   ! linear decrease in beta (1/(s*m*m))
   ! delta = 4.4e-18, ! linear decrease in beta (1/(s*m*m))
   ! Basic-state jet parameters
+  u0 = 3.,            ! (m/s) background (uniform) shear
   init_jet = .false., ! jet on or off
-  u0 = 5.,            ! (m/s) background (uniform) shear
   jet_amp = 5.,       ! (m/s) background (uniform) shear
   jet_sigma = 2.,     ! (in rossby radii) width of the jet
+  !
   ! Stochastic forcing parameters Sam, Momme, and Luke came up with
   ! These are not used, but might want to implement them in the future
   y0 = 0.,           ! (position of center mask)
@@ -33,12 +34,13 @@
   sigma_y = 1.,      ! (fraction of domain) fractional vertical extent for meridional forcing
   sigma_l = 5.,      ! amplitude decay in wavenumbers; will be normal in 1/k units
   sigma_k = 5.,      ! same as above
+  !
   ! Momme's lower level initial random forcing
-  ! Not needed for now
+  ! 
   ll_seed_on = .true., ! random seed in lower layer
   ll_seed_amp = 1.0e-7,  ! (1/s)  initial amplitude in vorticity lower layer
   ! Noboru's stochastic forcing parameters
-  famp = 3.0e-8,  !(1/s*s) initial forcing amplitude
+  famp = 3.0e-8,  !(1/s*s) forcing amplitude
   tau_fc = 60.,  !(s) forcing correlation timescale
   ! Timing controls for forcing
   tau_i = 1.,                 ! (days) injection timecale

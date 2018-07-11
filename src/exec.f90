@@ -30,7 +30,7 @@ contains
         visc_2(i,j) = -damp*((rkk**2+ell**2)**3)*vort_2(i,j,3)
         rad_1(i,j) = -(psi_2(i,j)-psi_1(i,j))/((rd*rd)*tau_r)
         rad_2(i,j) = (psi_2(i,j)-psi_1(i,j))/((rd*rd)*tau_r)
-        fric_2(i,j) = (rkk**2+ell**2)*psi_2(i,j)/tau_f(j)
+        fric_2(i,j) = (rkk**2+ell**2)*psi_2(i,j)/tau_f
         !    fric_2(i,j) = fric_2(i,j)-vort_2(i,j,3)/tau_2
         if(t.eq.tstart) then
           adv_1(i,j,2) = adv_1(i,j,3)
