@@ -6,23 +6,28 @@ function check() { # check if error
     exit 1
   fi
 }
+# Go to source code directory
+cd src
+[ $? -ne 0 ] && exit 1
 # Load modules
 echo "Loading shell modules."
 module purge 2>/dev/null # always prints some errors
 module load intel/16.0
 module load mkl/11.3
+dfti=$MKLROOT/include/mkl_dfti.f90
+trig=$MKLROOT/include/mkl_trig_transforms.f90
 # Recompile
 echo "Compiling fortran modules."
 rm *.o *.mod *.df 2>/dev/null
 ifort -c global_variables.f90; check
 ifort -c forward.f90; check
-ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 ftm.f90; check
-ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 $MKLROOT/include/mkl_trig_transforms.f90 invert.f90; check
-ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 $MKLROOT/include/mkl_trig_transforms.f90 initial.f90; check
-ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 $MKLROOT/include/mkl_trig_transforms.f90 exec.f90; check
+ifort -c -mkl $dfti ftm.f90; check
+ifort -c -mkl $dfti $trig invert.f90; check
+ifort -c -mkl $dfti $trig initial.f90; check
+ifort -c -mkl $dfti $trig exec.f90; check
 ifort -c -I/project2/rossby/models/2layer_nn/packages/include \
   -L/project2/rossby/models/2layer_nn/packages/lib -lmfhdf -ldf -ljpeg -lz  io.f90; check
-ifort -c -mkl $MKLROOT/include/mkl_dfti.f90 $MKLROOT/include/mkl_trig_transforms.f90 main.f90; check
+ifort -c -mkl $dfti $trig main.f90; check
 # Create executable
 echo "Creating executable."
 ifort -O3 "./io.o" "exec.o" "./invert.o" "./ftm.o" "./forward.o" \
@@ -30,4 +35,15 @@ ifort -O3 "./io.o" "exec.o" "./invert.o" "./ftm.o" "./forward.o" \
   -mkl -I/project2/rossby/models/2layer_nn/packages/include \
   -L/project2/rossby/models/2layer_nn/packages/lib \
   -lmfhdf -ldf -ljpeg -lz -o "./d.out"; check
-
+# Alternative makefile, doesn't require module loads it seems, just uses /opt files
+# ifort -c global_variables.f90
+# ifort -c forward.f90
+# ifort -c -mkl ftm.f90
+# ifort -c -mkl invert.f90
+# ifort -c -mkl initial.f90
+# ifort -c -mkl exec.f90
+# ifort -c -I/opt/hdf4/intel/include -L/opt/hdf4/intel/lib -lmfhdf -ldf -ljpeg -lz  io.f90
+# ifort -c -mkl main.f90
+# ifort -O3 "./io.o" "exec.o" "./invert.o" "./ftm.o" "./forward.o" "./global_variables.o" \
+#   "./main.o" "./initial.o"  -mkl -I/opt/hdf4/intel/include \
+#   -L/opt/hdf4/intel/lib -lmfhdf -ldf -ljpeg -lz -o "./d.out"

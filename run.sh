@@ -1,10 +1,27 @@
 #!/usr/bin/env bash
 #------------------------------------------------------------------------------#
 # This script runs Noboru's 2-layer model for a series of different experiments
+# Usage:
+#   ./run.sh [-n|-p] expname [param1=value1] [param2=value2] ...
+# Explanation:
+#   * If you *only* specify expname, will look for the namelist modifications
+#     associated with that experiment in the file 'experiments.txt'
+#   * If you *also* specify param1=value1 pairs, will *not* look up the experiment
+#     in experiments.txt for namelist modifications -- will just apply the namelist
+#     modifications passed by the user.
+# Flags:
+#   * -p: *Only* do post-processing -- i.e. do not run the model, just process
+#     existing results located in the expname directory.
+#   * -n: *Skip* post-processing -- i.e. just run the model.
+#------------------------------------------------------------------------------#
 # scratch=/scratch/midway2/t-970c07 # Momme's folder
-scratch=/scratch/midway2/holo # Sam's folder
+prefix=sweep # prefix for experiment directories
 templates=experiments.txt # location of experiment templates
-prefix=runs2  # or 2layer
+case $HOSTNAME in
+  midway*) scratch=/scratch/midway2/holo ;; # Sam's folder
+  uriah*)  scratch=$(pwd)/scratch ;;
+  *) echo "Error: Unknown host $HOSTNAME. Edit this script to add a scratch location." && exit 1
+esac
 exe=d.out     # executable compiled name
 nml=input.nml # nanmelist file name
 cwd="$(pwd)"  # directory this script was called in
@@ -66,11 +83,14 @@ elif ! $pponly; then
   updates="$(cat $templates | sed '/^'"$expname"':/,/^[[:space:]]*$/!d;//d' | tr -d ' \t')"
   [ -z "$updates" ] && echo "Error: Unknown project identifier \"$expname\"." && exit 1
 fi
-# Running directory
-rundir="$scratch/${prefix}_$expname"
 
 #------------------------------------------------------------------------------#
 # Prepare output location
+if [ -z "$prefix" ]; then
+  rundir="$scratch/$expname"
+else
+  rundir="$scratch/${prefix}_$expname"
+fi
 if [ ! -d "$rundir" ]; then
   if $pponly; then
     echo "Error: Directory \"$rundir\" does not exist." && exit 1

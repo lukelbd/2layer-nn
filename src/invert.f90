@@ -46,7 +46,9 @@ module INVERT
     integer,allocatable::iseed(:)
     real::anglex,angley,ampl
 
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !  Obtain zonal mean u from PV gradient
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     qbar1(:) = 0.
     qbar2(:) = 0.
@@ -75,7 +77,36 @@ module INVERT
       qbar2(j) = 0.
     enddo
 
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !  Transform sponge damping to spectral space 
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if(t.eq.0) then
+      do j = 2,nmax
+        tau_farray(j) = tau_farray
+      enddo
+      do j = nmax+1,jmax+1
+        tau_farray(j) = 0. ! 
+      end do
+      vqz_1(j) = 0.
+      vqz_2(j) = 0.
+      uav1 = 0. 
+      uav2 = 0. 
+      do i = 1,imx
+        vqz_1(j) = vqz_1(j) + v1(i)/float(imx)
+        vqz_2(j) = vqz_2(j) + v2(i)/float(imx)
+        uav1 = uav1 + u1(i)/float(imx)
+        uav2 = uav2 + u2(i)/float(imx)
+      enddo
+      tt_type=0
+      CALL D_INIT_TRIG_TRANSFORM(jmax,tt_type,ipar,spar,ir)
+      CALL D_COMMIT_TRIG_TRANSFORM(vqz_1,handle,ipar,spar,ir)
+      CALL D_FORWARD_TRIG_TRANSFORM(vqz_1,handle,ipar,spar,ir)
+      CALL FREE_TRIG_TRANSFORM(handle,ipar,ir)
+    end if
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !  Transform zonal mean to physical space 
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     qby_1(:) = qymean1(:,3)
     qby_2(:) = qymean2(:,3)
@@ -112,7 +143,9 @@ module INVERT
     CALL D_BACKWARD_TRIG_TRANSFORM(qbar2,handle,ipar,spar,ir)
     CALL FREE_TRIG_TRANSFORM(handle,ipar,ir)
 
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! *** compute full zonal-mean PV gradient in physical space ****
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     do j = 1,jmax+1
       y = dy*float(j-1)-0.5*width 
       qbar1(j) = qbar1(j)+(beta+u0/(rd*rd))*y 
@@ -125,7 +158,9 @@ module INVERT
       enddo
     endif
 
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !  Obtain streamfunction from PV and 
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !  transform eddy into physical space
     do j = 2,nmax
       ell = el*float(j-1)
@@ -168,7 +203,9 @@ module INVERT
     qy_1(1,:) = zero
     qy_2(1,:) = zero
 
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !  **** Transform u,v,vort to physical space ****
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     do i = 1,imax
       do j = 1,jmax+1
@@ -436,7 +473,9 @@ module INVERT
         pm2(i) = zero
       enddo
 
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! *** Inverse Fourier Transform ****
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       v1 = 0.
       v2 = 0.
@@ -482,14 +521,16 @@ module INVERT
       pxy1(:,j) = p1(:)
       pxy2(:,j) = p2(:)
 
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !  ****  stochastic forcing (small-scale narrow band) ****
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       call date_and_time(values=idate)
       call random_seed(size=isize)
       iseed=iseed*(idate(8)-500)
       call random_seed(put=iseed)
-      call random_number(anglex)  
-      call random_number(angley)  
+      call random_number(anglex)
+      call random_number(angley)
 
       do i = 1,imx
         !        fxy1(i,j,2) = exp(-dt/tau_fc)*fxy1(i,j,1)
@@ -520,10 +561,10 @@ module INVERT
         f1(i) = fxy1(i,j,2)
       enddo
 
-      vqz_1(j) = 0.
-      vqz_2(j) = 0.
-      uav1 = 0. 
-      uav2 = 0. 
+      vqz_1(j) = 0. ! bar(v'q'); v1 is v*q at each point in space
+      vqz_2(j) = 0. ! the imx normalizes the average
+      uav1 = 0. ! bar(u'dq'dx); this one is avection, the other
+      uav2 = 0. ! one is 
       do i = 1,imx
         vqz_1(j) = vqz_1(j) + v1(i)/float(imx)
         vqz_2(j) = vqz_2(j) + v2(i)/float(imx)
@@ -535,7 +576,9 @@ module INVERT
       um2 = zero
       fm1 = zero
 
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !   Forward FT   
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       as = 1./float(imx)
       call srcft(u1,um1,imx,as,hy)
       call srcft(u2,um2,imx,as,hy)
@@ -570,7 +613,9 @@ module INVERT
       f1r(:) = f_1_r(i,:)
       f1i(:) = f_1_i(i,:)
 
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !  Transform back to spectral space
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       tt_type=0
       CALL D_INIT_TRIG_TRANSFORM(jmax,tt_type,ipar,spar,ir)
@@ -603,7 +648,9 @@ module INVERT
       CALL D_FORWARD_TRIG_TRANSFORM(u2i,handle,ipar,spar,ir)
       CALL FREE_TRIG_TRANSFORM(handle,ipar,ir)
 
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !  finally reconstruct nonlinear jacoian and forcing terms in spectral space
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       do j = 1,nmax
         adv_1(i,j,3) = -(ur*u1r(j)+ui*u1i(j)) 
@@ -619,7 +666,9 @@ module INVERT
 
     enddo
 
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !  Transform zonal mean PV flux into spectral space 
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     !   write(6,*) 'max flux',maxval(vqz_1),minval(vqz_1)
 
@@ -644,7 +693,9 @@ module INVERT
       vqm_2(j,3) = 0.
     enddo
 
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Write diagnostic output, useful for reference; consider testing v in future
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! write(6,*) 'max flux',maxval(vqz_1),minval(vqz_1)
     if(mod(int(t),int(dt)*1000).eq.1) then
       write(6,*) 'Printing zonal mean diagnostics.'
