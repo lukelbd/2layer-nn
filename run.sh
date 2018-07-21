@@ -3,6 +3,7 @@
 # This script runs Noboru's 2-layer model for a series of different experiments
 # scratch=/scratch/midway2/t-970c07 # Momme's folder
 scratch=/scratch/midway2/holo # Sam's folder
+templates=experiments.txt # location of experiment templates
 prefix=runs2  # or 2layer
 exe=d.out     # executable compiled name
 nml=input.nml # nanmelist file name
@@ -44,8 +45,10 @@ fi
 #   User inputs arbitrary x=y statements
 #   Should be comma delimited (e.g. a=b,c=d)
 # Option 2:
-#   Update namelist parameters depending on 'experiment name' (standard input 1)
-#   Do not put spaces around = signs!
+#   Update namelist parameters by options for 'experiment name' defined in experiments.txt
+#   Syntax:
+#     * Template blocks are begun with 'expname:' (no leading spaces)
+#     * Template block ends with an empty line.
 if [[ -z "$expname" && -z "$updates" ]]; then
   # Default run
   echo "Using default namelist."
@@ -58,10 +61,9 @@ elif [[ ! -z "$updates" ]]; then
 elif ! $pponly; then
   # Option 2: Use templates
   # WARNING: Assignments cannot have spaces!
-  templates=experiments.txt
   echo "Using template \"$expname\" for namelist modification."
   [ ! -r "$templates" ] && echo "Error: Experiments file \"$templates\" available." && exit 1
-  updates="$(cat $templates | sed '/^'"$expname"':/,/^[[:space:]]*$/!d;//d')"
+  updates="$(cat $templates | sed '/^'"$expname"':/,/^[[:space:]]*$/!d;//d' | tr -d ' \t')"
   [ -z "$updates" ] && echo "Error: Unknown project identifier \"$expname\"." && exit 1
 fi
 # Running directory
