@@ -1,4 +1,5 @@
 # Ignore some directories
+scratch
 mod
 packages
 
