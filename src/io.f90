@@ -13,16 +13,16 @@ contains
     ! character (len=6) :: tstring   ! or just use timesteps
     ! write(tstring, '(i6.6)'), t/dt
 
-    shape(1) = imx
+    shape(1) = imax
     shape(2) = jmax+1
 
-    shape2(1) = imax
+    shape2(1) = idft
     shape2(2) = jmax+1 
 
     ret = dsadata("q1.df",2,shape,qxy1)
     ret = dsadata('q2.df',2,shape,qxy2)
 
-    do i = 1,imx
+    do i = 1,imax
       do j = 1,jmax+1
         qxy1(i,j) = qxy1(i,j) + qbar1(j) ! total PV
         qxy2(i,j) = qxy2(i,j) + qbar2(j) ! total PV

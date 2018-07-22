@@ -1,9 +1,10 @@
+default:
+
+
 quick:
   dt   = 100
   td   = 500
   tend = .1
-
-
 
 test1:
   dt   = 1500

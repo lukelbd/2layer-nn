@@ -1,6 +1,8 @@
-! ****** invert streamfunction from vorticity ****
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Invert streamfunction from vorticity
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 module INVERT
-  contains
+contains
   subroutine invert1(hx,hy)
     use GLOBAL_VARIABLES
     use mkl_dfti
@@ -26,21 +28,21 @@ module INVERT
     double precision :: p1r(jmax+1),p2r(jmax+1),p1i(jmax+1),p2i(jmax+1)
     double precision :: ub(jmax+1),uc(jmax+1)
     double precision :: vqz_1(jmax+1),vqz_2(jmax+1)
-    complex :: pb(imax,jmax+1),pc(imax,jmax+1)
-    double precision :: u1(imx),u2(imx)
-    double precision :: v1(imx),v2(imx)
-    double precision :: q1(imx),q2(imx)
-    double precision :: qx1(imx),qx2(imx)
-    double precision :: qy1(imx),qy2(imx)
-    double precision :: p1(imx),p2(imx)
-    double precision :: f1(imx)
-    double complex :: um1(imax),um2(imax)
-    double complex :: vm1(imax),vm2(imax)
-    double complex :: qm1(imax),qm2(imax)
-    double complex :: qxm1(imax),qxm2(imax)
-    double complex :: qym1(imax),qym2(imax)
-    double complex :: pm1(imax),pm2(imax)
-    double complex :: fm1(imax)
+    complex :: pb(idft,jmax+1),pc(idft,jmax+1)
+    double precision :: u1(imax),u2(imax)
+    double precision :: v1(imax),v2(imax)
+    double precision :: q1(imax),q2(imax)
+    double precision :: qx1(imax),qx2(imax)
+    double precision :: qy1(imax),qy2(imax)
+    double precision :: p1(imax),p2(imax)
+    double precision :: f1(imax)
+    double complex :: um1(idft),um2(idft)
+    double complex :: vm1(idft),vm2(idft)
+    double complex :: qm1(idft),qm2(idft)
+    double complex :: qxm1(idft),qxm2(idft)
+    double complex :: qym1(idft),qym2(idft)
+    double complex :: pm1(idft),pm2(idft)
+    double complex :: fm1(idft)
 
     integer::isize,idate(8)
     integer,allocatable::iseed(:)
@@ -91,11 +93,11 @@ module INVERT
       vqz_2(j) = 0.
       uav1 = 0. 
       uav2 = 0. 
-      do i = 1,imx
-        vqz_1(j) = vqz_1(j) + v1(i)/float(imx)
-        vqz_2(j) = vqz_2(j) + v2(i)/float(imx)
-        uav1 = uav1 + u1(i)/float(imx)
-        uav2 = uav2 + u2(i)/float(imx)
+      do i = 1,imax
+        vqz_1(j) = vqz_1(j) + v1(i)/float(imax)
+        vqz_2(j) = vqz_2(j) + v2(i)/float(imax)
+        uav1 = uav1 + u1(i)/float(imax)
+        uav2 = uav2 + u2(i)/float(imax)
       enddo
       tt_type=0
       CALL D_INIT_TRIG_TRANSFORM(jmax,tt_type,ipar,spar,ir)
@@ -206,8 +208,7 @@ module INVERT
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !  **** Transform u,v,vort to physical space ****
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    do i = 1,imax
+    do i = 1,idft
       do j = 1,jmax+1
         u1r(j) = real(u_1(i,j))
         u1i(j) = aimag(u_1(i,j))
@@ -235,6 +236,8 @@ module INVERT
         p2i(j) = aimag(psi_2(i,j))
       enddo
 
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! TT type 0
       tt_type=0
       CALL D_INIT_TRIG_TRANSFORM(jmax,tt_type,ipar,spar,ir)
       CALL D_COMMIT_TRIG_TRANSFORM(v1r,handle,ipar,spar,ir)
@@ -332,6 +335,7 @@ module INVERT
       p_2_i(i,:) = p2i(:)
       CALL FREE_TRIG_TRANSFORM(handle,ipar,ir)
 
+      ! TT type 0
       tt_type=1
       CALL D_INIT_TRIG_TRANSFORM(jmax,tt_type,ipar,spar,ir)
       CALL D_COMMIT_TRIG_TRANSFORM(u1r,handle,ipar,spar,ir)
@@ -397,7 +401,7 @@ module INVERT
       pm1 = zero
       pm2 = zero
 
-      do i = 1,imax
+      do i = 1,idft
         vm1(i) = ur*v_1_r(i,j)+ui*v_1_i(i,j)
         vm2(i) = ur*v_2_r(i,j)+ui*v_2_i(i,j)
         um1(i) = ur*u_1_r(i,j)+ui*u_1_i(i,j)
@@ -411,7 +415,7 @@ module INVERT
         pm1(i) = ur*p_1_r(i,j)+ui*p_1_i(i,j)
         pm2(i) = ur*p_2_r(i,j)+ui*p_2_i(i,j)
 
-        if(i.gt.1.and.i.lt.imax) then
+        if(i.gt.1.and.i.lt.idft) then
           fac = 0.5
         else
           fac = 1.0
@@ -458,7 +462,7 @@ module INVERT
       pm1(1) = zero
       pm2(1) = zero
 
-      do i = mmax+1,imax
+      do i = mmax+1,idft
         vm1(i) = zero
         vm2(i) = zero
         um1(i) = zero
@@ -491,18 +495,18 @@ module INVERT
       p2 = 0.
 
       as = 1.
-      call scrft(vm1,v1,imx,as,hx)
-      call scrft(vm2,v2,imx,as,hx)
-      call scrft(um1,u1,imx,as,hx)
-      call scrft(um2,u2,imx,as,hx)
-      call scrft(qm1,q1,imx,as,hx)
-      call scrft(qm2,q2,imx,as,hx)
-      call scrft(qxm1,qx1,imx,as,hx)
-      call scrft(qxm2,qx2,imx,as,hx)
-      call scrft(qym1,qy1,imx,as,hx)
-      call scrft(qym2,qy2,imx,as,hx)
-      call scrft(pm1,p1,imx,as,hx)
-      call scrft(pm2,p2,imx,as,hx)
+      call scrft(vm1,v1,imax,as,hx)
+      call scrft(vm2,v2,imax,as,hx)
+      call scrft(um1,u1,imax,as,hx)
+      call scrft(um2,u2,imax,as,hx)
+      call scrft(qm1,q1,imax,as,hx)
+      call scrft(qm2,q2,imax,as,hx)
+      call scrft(qxm1,qx1,imax,as,hx)
+      call scrft(qxm2,qx2,imax,as,hx)
+      call scrft(qym1,qy1,imax,as,hx)
+      call scrft(qym2,qy2,imax,as,hx)
+      call scrft(pm1,p1,imax,as,hx)
+      call scrft(pm2,p2,imax,as,hx)
 
       !   q', dq'/dx, dq'/dy fields
       qxy1(:,j) = q1(:)
@@ -532,7 +536,7 @@ module INVERT
       call random_number(anglex)
       call random_number(angley)
 
-      do i = 1,imx
+      do i = 1,imax
         !        fxy1(i,j,2) = exp(-dt/tau_fc)*fxy1(i,j,1)
         fxy1(i,j,2) = 0.5*fxy1(i,j,1)
         do k = 41,46
@@ -544,13 +548,13 @@ module INVERT
               !       + (1.-exp(-dt/tau_fc))*famp*ymask(j)*  &
             + 0.5*famp*ampl*ymask(j)*  &
               sin(float(j-1)*ell/float(jmax)+angley)*  &
-              cos(rkk*(float(i-1)/float(imx)+anglex)) 
+              cos(rkk*(float(i-1)/float(imax)+anglex)) 
           enddo
         enddo
       enddo
 
 
-      do i = 1,imx
+      do i = 1,imax
         v1(i) = vxy1(i,j)*qxy1(i,j)
         v2(i) = vxy2(i,j)*qxy2(i,j)
         u1(i) = (uxy1(i,j)+ubar1(j)+u0)*qxx1(i,j)
@@ -562,14 +566,14 @@ module INVERT
       enddo
 
       vqz_1(j) = 0. ! bar(v'q'); v1 is v*q at each point in space
-      vqz_2(j) = 0. ! the imx normalizes the average
+      vqz_2(j) = 0. ! the imax normalizes the average
       uav1 = 0. ! bar(u'dq'dx); this one is avection, the other
       uav2 = 0. ! one is 
-      do i = 1,imx
-        vqz_1(j) = vqz_1(j) + v1(i)/float(imx)
-        vqz_2(j) = vqz_2(j) + v2(i)/float(imx)
-        uav1 = uav1 + u1(i)/float(imx)
-        uav2 = uav2 + u2(i)/float(imx)
+      do i = 1,imax
+        vqz_1(j) = vqz_1(j) + v1(i)/float(imax)
+        vqz_2(j) = vqz_2(j) + v2(i)/float(imax)
+        uav1 = uav1 + u1(i)/float(imax)
+        uav2 = uav2 + u2(i)/float(imax)
       enddo
 
       um1 = zero
@@ -579,13 +583,13 @@ module INVERT
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !   Forward FT   
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      as = 1./float(imx)
-      call srcft(u1,um1,imx,as,hy)
-      call srcft(u2,um2,imx,as,hy)
-      call srcft(f1,fm1,imx,as,hy)
+      as = 1./float(imax)
+      call srcft(u1,um1,imax,as,hy)
+      call srcft(u2,um2,imax,as,hy)
+      call srcft(f1,fm1,imax,as,hy)
 
-      do i = 1,imax
-        if(i.gt.1.and.i.lt.imax) then
+      do i = 1,idft
+        if(i.gt.1.and.i.lt.idft) then
           fac = 2.0
         else
           fac = 1.0
@@ -604,7 +608,7 @@ module INVERT
 
     enddo
 
-    do i = 1,imax
+    do i = 1,idft
       rkk = rk*float(i-1)
       u1r(:) = u_1_r(i,:)
       u1i(:) = u_1_i(i,:)

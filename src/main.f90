@@ -11,7 +11,7 @@ program main
   use INVERT
   type(DFTI_DESCRIPTOR), POINTER :: HX,HY
   integer :: L(1)
-  L(1) = imx
+  L(1) = imax
 
   ! ****** Initialize fields ****  
   call read_namelist ! (global_variables.f90)

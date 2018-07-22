@@ -2,13 +2,15 @@ module GLOBAL_VARIABLES
   implicit none
   !----------------------------------------------------------------------------!
   !    ---- Initial stuff, and dimensions that must be hard-coded ----
-  real, parameter :: pi=3.141592653589793                      ! pi
-  integer :: t                                                 ! time tracker
-  complex :: ur = (1.,0.), ui = (0.,1.), zero = (0.,0.)        ! initial flow
-  integer, parameter :: tstart=0                               ! initial time
-  integer, parameter :: imx=256, jmax=256, mmax=85, nmax=170   ! dimensions
-  integer, parameter :: imax=1+imx/2                           ! myserious
+  real, parameter :: pi=3.141592653589793
+  complex :: ur = (1.,0.), ui = (0.,1.), zero = (0.,0.)
+  integer :: t         ! time tracker
   real :: energy2, cfl ! for monitoring integration
+  integer, parameter :: tstart=0          ! initial time
+  integer, parameter :: imax=256, jmax=256 ! grid size
+  integer, parameter :: mmax=85, nmax=170 ! 170+85 = 255, dunno what these are for
+  integer, parameter :: idft=1+imax/2      ! signal is real, so need only N/2-1 complex coeffs
+                                          ! plus the A_0 and A_(N/2) coeffs
 
   !    ---- To be calculated in subroutine below ----
   real :: damp, dx, dy, el, rk, bounds_l, bounds_k
@@ -26,41 +28,46 @@ module GLOBAL_VARIABLES
   real :: visc, ndeg                                  ! hyperviscocity
 
   !    ---- Noboru's arrays ----
-  complex :: vort_1(imax,jmax+1,4),force_1(imax,jmax+1), &
-         psi_1(imax,jmax+1), u_1(imax,jmax+1), v_1(imax,jmax+1), &
-         adv_1(imax,jmax+1,3),visc_1(imax,jmax+1),q_1(imax,jmax+1), &
-         qx_1(imax,jmax+1),qy_1(imax,jmax+1),rad_1(imax,jmax+1)
-  complex :: vort_2(imax,jmax+1,4), &
-         psi_2(imax,jmax+1), u_2(imax,jmax+1), v_2(imax,jmax+1), &
-         adv_2(imax,jmax+1,3),visc_2(imax,jmax+1),q_2(imax,jmax+1), &
-         qx_2(imax,jmax+1),qy_2(imax,jmax+1),rad_2(imax,jmax+1),&
-         fric_2(imax,jmax+1)
+  ! Arrays storing Fourier coefficients from x-direction decomposition
+  complex :: vort_1(idft,jmax+1,4), psi_1(idft,jmax+1),  &
+         adv_1(idft,jmax+1,3), u_1(idft,jmax+1),   v_1(idft,jmax+1), &
+         visc_1(idft,jmax+1),  rad_1(idft,jmax+1), force_1(idft,jmax+1), &
+         q_1(idft,jmax+1),     qx_1(idft,jmax+1),  qy_1(idft,jmax+1)
+  complex :: vort_2(idft,jmax+1,4), psi_2(idft,jmax+1),  &
+         adv_2(idft,jmax+1,3), u_2(idft,jmax+1),   v_2(idft,jmax+1), &
+         visc_2(idft,jmax+1),  rad_2(idft,jmax+1), fric_2(idft,jmax+1), &
+         q_2(idft,jmax+1),     qx_2(idft,jmax+1),  qy_2(idft,jmax+1)
 
-  real :: ueq(jmax+1),uf(imx,jmax+1),ymask(jmax+1), &
-          u_1_r(imax,jmax+1),u_1_i(imax,jmax+1),&
-          v_1_r(imax,jmax+1),v_1_i(imax,jmax+1),&
-          q_1_r(imax,jmax+1),q_1_i(imax,jmax+1),&
-          f_1_r(imax,jmax+1),f_1_i(imax,jmax+1),&
-          qx_1_r(imax,jmax+1),qx_1_i(imax,jmax+1),&
-          qy_1_r(imax,jmax+1),qy_1_i(imax,jmax+1),&
-          p_1_r(imax,jmax+1),p_1_i(imax,jmax+1),&
-          vqm_1(jmax+1,3), fxy1(imx,jmax+1,2),&
-          qxy1(imx,jmax+1),vxy1(imx,jmax+1),&
-          pxy1(imx,jmax+1),uxy1(imx,jmax+1),umean1(jmax+1),&
-          qxx1(imx,jmax+1),qyy1(imx,jmax+1),qymean1(jmax+1,4)
+  ! Special arrays
+  real :: ueq(jmax+1), uf(imax,jmax+1), ymask(jmax+1)
+
+  ! Arrays storing real and imaginary components of Fourier decomposition
+  real :: u_1_r(idft,jmax+1),  u_1_i(idft,jmax+1),  &
+          v_1_r(idft,jmax+1),  v_1_i(idft,jmax+1),  &
+          q_1_r(idft,jmax+1),  q_1_i(idft,jmax+1),  &
+          f_1_r(idft,jmax+1),  f_1_i(idft,jmax+1),  &
+          qx_1_r(idft,jmax+1), qx_1_i(idft,jmax+1), &
+          qy_1_r(idft,jmax+1), qy_1_i(idft,jmax+1), &
+          p_1_r(idft,jmax+1),  p_1_i(idft,jmax+1)
+  real :: u_2_r(idft,jmax+1),  u_2_i(idft,jmax+1),  &
+          v_2_r(idft,jmax+1),  v_2_i(idft,jmax+1),  &
+          q_2_r(idft,jmax+1),  q_2_i(idft,jmax+1),  &
+          qx_2_r(idft,jmax+1), qx_2_i(idft,jmax+1), &
+          qy_2_r(idft,jmax+1), qy_2_i(idft,jmax+1), &
+          p_2_r(idft,jmax+1),  p_2_i(idft,jmax+1)
+
+  ! Derivatives and other diagnostics in real space
+  real :: vqm_1(jmax+1,3), fxy1(imax,jmax+1,2), &
+          uxy1(imax,jmax+1), vxy1(imax,jmax+1), pxy1(imax,jmax+1), &
+          qxy1(imax,jmax+1), qxx1(imax,jmax+1), qyy1(imax,jmax+1), &
+          umean1(jmax+1), qymean1(jmax+1,4)
+  real :: vqm_2(jmax+1,3), &
+          uxy2(imax,jmax+1), vxy2(imax,jmax+1), pxy2(imax,jmax+1), &
+          qxy2(imax,jmax+1), qxx2(imax,jmax+1), qyy2(imax,jmax+1), &
+          umean2(jmax+1), qymean2(jmax+1,4)
+
+  ! Other stuff that has to be double precision for some reason
   double precision :: qby_1(jmax+1),qbar1(jmax+1),ubar1(jmax+1)
-
-  real ::  &
-          u_2_r(imax,jmax+1),u_2_i(imax,jmax+1),&
-          v_2_r(imax,jmax+1),v_2_i(imax,jmax+1),&
-          q_2_r(imax,jmax+1),q_2_i(imax,jmax+1),&
-          qx_2_r(imax,jmax+1),qx_2_i(imax,jmax+1),&
-          qy_2_r(imax,jmax+1),qy_2_i(imax,jmax+1),&
-          p_2_r(imax,jmax+1),p_2_i(imax,jmax+1),&
-          vqm_2(jmax+1,3),&
-          qxy2(imx,jmax+1),vxy2(imx,jmax+1),&
-          qxx2(imx,jmax+1),qyy2(imx,jmax+1),umean2(jmax+1),&
-          pxy2(imx,jmax+1),uxy2(imx,jmax+1),qymean2(jmax+1,4)
   double precision :: qby_2(jmax+1),qbar2(jmax+1),ubar2(jmax+1)
 
   contains
@@ -68,7 +75,7 @@ module GLOBAL_VARIABLES
   subroutine read_namelist
     implicit none
     !    ---- Declare namelist ----
-    real :: tau_f2sponge(jmax)
+    real :: tau_farray(jmax)
     namelist /input_nml/ &
       ll_seed_on, init_jet, &
       width, wlength, &
@@ -100,7 +107,7 @@ module GLOBAL_VARIABLES
     jet_sigma = rd*jet_sigma ! (m) from rossby radii to sigma
 
     !    ---- Calc previously declared, empty variables ----
-    dx = wlength/float(imx) ! (1000km) grid resolution in x
+    dx = wlength/float(imax) ! (1000km) grid resolution in x
     dy = width/float(jmax)  ! (1000km) grid resolution in y
     el = pi/width           ! (1/m) meridional wavenum scaling
     rk = 2.*pi/wlength      ! (1/m) zonal wavenum scaling

@@ -34,7 +34,7 @@ ifort -O3 "./io.o" "exec.o" "./invert.o" "./ftm.o" "./forward.o" \
   "./global_variables.o" "./main.o" "./initial.o"  \
   -mkl -I/project2/rossby/models/2layer_nn/packages/include \
   -L/project2/rossby/models/2layer_nn/packages/lib \
-  -lmfhdf -ldf -ljpeg -lz -o "./d.out"; check
+  -lmfhdf -ldf -ljpeg -lz -o "./2layer.x"; check
 # Alternative makefile, doesn't require module loads it seems, just uses /opt files
 # ifort -c global_variables.f90
 # ifort -c forward.f90
@@ -46,4 +46,4 @@ ifort -O3 "./io.o" "exec.o" "./invert.o" "./ftm.o" "./forward.o" \
 # ifort -c -mkl main.f90
 # ifort -O3 "./io.o" "exec.o" "./invert.o" "./ftm.o" "./forward.o" "./global_variables.o" \
 #   "./main.o" "./initial.o"  -mkl -I/opt/hdf4/intel/include \
-#   -L/opt/hdf4/intel/lib -lmfhdf -ldf -ljpeg -lz -o "./d.out"
+#   -L/opt/hdf4/intel/lib -lmfhdf -ldf -ljpeg -lz -o "./2layer.x"

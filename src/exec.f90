@@ -13,7 +13,7 @@ contains
 
     ! ------ Compute energy -------
     energy2 = 0.5*sum(vxy1*vxy1 + vxy2*vxy2 +  &
-      uxy1*uxy1 + uxy2*uxy2)/float(imx*(jmax+1))
+      uxy1*uxy1 + uxy2*uxy2)/float(imax*(jmax+1))
 
     do j = 2,nmax
       ell = el*float(j-1)
@@ -49,7 +49,7 @@ contains
         vort_2(i,j,4) = vort_2(i,j,4) + dt*fric_2(i,j)
       enddo
 
-      do i = mmax+1,imax
+      do i = mmax+1,idft
         vort_1(i,j,4) = (0.,0.)
         vort_2(i,j,4) = (0.,0.)
       enddo

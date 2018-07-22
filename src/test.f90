@@ -3,14 +3,14 @@ program test
   use MKL_DFTI
   use FTM
 
-  integer,parameter :: imax = 129, imx = 256, mmax = 85
+  integer,parameter :: idft = 129, imax = 256, mmax = 85
   complex :: ur,ui
-  double precision :: p1(imx),p2(imx)
-  double complex :: pm1(imax),pm2(imax)
+  double precision :: p1(imax),p2(imax)
+  double complex :: pm1(idft),pm2(idft)
   type(DFTI_DESCRIPTOR), POINTER :: HX
   integer :: L(1)
 
-  L(1) = imx
+  L(1) = imax
 
   Status = DftiCreateDescriptor( HX, DFTI_DOUBLE, &
     DFTI_REAL, 1, L)
@@ -28,8 +28,8 @@ program test
   pm2 = zero
   pm2(2) = ui
 
-  do i = 1,imax
-  if(i.gt.1.and.i.lt.imax) then
+  do i = 1,idft
+  if(i.gt.1.and.i.lt.idft) then
     fac = 0.5
   else
     fac = 1.0
@@ -44,7 +44,7 @@ program test
   endif
   enddo
 
-  do i = mmax+1,imax
+  do i = mmax+1,idft
   pm1(i) = zero
   pm2(i) = zero
   enddo
@@ -52,10 +52,10 @@ program test
   ! *** Inverse Fourier Transform ****
 
   as = 1.
-  call scrft(pm1,p1,imx,as,hx)
-  call scrft(pm2,p2,imx,as,hx)
+  call scrft(pm1,p1,imax,as,hx)
+  call scrft(pm2,p2,imax,as,hx)
 
-  do i = 1,imx
+  do i = 1,imax
   write(6,*) 'itest ',i,p1(i),p2(i)
   enddo
   Status = DftiFreeDescriptor( HX )

@@ -17,7 +17,7 @@ contains
     real :: y,yh,yph,phi,sech2
     real :: x,xph,rer,ell,aap 
 
-    real :: r(imax,jmax+1)
+    real :: r(idft,jmax+1)
     double precision :: spar(3*jmax/2+2)
     type(dfti_descriptor), pointer :: handle
 
