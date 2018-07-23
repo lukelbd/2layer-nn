@@ -1,11 +1,11 @@
 !**** Controls I/O *******
 
-module IO
+module io
 contains
 
   subroutine dataio
 
-    use GLOBAL_VARIABLES
+    use global_variables
     implicit none
     integer :: i,j,ret,shape(2),shape2(2),dsadata
     ! character (len=8) :: tstring ! time string with leading zeros

@@ -29,7 +29,7 @@
              dqdy2(j) = beta - const*exp(-o2)
              pb(j) = -(dqdy1(j)+dqdy2(j)-2.*beta)
              pc(j) = -(dqdy1(j)-dqdy2(j))
-             write(6,*) j,y,dqdy1(j),dqdy2(j),dqdy1(j)-dqdy2(j)
+             write(*,*) j,y,dqdy1(j),dqdy2(j),dqdy1(j)-dqdy2(j)
             enddo
 
              al(jmax-1) = 0.
@@ -52,7 +52,7 @@
             do j = 1,jmax
              u1(j) = 0.5*(ub(j)+uc(j)) 
              u2(j) = 0.5*(ub(j)-uc(j)) 
-             write(6,*) j,u1(j),u2(j)
+             write(*,*) j,u1(j),u2(j)
             enddo
             stop
             end

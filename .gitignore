@@ -8,6 +8,10 @@ packages
   # my vim sessions
 *.pyc
   # python compiled
+*.mod
+*.so
+*.o
+  # fortran compiled
 *.log
 *.out
 *.err

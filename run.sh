@@ -22,7 +22,7 @@ case $HOSTNAME in
   uriah*)  scratch=$(pwd)/scratch ;;
   *) echo "Error: Unknown host $HOSTNAME. Edit this script to add a scratch location." && exit 1
 esac
-exe=d.out     # executable compiled name
+exe=2layer.x  # executable compiled name
 nml=input.nml # nanmelist file name
 cwd="$(pwd)"  # directory this script was called in
 [ ! -x "$exe" ]     && echo "Error: Executable \"$exe\" does not exist, or is not executable." && exit 1
