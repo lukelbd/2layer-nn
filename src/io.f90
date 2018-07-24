@@ -1,56 +1,57 @@
-!**** Controls I/O *******
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Data output
+! Note dsadata is a ***function***, and you gotta declare functions
+! just like you declare a variable. Subroutines are different, just have
+! to be 'call'ed.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 module io
 contains
+subroutine dataio
+  use global_variables
+  implicit none
+  integer :: i,j,ret,shape1(2),shape2(2),shape3(1),dsadata
+  ! character (len=8) :: tstring ! time string with leading zeros
+  ! write(tstring, '(i8.8)'), t  ! flexible, allows for a few hundred days
+  ! character (len=6) :: tstring   ! or just use timesteps
+  ! write(tstring, '(i6.6)'), t/dt
 
-  subroutine dataio
+  shape1(1) = imax
+  shape1(2) = jmax
 
-    use global_variables
-    implicit none
-    integer :: i,j,ret,shape(2),shape2(2),dsadata
-    ! character (len=8) :: tstring ! time string with leading zeros
-    ! write(tstring, '(i8.8)'), t  ! flexible, allows for a few hundred days
-    ! character (len=6) :: tstring   ! or just use timesteps
-    ! write(tstring, '(i6.6)'), t/dt
+  shape2(1) = idft
+  shape2(2) = jmax 
 
-    shape(1) = imax
-    shape(2) = jmax+1
+  shape3(1) = jmax
 
-    shape2(1) = idft
-    shape2(2) = jmax+1 
+  ret = dsadata('q1.df',2,shape1,qxy1)
+  ret = dsadata('q2.df',2,shape1,qxy2)
 
-    ret = dsadata("q1.df",2,shape,qxy1)
-    ret = dsadata('q2.df',2,shape,qxy2)
+  ret = dsadata('f1.df',2,shape1,fxy1) ! forcing
 
-    do i = 1,imax
-      do j = 1,jmax+1
-        qxy1(i,j) = qxy1(i,j) + qbar1(j) ! total PV
-        qxy2(i,j) = qxy2(i,j) + qbar2(j) ! total PV
-      enddo
-    enddo
-    ret = dsadata('v1.df',2,shape,vxy1)
-    ret = dsadata('v2.df',2,shape,vxy2)
+  ! do i = 1,imax
+  !   do j = 1,jmax
+  !     qxy1(i,j) = qxy1(i,j) + qbar1(j) ! total PV
+  !     qxy2(i,j) = qxy2(i,j) + qbar2(j) ! total PV
+  !   enddo
+  ! enddo
 
-    ret = dsadata('u1.df',2,shape,uxy1)
-    ret = dsadata('u2.df',2,shape,uxy2)
+  ret = dsadata('v1.df',2,shape1,vxy1)
+  ret = dsadata('v2.df',2,shape1,vxy2)
 
-    ! ret = dsadata('u1_total.df',2,shape,u_1_r)
-    ! ret = dsadata('u2_total.df',2,shape,u_2_r)
-    ret = dsadata('u1_zonalmean.df',1,(/jmax+1/),ubar1)
-    ret = dsadata('u2_zonalmean.df',1,(/jmax+1/),ubar2)
+  ret = dsadata('u1.df',2,shape1,uxy1)
+  ret = dsadata('u2.df',2,shape1,uxy2)
 
-    ret = dsadata('psi1.df',2,shape2,psi_1)
-    ret = dsadata('psi2.df',2,shape2,psi_2)
+  ! ret = dsadata('u1_zonalmean.df',1,shape3,ubar1)
+  ! ret = dsadata('u2_zonalmean.df',1,shape3,ubar2)
 
-    ret = dsadata('q1_zonalmean.df',1,(/jmax+1/),qbar1)
-    ret = dsadata('q2_zonalmean.df',1,(/jmax+1/),qbar2)
+  ! ret = dsadata('psi1.df',2,shape2,psi1_c)
+  ! ret = dsadata('psi2.df',2,shape2,psi2_c)
 
-    !ret = dsadata('dqdy1.df',1,jmax+1,qbar1)
-    !ret = dsadata('dqdy2.df',1,jmax+1,qbar2)
+  ! ret = dsadata('q1_zonalmean.df',1,shape3,qbar1)
+  ! ret = dsadata('q2_zonalmean.df',1,shape3,qbar2)
 
-    ret = dsadata('eke.df',1, 1, energy2)
+  ret = dsadata('eke.df',1, 1, energy2)
 
-    return
-  end subroutine
-
+  return
+end subroutine
 end module

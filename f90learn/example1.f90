@@ -6,11 +6,19 @@ program test
   integer :: n, m
   integer :: array(5) = 2
   complex :: comp(2) = (/ (20,-1), (0,5) /)
+  integer :: grid1(3,3) = 5
+  integer :: grid2(3,3) = 5
   real :: empty(10)
-  print *, real(comp(:))
-  print *, sum(array)
-  array(2:3) = 0
-  print *, array
+  ! weird(:,1:1) = (/1, 2, 3/)
+  grid1(:,1:1) = reshape((/1, 2, 3/),(/3, 1/))
+  grid2(:,1) = (/1, 2, 3/)
+  ! minval(array)
+  print *, grid1
+  print *, grid2
+  ! print *, real(comp(:))
+  ! print *, sum(array)
+  ! array(2:3) = 0
+  ! print *, array
   ! print *,empty
   ! do i=1,5
   !   print *,i

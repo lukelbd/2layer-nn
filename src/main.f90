@@ -3,9 +3,8 @@
 ! Nonlinear 2 layer baroclinic instability on the beta-plane.
 ! Periodic in x and rigid walls at north and south.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 program main
-  ! implicit none
+  ! implicit none ! must be commented out, due to global variables error
   use mkl_dfti
   use global_variables
   use initial
@@ -47,7 +46,7 @@ program main
     call prog    ! (prognostics.f90) eddy prognostic equation
     call iterate ! (forward.f90) time forwarding
     ! Testing things
-    print *, y0, tend, tchange, tds, tau_r, tau_f, tau_2, rd, width, wlength, sigma_jet
+    ! print *, y0, tend, tchange, tds, tau_r, tau_f, tau_2, rd, width, wlength, sigma_jet
     stop
     ! Test
   enddo

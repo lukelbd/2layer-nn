@@ -9,11 +9,11 @@ module global_variables
   ! Timing
   integer, parameter :: tstart=0
   ! Grid resolution (number of cells)
-  integer, parameter :: imax=512, jmax=256
+  integer, parameter :: imax=512, jmax=256+1 ! we want a point exactly at y=0
   ! integer, parameter :: imax=256, jmax=256
   ! Number complex coefficients for cyclic DFT in x-direction
   ! Signal is real, so need only N/2-1 complex coeffs plus the A_0 and A_(N/2) coeffs
-  ! For y sine transform, coefficients are all real; need all <jmax> of them
+  ! For y sine transform, coefficients are all real; need all <jmax> of them plus the constant offset
   ! See: https://en.wikipedia.org/wiki/Discrete_Fourier_transform#The_real-input_DFT
   integer, parameter :: idft=1+imax/2
   ! Truncation of y-sine ft and x-dft to resolve (avoid aliasing) quadratic terms
@@ -40,46 +40,26 @@ module global_variables
 
   !    ---- Noboru's arrays ----
   ! Arrays storing Fourier coefficients from x-direction decomposition
-  complex :: vort_1(idft,jmax+1,4), psi_1(idft,jmax+1),  &
-         adv_1(idft,jmax+1,3), u_1(idft,jmax+1),   v_1(idft,jmax+1), &
-         visc_1(idft,jmax+1),  rad_1(idft,jmax+1), force_1(idft,jmax+1), &
-         q_1(idft,jmax+1),     qx_1(idft,jmax+1),  qy_1(idft,jmax+1)
-  complex :: vort_2(idft,jmax+1,4), psi_2(idft,jmax+1),  &
-         adv_2(idft,jmax+1,3), u_2(idft,jmax+1),   v_2(idft,jmax+1), &
-         visc_2(idft,jmax+1),  rad_2(idft,jmax+1), fric_2(idft,jmax+1), &
-         q_2(idft,jmax+1),     qx_2(idft,jmax+1),  qy_2(idft,jmax+1)
-
-  ! Special arrays
-  real :: ueq(jmax+1), uf(imax,jmax+1), ymask(jmax+1)
-
-  ! Arrays storing real and imaginary components of Fourier decomposition
-  real :: u_1_r(idft,jmax+1),  u_1_i(idft,jmax+1),  &
-          v_1_r(idft,jmax+1),  v_1_i(idft,jmax+1),  &
-          q_1_r(idft,jmax+1),  q_1_i(idft,jmax+1),  &
-          f_1_r(idft,jmax+1),  f_1_i(idft,jmax+1),  &
-          qx_1_r(idft,jmax+1), qx_1_i(idft,jmax+1), &
-          qy_1_r(idft,jmax+1), qy_1_i(idft,jmax+1), &
-          p_1_r(idft,jmax+1),  p_1_i(idft,jmax+1)
-  real :: u_2_r(idft,jmax+1),  u_2_i(idft,jmax+1),  &
-          v_2_r(idft,jmax+1),  v_2_i(idft,jmax+1),  &
-          q_2_r(idft,jmax+1),  q_2_i(idft,jmax+1),  &
-          qx_2_r(idft,jmax+1), qx_2_i(idft,jmax+1), &
-          qy_2_r(idft,jmax+1), qy_2_i(idft,jmax+1), &
-          p_2_r(idft,jmax+1),  p_2_i(idft,jmax+1)
-
+  complex :: q1_c(idft,jmax,4), psi1_c(idft,jmax),  &
+         adv1_c(idft,jmax,3), u1_c(idft,jmax),   v1_c(idft,jmax),     &
+         visc1_c(idft,jmax),  rad1_c(idft,jmax), force1_c(idft,jmax), &
+         qx1_c(idft,jmax),    qy1_c(idft,jmax)
+  complex :: q2_c(idft,jmax,4), psi2_c(idft,jmax),  &
+         adv2_c(idft,jmax,3), u2_c(idft,jmax),   v2_c(idft,jmax),   &
+         visc2_c(idft,jmax),  rad2_c(idft,jmax), fric_2(idft,jmax), &
+         qx2_c(idft,jmax),    qy2_c(idft,jmax)
+  ! Special array
+  real :: ymask(jmax)
   ! Derivatives and other diagnostics in real space
-  real :: vqm_1(jmax+1,3), fxy1(imax,jmax+1,2), &
-          uxy1(imax,jmax+1), vxy1(imax,jmax+1), pxy1(imax,jmax+1), &
-          qxy1(imax,jmax+1), qxx1(imax,jmax+1), qyy1(imax,jmax+1)
-  real :: vqm_2(jmax+1,3), &
-          uxy2(imax,jmax+1), vxy2(imax,jmax+1), pxy2(imax,jmax+1), &
-          qxy2(imax,jmax+1), qxx2(imax,jmax+1), qyy2(imax,jmax+1)
+  real :: fxy1(imax,jmax,2), ufull1(imax,jmax), &
+          uxy1(imax,jmax), vxy1(imax,jmax), pxy1(imax,jmax), &
+          qxy1(imax,jmax), qxx1(imax,jmax), qyy1(imax,jmax)
+  real :: ufull2(imax,jmax), &
+          uxy2(imax,jmax), vxy2(imax,jmax), pxy2(imax,jmax), &
+          qxy2(imax,jmax), qxx2(imax,jmax), qyy2(imax,jmax)
   ! Special; stores mean and mean gradient
-  real :: umean1(jmax+1), qymean1(jmax+1,4), &
-          umean2(jmax+1), qymean2(jmax+1,4)
-  ! Other stuff that has to be double precision for some reason
-  double precision :: qby_1(jmax+1),qbar1(jmax+1),ubar1(jmax+1)
-  double precision :: qby_2(jmax+1),qbar2(jmax+1),ubar2(jmax+1)
+  real :: umean1(jmax), qyyflux1(jmax,3), qymean1(jmax,4), &
+          umean2(jmax), qyyflux2(jmax,3), qymean2(jmax,4)
 
   contains
 
@@ -119,7 +99,7 @@ module global_variables
 
     !    ---- Calculate dependent variables ----
     dx = wlength/float(imax) ! (m) grid resolution in x
-    dy = width/float(jmax)   ! (m) grid resolution in y
+    dy = width/float(jmax-1) ! (m) grid resolution in y; non-cyclic so use -1, or something
     el = pi/width            ! (1/m) converts radians to meridional wavenums
     rk = 2.*pi/wlength       ! (1/m) converts radians to zonal wavenums
     damp = visc*(dx**ndeg)/(dt*(pi**ndeg))  ! (m**ndeg/s) hyperviscocity

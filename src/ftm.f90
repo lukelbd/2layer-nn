@@ -3,6 +3,8 @@ contains
 subroutine srcft(x,y,n,as,hx)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Forward transform, 'real to complex'
+! Remember for real signal, the N/2-N coefficients are complex conjugates
+! of the 1-N coefficients. We can combine them.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   use mkl_dfti
   implicit none
