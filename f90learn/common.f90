@@ -1,3 +1,4 @@
+! common blocks
 ! communicate files declared in subroutine to 
 program myprog 
   integer i1, i2
@@ -22,6 +23,8 @@ subroutine mysubr
 
   common /john/ i1, f1    ! must be in same order !!!
 
+  ! First values are initiated
+  print *,i1,f1,i2,f2
 
   i1 = 5555
   f1 = 6666

@@ -25,9 +25,9 @@
 !  2. go to $MKLROOT/include, and check out the
 !     mkl_dfti.f90 and mkl_trig_transforms.f90 files
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Warning:
-! Variables are often not what they seem. The 'tt' variables can be in cartesian
-! y coordinates or spectral sine/cosine y coordinates.
+! Warning: Several tricks to be aware of
+! We always calculate u ***relative to a background shear***. Need to add that
+! to wind in the upper layer to get its true value.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 module diagnostics
 contains
@@ -54,59 +54,66 @@ subroutine diag(hx,hy)
   ! Arrays storing fully spectral data (real/imaginary coeffs of
   ! x-Fourier decomposition, and trig transform in y)
   ! Sometimes u/v will hold wind, sometimes flux
-  real :: u1_r(idft,jmax),  u1_i(idft,jmax),  &
-          v1_r(idft,jmax),  v1_i(idft,jmax),  &
-          q1_r(idft,jmax),  q1_i(idft,jmax),  &
-          qx1_r(idft,jmax), qx1_i(idft,jmax), &
-          qy1_r(idft,jmax), qy1_i(idft,jmax), &
-          p1_r(idft,jmax),  p1_i(idft,jmax), &
+  real :: u1_r(idft,jmax),   u1_i(idft,jmax),  &
+          v1_r(idft,jmax),   v1_i(idft,jmax),  &
+          q1_r(idft,jmax),   q1_i(idft,jmax),  &
+          qx1_r(idft,jmax),  qx1_i(idft,jmax), &
+          qy1_r(idft,jmax),  qy1_i(idft,jmax), &
+          psi1_r(idft,jmax), psi1_i(idft,jmax), &
+          vor1_r(idft,jmax), vor1_i(idft,jmax), &
           adv1_r(idft,jmax), adv1_i(idft,jmax), &
-          f1_r(idft,jmax),  f1_i(idft,jmax)
-  real :: u2_r(idft,jmax),  u2_i(idft,jmax),  &
-          v2_r(idft,jmax),  v2_i(idft,jmax),  &
-          q2_r(idft,jmax),  q2_i(idft,jmax),  &
-          qx2_r(idft,jmax), qx2_i(idft,jmax), &
-          qy2_r(idft,jmax), qy2_i(idft,jmax), &
-          p2_r(idft,jmax),  p2_i(idft,jmax), &
+          f1_r(idft,jmax),   f1_i(idft,jmax)
+  real :: u2_r(idft,jmax),   u2_i(idft,jmax),  &
+          v2_r(idft,jmax),   v2_i(idft,jmax),  &
+          q2_r(idft,jmax),   q2_i(idft,jmax),  &
+          qx2_r(idft,jmax),  qx2_i(idft,jmax), &
+          qy2_r(idft,jmax),  qy2_i(idft,jmax), &
+          psi2_r(idft,jmax), psi2_i(idft,jmax), &
+          vor2_r(idft,jmax), vor2_i(idft,jmax), &
           adv2_r(idft,jmax), adv2_i(idft,jmax)
 
-  ! Variables storing x-Fourier coefficients, for iterating over i
-  ! Stores data cartesian in y *or* trig transform (sine/cosine)
+  ! Stores y data cartesian in y *or* trig transform (sine/cosine)
   ! The 'tt' stands for trigonometric transform
+  ! Used while iterating over the x-Fourier coefficients
   double precision :: v1_r_tt(jmax), v2_r_tt(jmax), v1_i_tt(jmax), v2_i_tt(jmax), &
     u1_r_tt(jmax),   u1_i_tt(jmax),  u2_r_tt(jmax),  u2_i_tt(jmax),  &
     q1_r_tt(jmax),   q2_r_tt(jmax),  q1_i_tt(jmax),  q2_i_tt(jmax),  &
     qx1_r_tt(jmax),  qx2_r_tt(jmax), qx1_i_tt(jmax), qx2_i_tt(jmax), &
     qy1_r_tt(jmax),  qy2_r_tt(jmax), qy1_i_tt(jmax), qy2_i_tt(jmax), &
-    p1_r_tt(jmax),   p2_r_tt(jmax),  p1_i_tt(jmax),  p2_i_tt(jmax),  &
+    psi1_r_tt(jmax), psi2_r_tt(jmax), psi1_i_tt(jmax), psi2_i_tt(jmax),  &
+    vor1_r_tt(jmax), vor2_r_tt(jmax), vor1_i_tt(jmax), vor2_i_tt(jmax),  &
     adv1_r_tt(jmax), adv1_i_tt(jmax), adv2_r_tt(jmax), adv2_i_tt(jmax), &
     f1_r_tt(jmax),   f1_i_tt(jmax)
 
   ! Zonal mean/zonal flux values
-  ! Stored data cartesian in y *or* trig transform (sine/cosine)
+  ! Stores y data cartesian in y *or* trig transform (sine/cosine)
   double precision :: ub_tt(jmax), uc_tt(jmax), &
     qflux1_tt(jmax), qybar1_tt(jmax), qbar1_tt(jmax), ubar1_tt(jmax), &
     qflux2_tt(jmax), qybar2_tt(jmax), qbar2_tt(jmax), ubar2_tt(jmax)
 
-  ! Truncated Fourier coefficients, for iterating over j
+  ! Fourier coefficients in x
+  ! Used while iterating over y
   double complex :: u1_dft(idft),  u2_dft(idft), &
     v1_dft(idft),   v2_dft(idft),   &
     q1_dft(idft),   q2_dft(idft),   &
     qx1_dft(idft),  qx2_dft(idft),  &
     qy1_dft(idft),  qy2_dft(idft),  &
-    p1_dft(idft),   p2_dft(idft),   &
+    psi1_dft(idft), psi2_dft(idft),   &
+    vor1_dft(idft), vor2_dft(idft),   &
     adv1_dft(idft), adv2_dft(idft), &
     f1_dft(idft)
 
   ! Inverse transforms of the above values
   ! This data is always cartesian
+  ! Used while iterating over y
   double precision :: u1_cart(imax),  u2_cart(imax), &
     v1_cart(imax),   v2_cart(imax),   &
     q1_cart(imax),   q2_cart(imax),   &
     vq1_cart(imax),  vq2_cart(imax),  &
     qx1_cart(imax),  qx2_cart(imax),  &
     qy1_cart(imax),  qy2_cart(imax),  &
-    p1_cart(imax),   p2_cart(imax),   &
+    psi1_cart(imax),   psi2_cart(imax),   &
+    vor1_cart(imax),   vor2_cart(imax),   &
     adv1_cart(imax), adv2_cart(imax), &
     f1_cart(imax)
 
@@ -118,12 +125,9 @@ subroutine diag(hx,hy)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Invert d/dy zonal mean PV equation to get zonal mean u
   ! Also integrate d/dy zonal mean PV to get zonal mean PV
-  ! * The umean are needed for radiation forcing in prognostics.f90, which is why
-  !   we create the seemingly identical variables 'umean1/ubar1_tt' and 'umean2/ubar2_tt'
-  ! * The latter will undergo in-place sine transformation in this module
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  umean1(:) = 0.
-  umean2(:) = 0.
+  ubar1_out(:) = 0.
+  ubar2_out(:) = 0.
   ub_tt(:) = 0.
   uc_tt(:) = 0.
   qbar1_tt(:) = 0.
@@ -132,15 +136,15 @@ subroutine diag(hx,hy)
   ubar2_tt(:) = 0.
   do j = 2,jtrunc
     ell = el*float(j-1) ! angular wavenumber
-    ub_tt(j) = (qymean1(j,3)+qymean2(j,3))/(ell**2)
-    uc_tt(j) = (qymean1(j,3)-qymean2(j,3))/(ell**2 + (2./(rd*rd)))
-    umean1(j) = (ub_tt(j)+uc_tt(j))*0.5
-    umean2(j) = (ub_tt(j)-uc_tt(j))*0.5
-    qbar1_tt(j) = qymean1(j,3)/ell ! d/dx(f(t)) = wavenum*F(wavenum) for sine transform (note wavenum is angular here)
-    qbar2_tt(j) = qymean2(j,3)/ell
-    ubar1_tt(j) = umean1(j)
-    ubar2_tt(j) = umean2(j)
+    ub_tt(j) = (qybar1_out(j,3)+qybar2_out(j,3))/(ell**2)
+    uc_tt(j) = (qybar1_out(j,3)-qybar2_out(j,3))/(ell**2 + (2./(rd*rd)))
+    qbar1_tt(j) = qybar1_out(j,3)/ell ! d/dx(f(t)) = wavenum*F(wavenum) for sine transform (note wavenum is angular here)
+    qbar2_tt(j) = qybar2_out(j,3)/ell
   enddo
+  ubar1_tt(:) = 0.5*(ub_tt(:) + uc_tt(:))
+  ubar2_tt(:) = 0.5*(ub_tt(:) - uc_tt(:))
+  ubar1_out(:) = ubar1_tt(:)
+  ubar2_out(:) = ubar2_tt(:)
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Invert PV equation to get streamfunction
@@ -152,16 +156,8 @@ subroutine diag(hx,hy)
   ! values above the trunc number (generally random, extremely small numbers)
   psi1_c(:,:) = zero
   psi2_c(:,:) = zero
-  u1_c(:,:)   = zero
-  u2_c(:,:)   = zero
-  v1_c(:,:)   = zero
-  v2_c(:,:)   = zero
-  qx1_c(:,:)  = zero
-  qx2_c(:,:)  = zero
-  qy1_c(:,:)  = zero
-  qy2_c(:,:)  = zero
-  psi1_c(:,:) = zero
-  psi2_c(:,:) = zero
+  vor1_c(:,:) = zero
+  vor2_c(:,:) = zero
   u1_c(:,:)   = zero
   u2_c(:,:)   = zero
   v1_c(:,:)   = zero
@@ -176,16 +172,18 @@ subroutine diag(hx,hy)
       rkk = rk*float(i-1)
       pb  = -(q1_c(i,j,3)+q2_c(i,j,3))/(rkk**2 + ell**2)
       pc  = -(q1_c(i,j,3)-q2_c(i,j,3))/(rkk**2 + ell**2  + (2./(rd*rd)))
-      psi1_c(i,j) = 0.5*(pb+pc)
-      psi2_c(i,j) = 0.5*(pb-pc)
-      u1_c(i,j) = -ell*psi1_c(i,j)
-      u2_c(i,j) = -ell*psi2_c(i,j)
-      v1_c(i,j) = one_i*rkk*psi1_c(i,j)
-      v2_c(i,j) = one_i*rkk*psi2_c(i,j)
-      qx1_c(i,j) = one_i*rkk*q1_c(i,j,3)
-      qx2_c(i,j) = one_i*rkk*q2_c(i,j,3)
-      qy1_c(i,j) = ell*q1_c(i,j,3)
-      qy2_c(i,j) = ell*q2_c(i,j,3)
+      psi1_c(i,j)  = 0.5*(pb+pc)
+      psi2_c(i,j)  = 0.5*(pb-pc)
+      vor1_c(i,j) = -(rkk**2+ell**2)*psi1_c(i,j)
+      vor2_c(i,j) = -(rkk**2+ell**2)*psi2_c(i,j)
+      u1_c(i,j)    = -ell*psi1_c(i,j)
+      u2_c(i,j)    = -ell*psi2_c(i,j)
+      v1_c(i,j)    = one_i*rkk*psi1_c(i,j)
+      v2_c(i,j)    = one_i*rkk*psi2_c(i,j)
+      qx1_c(i,j)   = one_i*rkk*q1_c(i,j,3)
+      qx2_c(i,j)   = one_i*rkk*q2_c(i,j,3)
+      qy1_c(i,j)   = ell*q1_c(i,j,3)
+      qy2_c(i,j)   = ell*q2_c(i,j,3)
     enddo
   enddo
 
@@ -196,8 +194,8 @@ subroutine diag(hx,hy)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Inverse sine transforms
   ! Suitable if edges are always small/zero
-  qybar1_tt(:) = qymean1(:,3) ! below functions need a 1D series
-  qybar2_tt(:) = qymean2(:,3)
+  qybar1_tt(:) = qybar1_out(:,3) ! below functions need a 1D series
+  qybar2_tt(:) = qybar2_out(:,3)
   tt_type=0
   call d_init_trig_transform(jmax-1,tt_type,ipar,spar,ir)
   call d_commit_trig_transform(ubar1_tt,handle,ipar,spar,ir)
@@ -236,18 +234,13 @@ subroutine diag(hx,hy)
   ! equation from lower to upper boundary.
   do j = 1,jmax
     y = dy*float(j-1)-0.5*width 
-    qbar1_tt(j) = qbar1_tt(j)+(beta+u0/(rd*rd))*y
-    qbar2_tt(j) = qbar2_tt(j)+(beta-u0/(rd*rd))*y
+    qbar1_tt(j) = qbar1_tt(j) + (beta + shear/(rd*rd))*y
+    qbar2_tt(j) = qbar2_tt(j) + (beta - shear/(rd*rd))*y
   enddo
-  if(mod(t,10000).eq.1) then
-    do j = 1,jmax
-      write(*,*) j,'u1:',ubar1_tt(j)+u0,' qbar1:',qbar1_tt(j)
-    enddo
-  endif
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Perform inverse y-sine/cosine transformations
-  ! of the x-direction Fourier coefficients for 2D params
+  ! Transform 2D data to physical space
+  ! First perform backward trig transforms of the x-direction Fourier coefficients
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   do i = 1,idft
     ! First prepare 1D vectors containing the complex x-direction
@@ -272,10 +265,14 @@ subroutine diag(hx,hy)
     qx2_i_tt(:) = aimag(qx2_c(i,:))
     qy2_r_tt(:) = real(qy2_c(i,:))
     qy2_i_tt(:) = aimag(qy2_c(i,:))
-    p1_r_tt(:)  = real(psi1_c(i,:))
-    p1_i_tt(:)  = aimag(psi1_c(i,:))
-    p2_r_tt(:)  = real(psi2_c(i,:))
-    p2_i_tt(:)  = aimag(psi2_c(i,:))
+    psi1_r_tt(:)  = real(psi1_c(i,:))
+    psi1_i_tt(:)  = aimag(psi1_c(i,:))
+    psi2_r_tt(:)  = real(psi2_c(i,:))
+    psi2_i_tt(:)  = aimag(psi2_c(i,:))
+    vor1_r_tt(:)  = real(vor1_c(i,:))
+    vor1_i_tt(:)  = aimag(vor1_c(i,:))
+    vor2_r_tt(:)  = real(vor2_c(i,:))
+    vor2_i_tt(:)  = aimag(vor2_c(i,:))
 
     ! Inverse sine transforms
     ! Suitable if edges are always small/zero
@@ -318,15 +315,27 @@ subroutine diag(hx,hy)
     call free_trig_transform(handle,ipar,ir)
 
     call d_init_trig_transform(jmax-1,tt_type,ipar,spar,ir)
-    call d_commit_trig_transform(p1_r_tt,handle,ipar,spar,ir)
-    call d_backward_trig_transform(p1_r_tt,handle,ipar,spar,ir)
-    p1_r(i,:) = p1_r_tt(:)
+    call d_commit_trig_transform(psi1_r_tt,handle,ipar,spar,ir)
+    call d_backward_trig_transform(psi1_r_tt,handle,ipar,spar,ir)
+    psi1_r(i,:) = psi1_r_tt(:)
     call free_trig_transform(handle,ipar,ir)
 
     call d_init_trig_transform(jmax-1,tt_type,ipar,spar,ir)
-    call d_commit_trig_transform(p1_i_tt,handle,ipar,spar,ir)
-    call d_backward_trig_transform(p1_i_tt,handle,ipar,spar,ir)
-    p1_i(i,:) = p1_i_tt(:)
+    call d_commit_trig_transform(psi1_i_tt,handle,ipar,spar,ir)
+    call d_backward_trig_transform(psi1_i_tt,handle,ipar,spar,ir)
+    psi1_i(i,:) = psi1_i_tt(:)
+    call free_trig_transform(handle,ipar,ir)
+
+    call d_init_trig_transform(jmax-1,tt_type,ipar,spar,ir)
+    call d_commit_trig_transform(vor1_r_tt,handle,ipar,spar,ir)
+    call d_backward_trig_transform(vor1_r_tt,handle,ipar,spar,ir)
+    vor1_r(i,:) = vor1_r_tt(:)
+    call free_trig_transform(handle,ipar,ir)
+
+    call d_init_trig_transform(jmax-1,tt_type,ipar,spar,ir)
+    call d_commit_trig_transform(vor1_i_tt,handle,ipar,spar,ir)
+    call d_backward_trig_transform(vor1_i_tt,handle,ipar,spar,ir)
+    vor1_i(i,:) = vor1_i_tt(:)
     call free_trig_transform(handle,ipar,ir)
 
     call d_init_trig_transform(jmax-1,tt_type,ipar,spar,ir)
@@ -366,15 +375,27 @@ subroutine diag(hx,hy)
     call free_trig_transform(handle,ipar,ir)
 
     call d_init_trig_transform(jmax-1,tt_type,ipar,spar,ir)
-    call d_commit_trig_transform(p2_r_tt,handle,ipar,spar,ir)
-    call d_backward_trig_transform(p2_r_tt,handle,ipar,spar,ir)
-    p2_r(i,:) = p2_r_tt(:)
+    call d_commit_trig_transform(psi2_r_tt,handle,ipar,spar,ir)
+    call d_backward_trig_transform(psi2_r_tt,handle,ipar,spar,ir)
+    psi2_r(i,:) = psi2_r_tt(:)
     call free_trig_transform(handle,ipar,ir)
 
     call d_init_trig_transform(jmax-1,tt_type,ipar,spar,ir)
-    call d_commit_trig_transform(p2_i_tt,handle,ipar,spar,ir)
-    call d_backward_trig_transform(p2_i_tt,handle,ipar,spar,ir)
-    p2_i(i,:) = p2_i_tt(:)
+    call d_commit_trig_transform(psi2_i_tt,handle,ipar,spar,ir)
+    call d_backward_trig_transform(psi2_i_tt,handle,ipar,spar,ir)
+    psi2_i(i,:) = psi2_i_tt(:)
+    call free_trig_transform(handle,ipar,ir)
+
+    call d_init_trig_transform(jmax-1,tt_type,ipar,spar,ir)
+    call d_commit_trig_transform(vor2_r_tt,handle,ipar,spar,ir)
+    call d_backward_trig_transform(vor2_r_tt,handle,ipar,spar,ir)
+    vor2_r(i,:) = vor2_r_tt(:)
+    call free_trig_transform(handle,ipar,ir)
+
+    call d_init_trig_transform(jmax-1,tt_type,ipar,spar,ir)
+    call d_commit_trig_transform(vor2_i_tt,handle,ipar,spar,ir)
+    call d_backward_trig_transform(vor2_i_tt,handle,ipar,spar,ir)
+    vor2_i(i,:) = vor2_i_tt(:)
     call free_trig_transform(handle,ipar,ir)
 
     ! Inverse cosine transforms
@@ -431,10 +452,8 @@ subroutine diag(hx,hy)
 
   do j = 1,jmax
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! Inverse x-Fourier transforms
-    ! * The y dimension now has *cartesian* units, not sine/cosine transform coeffs
-    ! * Note the full Fourier transform equations take input/output arrays; they
-    !   do *not* change arrays in place.
+    ! Transform 2D data to physical space
+    ! Next get inverse Fourier transforms; the y dimension already has *cartesian* units
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Prepare 1D vectors that will be passed to Fourier inversion functions
     ! Also apply truncation here
@@ -448,8 +467,10 @@ subroutine diag(hx,hy)
     qx2_dft(:) = zero
     qy1_dft(:) = zero
     qy2_dft(:) = zero
-    p1_dft(:)  = zero
-    p2_dft(:)  = zero
+    psi1_dft(:)  = zero
+    psi2_dft(:)  = zero
+    vor1_dft(:)  = zero
+    vor2_dft(:)  = zero
     v1_dft(2:itrunc)  = 0.5*(one_r*v1_r(2:itrunc,j)  + one_i*v1_i(2:itrunc,j))
     v2_dft(2:itrunc)  = 0.5*(one_r*v2_r(2:itrunc,j)  + one_i*v2_i(2:itrunc,j))
     u1_dft(2:itrunc)  = 0.5*(one_r*u1_r(2:itrunc,j)  + one_i*u1_i(2:itrunc,j))
@@ -460,8 +481,8 @@ subroutine diag(hx,hy)
     qx2_dft(2:itrunc) = 0.5*(one_r*qx2_r(2:itrunc,j) + one_i*qx2_i(2:itrunc,j))
     qy1_dft(2:itrunc) = 0.5*(one_r*qy1_r(2:itrunc,j) + one_i*qy1_i(2:itrunc,j))
     qy2_dft(2:itrunc) = 0.5*(one_r*qy2_r(2:itrunc,j) + one_i*qy2_i(2:itrunc,j))
-    p1_dft(2:itrunc)  = 0.5*(one_r*p1_r(2:itrunc,j)  + one_i*p1_i(2:itrunc,j))
-    p2_dft(2:itrunc)  = 0.5*(one_r*p2_r(2:itrunc,j)  + one_i*p2_i(2:itrunc,j))
+    vor1_dft(2:itrunc)  = 0.5*(one_r*vor1_r(2:itrunc,j)  + one_i*vor1_i(2:itrunc,j))
+    vor2_dft(2:itrunc)  = 0.5*(one_r*vor2_r(2:itrunc,j)  + one_i*vor2_i(2:itrunc,j))
     v1_dft(itrunc)  = one_r*real(v1_dft(itrunc))
     v2_dft(itrunc)  = one_r*real(v2_dft(itrunc))
     u1_dft(itrunc)  = one_r*real(u1_dft(itrunc))
@@ -472,8 +493,10 @@ subroutine diag(hx,hy)
     qx2_dft(itrunc) = one_r*real(qx2_dft(itrunc))
     qy1_dft(itrunc) = one_r*real(qy1_dft(itrunc))
     qy2_dft(itrunc) = one_r*real(qy2_dft(itrunc))
-    p1_dft(itrunc)  = one_r*real(p1_dft(itrunc))
-    p2_dft(itrunc)  = one_r*real(p2_dft(itrunc))
+    psi1_dft(itrunc)  = one_r*real(psi1_dft(itrunc))
+    psi2_dft(itrunc)  = one_r*real(psi2_dft(itrunc))
+    vor1_dft(itrunc)  = one_r*real(vor1_dft(itrunc))
+    vor2_dft(itrunc)  = one_r*real(vor2_dft(itrunc))
 
     ! Inverse Fourier Transform
     ! Note we ***write to global variables here***
@@ -489,8 +512,10 @@ subroutine diag(hx,hy)
     qx2_cart(:) = 0.
     qy1_cart(:) = 0.
     qy2_cart(:) = 0.
-    p1_cart(:)  = 0.
-    p2_cart(:)  = 0.
+    psi1_cart(:)  = 0.
+    psi2_cart(:)  = 0.
+    vor1_cart(:)  = 0.
+    vor2_cart(:)  = 0.
     call scrft(v1_dft,v1_cart,imax,as,hx)
     call scrft(v2_dft,v2_cart,imax,as,hx)
     call scrft(u1_dft,u1_cart,imax,as,hx)
@@ -501,8 +526,10 @@ subroutine diag(hx,hy)
     call scrft(qx2_dft,qx2_cart,imax,as,hx)
     call scrft(qy1_dft,qy1_cart,imax,as,hx)
     call scrft(qy2_dft,qy2_cart,imax,as,hx)
-    call scrft(p1_dft,p1_cart,imax,as,hx)
-    call scrft(p2_dft,p2_cart,imax,as,hx)
+    call scrft(psi1_dft,psi1_cart,imax,as,hx)
+    call scrft(psi2_dft,psi2_cart,imax,as,hx)
+    call scrft(vor1_dft,vor1_cart,imax,as,hx)
+    call scrft(vor2_dft,vor2_cart,imax,as,hx)
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Finally have the 2D real data in this block!!!
@@ -514,7 +541,7 @@ subroutine diag(hx,hy)
     ! * Must appear here, because we have a real ymask that limits appearence
     !   of PV perturbations into a narrow 'jet' band
     ! * Below can be used to have arbitrary memory; just replace where you see 0.5
-    !   fxy1(i,j,2) = exp(-dt/tau_i)*fxy1(i,j,1)
+    !   f1_cart(i) = exp(-dt/tau_i)*f1_out(i,j,1)
     !   + (1.-exp(-dt/tau_i))*amp_i*ymask(j)*  &
     iseed=iseed*(idate(8)-500)
     call date_and_time(values=idate)
@@ -523,7 +550,7 @@ subroutine diag(hx,hy)
     call random_number(anglex)
     call random_number(angley)
     do i = 1,imax
-      f1_cart(i) = 0.5*fxy1(i,j,1) ! initialize with previous state
+      f1_cart(i) = 0.5*f1_out(i,j,1) ! initialize with previous state
       do wcos = wmin_i,wmax_i
         rkk = rk*float(wcos-1)
         do wsin = wmin_i,wmax_i
@@ -537,37 +564,37 @@ subroutine diag(hx,hy)
     enddo
 
     ! Write data to some convenient arrays that can be output in io.f90
+    ! Add to this if you want to output some new stuff
     ! q', dq'/dx, dq'/dy fields
-    qxy1(:,j) = q1_cart(:)
-    qxy2(:,j) = q2_cart(:)
-    qxx1(:,j) = qx1_cart(:)
-    qxx2(:,j) = qx2_cart(:)
-    qyy1(:,j) = qy1_cart(:)
-    qyy2(:,j) = qy2_cart(:)
+    q1_out(:,j) = q1_cart(:)
+    q2_out(:,j) = q2_cart(:)
     ! v' field (always has zero mean)
-    vxy1(:,j) = v1_cart(:)
-    vxy2(:,j) = v2_cart(:)
+    v1_out(:,j) = v1_cart(:)
+    v2_out(:,j) = v2_cart(:)
     ! u' field
-    uxy1(:,j) = u1_cart(:)
-    uxy2(:,j) = u2_cart(:)
+    u1_out(:,j) = u1_cart(:)
+    u2_out(:,j) = u2_cart(:)
     ! u field
-    ufull1(:,j) = u1_cart(:)+ubar1_tt(j)+u0 ! add basic state shear
-    ufull2(:,j) = u2_cart(:)+ubar2_tt(j)
+    utot1_out(:,j) = u1_cart(:) + ubar1_tt(j) + shear ! add basic state shear
+    utot2_out(:,j) = u2_cart(:) + ubar2_tt(j)
     ! p' field
-    pxy1(:,j) = p1_cart(:)
-    pxy2(:,j) = p2_cart(:)
-    ! forcing field (update latest forcing values)
-    fxy1(:,j,2) = f1_cart(:)
+    psi1_out(:,j) = psi1_cart(:)
+    psi2_out(:,j) = psi2_cart(:)
+    ! vor' field
+    vor1_out(:,j) = vor1_cart(:)
+    vor2_out(:,j) = vor2_cart(:)
+    ! forcing field (also updates latest forcing values)
+    f1_out(:,j,2) = f1_cart(:)
 
     ! Next get some derived ***advection*** quantities
     ! The meridional pv flux
     vq1_cart(:) = v1_cart(:)*q1_cart(:)
     vq2_cart(:) = v2_cart(:)*q2_cart(:) ! pv flux
     ! The x,y resolution advection terms
-    adv1_cart(:) = qx1_cart(:)*(u1_cart(:) + ubar1_tt(j) + u0) &
-         + v1_cart(:)*(qy1_cart(:) + beta + (u0/(rd*rd)) + qybar1_tt(j))
+    adv1_cart(:) = qx1_cart(:)*(u1_cart(:) + ubar1_tt(j) + shear) &
+         + v1_cart(:)*(qy1_cart(:) + beta + (shear/(rd*rd)) + qybar1_tt(j))
     adv2_cart(:) = qx2_cart(:)*(u2_cart(:) + ubar2_tt(j)) &
-         + v2_cart(:)*(qy2_cart(:) + beta - (u0/(rd*rd)) + qybar2_tt(j))
+         + v2_cart(:)*(qy2_cart(:) + beta - (shear/(rd*rd)) + qybar2_tt(j))
     ! The total meridional flux here
     qflux1_tt(j) = sum(vq1_cart(:))/float(imax) ! meridional PV flux maybe
     qflux2_tt(j) = sum(vq2_cart(:))/float(imax)
@@ -664,23 +691,28 @@ subroutine diag(hx,hy)
 
   do j = 2,jtrunc
     ell = el*float(j-1)
-    qyyflux1(j,3) = -ell*ell*qflux1_tt(j) ! these are 2nd derivatives
-    qyyflux2(j,3) = -ell*ell*qflux2_tt(j) ! convergence of the flux?
+    qyyflux1_out(j,3) = -ell*ell*qflux1_tt(j) ! these are 2nd derivatives
+    qyyflux2_out(j,3) = -ell*ell*qflux2_tt(j) ! convergence of the flux?
   enddo
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Write diagnostic output, useful for reference; consider testing v in future
+  ! Print diagnostic output, useful for monitoring the situation
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! write(*,*) 'max flux',maxval(qflux1_tt),minval(qflux1_tt)
   if(mod(int(t),int(dt)*1000).eq.1) then
     write(*,*) 'Printing zonal mean diagnostics.'
     do j = 1,jmax
-      write(*,*) j,'ubar = ',ubar1_tt(j)+u0,' qbar = ',qbar1_tt(j)
+      write(*,*) j, 'ubar1 = ', ubar1_tt(j)+shear, 'qbar1 = ', qbar1_tt(j)
     enddo
   endif
-  umax = max(maxval(ufull1),maxval(ufull2))
-  write(*,*) ' umax = ',umax,' cfl = ',umax/(dx/dt)
+  day    = float(t)/(3600.*24.)
+  cfl    = umax*dt/dx
+  umax   = max(maxval(utot1_out),maxval(utot2_out))
+  energy = 0.5*sum(v1_out*v1_out + v2_out*v2_out + &
+    u1_out*u1_out + u2_out*u2_out) / float(imax*jmax)
+  write(*,677) day, energy, umax, cfl
+  677 format("days = ", 1f8.3, " eke = ", 1p1e13.5, " umax = ", 1f3.3, " cfl = ", 1f3.3)
+  ! 1p ensures non-zero digit to left of decimal
   return
-
 end subroutine
 end module

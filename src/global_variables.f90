@@ -4,8 +4,8 @@ module global_variables
   !    ---- Initial stuff, and dimensions that must be hard-coded ----
   real, parameter :: pi=3.141592653589793
   complex :: one_r = (1.,0.), one_i = (0.,1.), zero = (0.,0.)
-  integer :: t         ! time tracker
-  real :: energy2, cfl ! for monitoring integration
+  integer :: day, t   ! time tracker
+  real :: energy, cfl ! for monitoring integration
   ! Timing
   integer, parameter :: tstart=0
   ! Grid resolution (number of cells)
@@ -32,7 +32,7 @@ module global_variables
   real :: width, wlength                  ! channel width, channel length
   real :: rd                              ! radius of deformation
   real :: tau_r, tau_f, tau_2, tau_sponge ! damping stuff
-  real :: u0, beta                        ! background state
+  real :: shear, beta                        ! background state
   real :: amp_jet, sigma_jet              ! initial jet
   real :: amp_i, tau_i, sigma_i, wmin_i, wmax_i ! Noboru's stoshcastic forcing
   real :: ll_seed_amp                     ! lower level forcing
@@ -40,26 +40,26 @@ module global_variables
 
   !    ---- Noboru's arrays ----
   ! Arrays storing Fourier coefficients from x-direction decomposition
-  complex :: q1_c(idft,jmax,4), psi1_c(idft,jmax),  &
+  complex :: q1_c(idft,jmax,4), psi1_c(idft,jmax), vor1_c(idft,jmax), &
          adv1_c(idft,jmax,3), u1_c(idft,jmax),   v1_c(idft,jmax),     &
          visc1_c(idft,jmax),  rad1_c(idft,jmax), force1_c(idft,jmax), &
          qx1_c(idft,jmax),    qy1_c(idft,jmax)
-  complex :: q2_c(idft,jmax,4), psi2_c(idft,jmax),  &
-         adv2_c(idft,jmax,3), u2_c(idft,jmax),   v2_c(idft,jmax),   &
-         visc2_c(idft,jmax),  rad2_c(idft,jmax), fric_2(idft,jmax), &
+  complex :: q2_c(idft,jmax,4), psi2_c(idft,jmax), vor2_c(idft,jmax), &
+         adv2_c(idft,jmax,3), u2_c(idft,jmax),   v2_c(idft,jmax),     &
+         visc2_c(idft,jmax),  rad2_c(idft,jmax), fric_2(idft,jmax),   &
          qx2_c(idft,jmax),    qy2_c(idft,jmax)
   ! Special array
   real :: ymask(jmax)
-  ! Derivatives and other diagnostics in real space
-  real :: fxy1(imax,jmax,2), ufull1(imax,jmax), &
-          uxy1(imax,jmax), vxy1(imax,jmax), pxy1(imax,jmax), &
-          qxy1(imax,jmax), qxx1(imax,jmax), qyy1(imax,jmax)
-  real :: ufull2(imax,jmax), &
-          uxy2(imax,jmax), vxy2(imax,jmax), pxy2(imax,jmax), &
-          qxy2(imax,jmax), qxx2(imax,jmax), qyy2(imax,jmax)
+  ! Arrays stored in real space, suitable for output
+  real :: f1_out(imax,jmax,2), utot1_out(imax,jmax), &
+          u1_out(imax,jmax), v1_out(imax,jmax), q1_out(imax,jmax), &
+          psi1_out(imax,jmax), vor1_out(imax,jmax)
+  real :: utot2_out(imax,jmax), &
+          u2_out(imax,jmax), v2_out(imax,jmax), q2_out(imax,jmax), &
+          psi2_out(imax,jmax), vor2_out(imax,jmax)
   ! Special; stores mean and mean gradient
-  real :: umean1(jmax), qyyflux1(jmax,3), qymean1(jmax,4), &
-          umean2(jmax), qyyflux2(jmax,3), qymean2(jmax,4)
+  real :: ubar1_out(jmax), qyyflux1_out(jmax,3), qybar1_out(jmax,4), &
+          ubar2_out(jmax), qyyflux2_out(jmax,3), qybar2_out(jmax,4)
 
   contains
 
@@ -73,7 +73,7 @@ module global_variables
       dt, td, &
       tend, tchange, tds, &
       tau_r, tau_f, tau_sponge, tau_2, &
-      u0, beta, rd, &
+      shear, beta, rd, &
       amp_jet, sigma_jet, &
       amp_i, tau_i, sigma_i, wmin_i, wmax_i, &
       ll_seed_amp, &

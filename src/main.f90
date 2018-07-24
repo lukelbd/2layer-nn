@@ -34,8 +34,6 @@ program main
   do t = tstart, int(tend), int(dt) ! note that loop is normally end-inclusive
     !    ---- Invert spectral data, get diagnostic parameters, print diagnostics ----
     call diag(hx,hy) ! (diagnostics.f90) invert streamfunction from vorticity
-    write(*,677) float(t)/(3600.*24.), energy2, cfl
-    677 format("days = ", 1f8.3, " eke = ", 1p1e13.5, 1f3.3) ! 1p ensures non-zero digit to left of decimal
     !    ---- Save data ----
     if ((mod(t,td).eq.0).and.(t.ge.int(tds))) then 
       write(*,*) "Writing data."
@@ -48,9 +46,7 @@ program main
     ! Testing things
     ! print *, y0, tend, tchange, tds, tau_r, tau_f, tau_2, rd, width, wlength, sigma_jet
     stop
-    ! Test
   enddo
-  write(*,*) 'Final Day = ', float(t)/(3600.*24.)
   close(11)
 
   status = dftifreedescriptor( hx )

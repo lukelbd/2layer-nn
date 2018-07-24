@@ -28,14 +28,14 @@ subroutine init
   enddo
 
   !    ---- Zonal mean pv ----
-  ! qymean1 and qymean2 are the part of zonal-mean PV gradient that 
-  ! excludes the uniform component [i.e. beta + u0/(rd*rd) and
-  ! beta - u0/(rd*rd)]. Since initially the total mean PV gradient is
-  ! uniform and equal to beta + u0/(rd*rd) and beta - u0/(rd*rd), qymean1 and
-  ! qymean2 are set to zero. Departure from the initial condition will be
+  ! qybar1_out and qybar2_out are the part of zonal-mean PV gradient that 
+  ! excludes the uniform component [i.e. beta + shear/(rd*rd) and
+  ! beta - shear/(rd*rd)]. Since initially the total mean PV gradient is
+  ! uniform and equal to beta + shear/(rd*rd) and beta - shear/(rd*rd), qybar1_out and
+  ! qybar2_out are set to zero. Departure from the initial condition will be
   ! introduced later through eddy PV flux and forcing/damping.
-  qymean1 = 0.
-  qymean2 = 0.
+  qybar1_out = 0.
+  qybar2_out = 0.
 
   !    ---- Vorticity and streamfunc ----
   ! eddy streamfunction psi1_c and psi2_c and eddy PV q1_c and q2_c
