@@ -2,7 +2,7 @@
 # Exit immediately if compile step fails
 function check() { # check if error
   if [ $? -ne 0 ]; then
-    echo "Compile step failed."
+    echo "Failed compiling \"$1\"."
     exit 1
   fi
 }
@@ -20,15 +20,16 @@ trig=$MKLROOT/include/mkl_trig_transforms.f90
 # Recompile
 echo "Compiling fortran modules."
 rm *.o *.mod *.df 2>/dev/null
-ifort -c global_variables.f90; check
-ifort -c forward.f90; check
-ifort -c -mkl $dfti ftm.f90; check
-ifort -c -mkl $dfti $trig initial.f90; check
-ifort -c -mkl $dfti $trig diagnostics.f90; check
-ifort -c -mkl $dfti $trig prognostics.f90; check
-ifort -c -I/project2/rossby/models/2layer_nn/packages/include \
-  -L/project2/rossby/models/2layer_nn/packages/lib -lmfhdf -ldf -ljpeg -lz  io.f90; check
-ifort -c -mkl $dfti $trig main.f90; check
+ifort -c global_variables.f90; check global
+ifort -c initial.f90; check initial
+ifort -c forward.f90; check forward
+ifort -c prognostics.f90; check prognostics
+ifort -c -mkl $dfti $trig ftm.f90; check ftm # added trig library to this
+ifort -c -mkl $dfti $trig diagnostics.f90; check diagnostics
+ifort -c \
+  -I/project2/rossby/models/2layer_nn/packages/include \
+  -L/project2/rossby/models/2layer_nn/packages/lib -lmfhdf -ldf -ljpeg -lz  io.f90; check io
+ifort -c -mkl $dfti $trig main.f90; check main
 # Create executable
 echo "Creating executable."
 ifort -O3 "./io.o" "prognostics.o" "./diagnostics.o" "./ftm.o" "./forward.o" \

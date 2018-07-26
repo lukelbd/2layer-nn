@@ -9,44 +9,42 @@ contains
 subroutine dataio
   use global_variables
   implicit none
-  integer :: i,j,ret,shape1(2),shape2(2),shape3(1),dsadata
+  integer :: i, j, ret, shape1(2), shape2(2), shape3(1), dsadata
   shape1(1) = imax
   shape1(2) = jmax
   shape2(1) = idft
   shape2(2) = jmax 
   shape3(1) = jmax
 
-  ! pv anomaly
-  ret = dsadata('q1.df',2,shape1,q1_out)
-  ret = dsadata('q2.df',2,shape1,q2_out)
+  ! Write data
+  ! Total PV
+  ret = dsadata('q1.df',2,shape1,qfull1_cart)
+  ret = dsadata('q2.df',2,shape1,qfull2_cart)
 
-  ! relative vorticity anomaly
-  ret = dsadata('vor1.df',2,shape1,vor1_out)
-  ret = dsadata('vor2.df',2,shape1,vor2_out)
+  ! Total relative vorticity
+  ret = dsadata('vor1.df',2,shape1,vorfull1_cart)
+  ret = dsadata('vor2.df',2,shape1,vorfull2_cart)
 
-  ! streamfunction
-  ret = dsadata('psi1.df',2,shape1,psi1_out)
-  ret = dsadata('psi2.df',2,shape1,psi2_out)
+  ! Total u wind
+  ret = dsadata('u1.df',2,shape1,ufull1_cart)
+  ret = dsadata('u2.df',2,shape1,ufull2_cart)
 
-  ! forcing
-  ret = dsadata('f1.df',2,shape1,f1_out)
+  ! Total v wind (always anomalous, b/c mass conservation)
+  ret = dsadata('v1.df',2,shape1,v1_cart)
+  ret = dsadata('v2.df',2,shape1,v2_cart)
 
-  ! u wind
-  ret = dsadata('u1.df',2,shape1,u1_out)
-  ret = dsadata('u2.df',2,shape1,u2_out)
+  ! Streamfunction anomaly (TODO: get full version)
+  ! ret = dsadata('psi1.df',2,shape1,psi1_cart)
+  ! ret = dsadata('psi2.df',2,shape1,psi2_cart)
 
-  ! v wind
-  ret = dsadata('v1.df',2,shape1,v1_out)
-  ret = dsadata('v2.df',2,shape1,v2_out)
+  ! Forcing
+  ret = dsadata('f1.df',2,shape1,force1_cart(:,:,2))
 
-  ! energy
+  ! Energy
   ret = dsadata('eke.df',1,1,energy)
 
   ! ret = dsadata('u1_zonalmean.df',1,shape3,ubar1)
   ! ret = dsadata('u2_zonalmean.df',1,shape3,ubar2)
-
-  ! ret = dsadata('psi1.df',2,shape2,psi1_c)
-  ! ret = dsadata('psi2.df',2,shape2,psi2_c)
 
   ! ret = dsadata('q1_zonalmean.df',1,shape3,qbar1)
   ! ret = dsadata('q2_zonalmean.df',1,shape3,qbar2)

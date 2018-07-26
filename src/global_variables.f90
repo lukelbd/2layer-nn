@@ -31,8 +31,9 @@ module global_variables
   real :: tend, tchange, tds              ! timing
   real :: width, wlength                  ! channel width, channel length
   real :: rd                              ! radius of deformation
-  real :: tau_r, tau_f, tau_2, tau_sponge ! damping stuff
-  real :: shear, beta                        ! background state
+  real :: tau_r, tau_f, tau_2, tau_sp     ! damping stuff
+  real :: y_sp                            ! percentage of top half/bottom half that we want covered by sponge layer
+  real :: shear, beta                     ! background state
   real :: amp_jet, sigma_jet              ! initial jet
   real :: amp_i, tau_i, sigma_i, wmin_i, wmax_i ! Noboru's stoshcastic forcing
   real :: ll_seed_amp                     ! lower level forcing
@@ -40,26 +41,41 @@ module global_variables
 
   !    ---- Noboru's arrays ----
   ! Arrays storing Fourier coefficients from x-direction decomposition
-  complex :: q1_c(idft,jmax,4), psi1_c(idft,jmax), vor1_c(idft,jmax), &
-         adv1_c(idft,jmax,3), u1_c(idft,jmax),   v1_c(idft,jmax),     &
-         visc1_c(idft,jmax),  rad1_c(idft,jmax), force1_c(idft,jmax), &
-         qx1_c(idft,jmax),    qy1_c(idft,jmax)
-  complex :: q2_c(idft,jmax,4), psi2_c(idft,jmax), vor2_c(idft,jmax), &
-         adv2_c(idft,jmax,3), u2_c(idft,jmax),   v2_c(idft,jmax),     &
-         visc2_c(idft,jmax),  rad2_c(idft,jmax), fric_2(idft,jmax),   &
-         qx2_c(idft,jmax),    qy2_c(idft,jmax)
-  ! Special array
-  real :: ymask(jmax)
-  ! Arrays stored in real space, suitable for output
-  real :: f1_out(imax,jmax,2), utot1_out(imax,jmax), &
-          u1_out(imax,jmax), v1_out(imax,jmax), q1_out(imax,jmax), &
-          psi1_out(imax,jmax), vor1_out(imax,jmax)
-  real :: utot2_out(imax,jmax), &
-          u2_out(imax,jmax), v2_out(imax,jmax), q2_out(imax,jmax), &
-          psi2_out(imax,jmax), vor2_out(imax,jmax)
-  ! Special; stores mean and mean gradient
-  real :: ubar1_out(jmax), qyyflux1_out(jmax,3), qybar1_out(jmax,4), &
-          ubar2_out(jmax), qyyflux2_out(jmax,3), qybar2_out(jmax,4)
+  complex :: q1_sp(idft,jmax,2), adv1_sp(idft,jmax,3), &
+         tmp1_sp(idft,jmax),  psi1_sp(idft,jmax), vor1_sp(idft,jmax), &
+         visc1_sp(idft,jmax), rad1_sp(idft,jmax), &
+         force1_sp(idft,jmax), &
+         u1_sp(idft,jmax),    v1_sp(idft,jmax),   &
+         qx1_sp(idft,jmax),   qy1_sp(idft,jmax)
+  complex :: q2_sp(idft,jmax,2), adv2_sp(idft,jmax,3), &
+         tmp2_sp(idft,jmax),  psi2_sp(idft,jmax), vor2_sp(idft,jmax), &
+         visc2_sp(idft,jmax), rad2_sp(idft,jmax), &
+         fric2_sp(idft,jmax), &
+         u2_sp(idft,jmax),    v2_sp(idft,jmax),   &
+         qx2_sp(idft,jmax),   qy2_sp(idft,jmax)
+  ! Arrays storing values in 2D cartesian space
+  real :: force1_cart(imax,jmax,2), adv1_cart(imax,jmax), &
+          ufull1_cart(imax,jmax), vorfull1_cart(imax,jmax), qfull1_cart(imax,jmax), &
+          u1_cart(imax,jmax),   v1_cart(imax,jmax),   q1_cart(imax,jmax), &
+          psi1_cart(imax,jmax), vor1_cart(imax,jmax), &
+          qx1_cart(imax,jmax),  qy1_cart(imax,jmax)
+  real :: adv2_cart(imax,jmax), &
+          ufull2_cart(imax,jmax), qfull2_cart(imax,jmax), vorfull2_cart(imax,jmax), &
+          u2_cart(imax,jmax),   v2_cart(imax,jmax),   q2_cart(imax,jmax), &
+          psi2_cart(imax,jmax), vor2_cart(imax,jmax), &
+          qx2_cart(imax,jmax),  qy2_cart(imax,jmax)
+  ! Means in tt space
+  real :: ub_tt(jmax), uc_tt(jmax), tmp1_tt(jmax), tmp2_tt(jmax), &
+          qyyflux1_tt(jmax,3), qyyflux2_tt(jmax,3), &
+          qybar1_tt(jmax,2), qybar2_tt(jmax,2), &
+          vorbar1_tt(jmax), qbar1_tt(jmax), ubar1_tt(jmax), &
+          vorbar2_tt(jmax), qbar2_tt(jmax), ubar2_tt(jmax)
+  ! Means in cartesian space
+  real :: qybar1_cart(jmax),  qybar2_cart(jmax), &
+          vorbar1_cart(jmax), qbar1_cart(jmax),  ubar1_cart(jmax), &
+          vorbar2_cart(jmax), qbar2_cart(jmax),  ubar2_cart(jmax)
+  ! Physical y coordinate, and masks for sponge and pv injection
+  real :: y_cart(jmax), mask_i(jmax), mask_sp(jmax)
 
   contains
 
@@ -72,7 +88,7 @@ module global_variables
       width, wlength, &
       dt, td, &
       tend, tchange, tds, &
-      tau_r, tau_f, tau_sponge, tau_2, &
+      tau_r, tau_f, tau_sp, tau_2, &
       shear, beta, rd, &
       amp_jet, sigma_jet, &
       amp_i, tau_i, sigma_i, wmin_i, wmax_i, &
@@ -91,6 +107,7 @@ module global_variables
     tau_r     = tau_r*24.*3600.   ! days to s
     tau_f     = tau_f*24.*3600.   ! days to s
     tau_2     = tau_2*24.*3600.   ! days to s
+    tau_sp    = tau_sp*24.*3600.   ! days to s
     rd        = rd*1.e3      ! km to m
     width     = width*1.e3   ! km to m
     wlength   = wlength*1.e3 ! km to m
