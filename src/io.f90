@@ -21,7 +21,7 @@ subroutine ncwrite
     ! Define dimensions
     ret = nf90_def_dim(file_id, 'x', imax, xdim_id)
     ret = nf90_def_dim(file_id, 'y', jmax, ydim_id)
-    ret = nf90_def_dim(file_id, 'z', jmax, zdim_id)
+    ret = nf90_def_dim(file_id, 'z', 2, zdim_id)
     ret = nf90_def_dim(file_id, 'time', nf90_unlimited, tdim_id)
     ! Dimension variables
     ret = nf90_def_var(file_id, 'x',  nf90_float, (/xdim_id/), x_id)
