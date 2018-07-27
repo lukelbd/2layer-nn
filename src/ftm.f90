@@ -85,11 +85,11 @@ subroutine rcft(x, y, n, trunc, as, hy)
   ! Construct complex coefficients from real array
   ! call f2trf(n,tmp2,tmp2,wfftr) ! alternative FFTRB library, from Rogue Wave software
   y(1) = one_real*tmp1(1) ! back to single
-  do 67 i = 2,n/2
-  iim = 2*i-1
-  iip = 2*i
-  y(i) = one_real*tmp1(iim)+one_imag*tmp1(iip) ! back to single
-  67 continue
+  do i = 2,n/2
+    iim = 2*i-1
+    iip = 2*i
+    y(i) = one_real*tmp1(iim)+one_imag*tmp1(iip) ! back to single
+  enddo
   y(1+n/2) = one_real*tmp1(n+1) ! back to single
   y(:) = y(:)*as
 end subroutine
@@ -107,12 +107,12 @@ subroutine crft(y, x, n, trunc, as, hx)
   ! Decompose complex coefficients into real array
   tmp1(1) = real(y(1))
   tmp1(2) = 0.
-  do 67 i = 2,n/2
-  iim = 2*i-1
-  iip = 2*i
-  tmp1(iim) = real(y(i))
-  tmp1(iip) = aimag(y(i))
-  67 continue
+  do i = 2,n/2
+    iim = 2*i-1
+    iip = 2*i
+    tmp1(iim) = real(y(i))
+    tmp1(iip) = aimag(y(i))
+  enddo
   tmp1(n+1) = real(y(1+n/2))
   tmp1(n+2) = 0.
   ! Execute spectral-->cartesian transform
