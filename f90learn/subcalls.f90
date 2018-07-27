@@ -50,12 +50,14 @@ program main
   use procedures
   implicit none
   real :: single(2)
+  character(len=*), parameter :: string = "hello, world!"
   integer, dimension(5) :: array = (/1, 1, 1, 1, 1/)
   integer, dimension(5) :: copy
   integer, dimension(2) :: rep = (/1, 2/)
   integer, dimension(2,2) :: res
   integer, parameter :: x = 1
   integer :: y(x) = (/x/)
+  print *,string
   copy = array
   call sub2(array)
   call sub3(single)

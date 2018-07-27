@@ -36,16 +36,13 @@ use mkl_dfti ! includes some boilerplate stuff, and Fourier transforms
 contains
 
 ! Get diagnostics
-subroutine diag(hcr, hrc)
-
+subroutine diag
   ! Scalars
   implicit none
-  type(dfti_descriptor), pointer :: hcr, hrc ! handles for real-to-complex and complex-to-real fourier transforms
-  real :: y, rkk, ell, fac, s, umax, qplus, qminus
+  real :: y, rkk, ell, fac, s, qplus, qminus
   integer :: i, j, wcos, wsin
   complex :: pb_sp, pc_sp ! temporary scalars during PV inversion
   real    :: pb_tt, pc_tt
-
   ! For PV injection
   integer,allocatable :: iseed(:)
   integer             :: isize,idate(8)
@@ -256,27 +253,11 @@ subroutine diag(hcr, hrc)
   enddo
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Eddy kinetic energy
+  ! Scalars, including eke
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  energy = 0.5*sum(v1_cart**2 + v2_cart**2 + u1_cart**2 + u2_cart**2)/float(imax*jmax)
+  energy(1) = 0.5*sum(v1_cart**2 + v2_cart**2 + u1_cart**2 + u2_cart**2)/float(imax*jmax)
+  umax(1)   = max(maxval(ufull1_cart),maxval(ufull2_cart))
+  cfl(1)    = umax(1)*dt/dx
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Print diagnostic output, useful for monitoring the situation
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! write(*,*) 'max flux',maxval(qyyflux1_tt),minval(qyyflux1_tt)
-  if(mod(int(t),int(dt)*1000).eq.1) then
-    write(*,*) 'Printing zonal mean diagnostics.'
-    do j = 1,jmax
-      write(*,*) j, 'ubar1 = ', ubar1_cart(j)+shear, 'qbar1 = ', qbar1_cart(j)
-    enddo
-  endif
-  day    = float(t)/(3600.*24.)
-  umax   = max(maxval(ufull1_cart),maxval(ufull2_cart))
-  cfl    = umax*dt/dx
-  write(*,677) day, energy, umax, cfl
-  677 format("days = ", 1f8.3, " eke = ", 1p1e13.5, " umax = ", 1f3.3, " cfl = ", 1f3.3)
-  ! 1p ensures non-zero digit to left of decimal
-  return
 end subroutine
-
 end module

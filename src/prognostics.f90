@@ -8,15 +8,15 @@
 ! These are all ***transformed*** values; trigonometric in y, Fourier in x.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 module prognostics
+use global_variables
 contains
 subroutine prog
-  use global_variables
   implicit none
-  integer :: i, j, i1, j1, n1, m1, ii, jj
+  integer :: i, j
   real    :: ell, rkk, kkk, filter
 
-  ! Populate older positions with current position
-  if(t.eq.tstart) then
+  !    ---- Populate older positions with current position ----
+  if (t.eq.tstart) then
     adv1_sp(:,:,2) = adv1_sp(:,:,3)
     adv1_sp(:,:,1) = adv1_sp(:,:,2)
     adv2_sp(:,:,2) = adv2_sp(:,:,3)
@@ -38,12 +38,12 @@ subroutine prog
       ! radiation to relax their *difference* to zero
       rad1_sp(i,j)    = -(psi2_sp(i,j) - psi1_sp(i,j))/((rd*rd)*tau_r) ! radiation
       rad2_sp(i,j)    =  (psi2_sp(i,j) - psi1_sp(i,j))/((rd*rd)*tau_r)
-      visc1_sp(i,j)   = -damp*((rkk**2 + ell**2)**3)*q1_sp(i,j,1) ! hyperdiffusion
-      visc2_sp(i,j)   = -damp*((rkk**2 + ell**2)**3)*q2_sp(i,j,1)
+      visc1_sp(i,j)   = -damp*((rkk**2 + ell**2)**(ndeg/2))*q1_sp(i,j,1) ! hyperdiffusion
+      visc2_sp(i,j)   = -damp*((rkk**2 + ell**2)**(ndeg/2))*q2_sp(i,j,1)
       sponge1_sp(i,j) = -(rkk**2 + ell**2)*psi1_sp(i,j)*mask_sp_tt(j)/tau_sp ! sponge; LHS equals vorticity anomaly
       sponge2_sp(i,j) = -(rkk**2 + ell**2)*psi2_sp(i,j)*mask_sp_tt(j)/tau_sp
       fric2_sp(i,j)   = -(rkk**2 + ell**2)*psi2_sp(i,j)/tau_f ! friction; LHS equals vorticity anomaly
-      ! fric2_sp(i,j) = fric2_sp(i,j)-q2_sp(i,j,3)/tau_2
+      ! fric2_sp(i,j) = fric2_sp(i,j)-q2_sp(i,j,2)/tau_2 ! extra damping, not used
       ! Apply *hyperdiffusion*, *radiation*, and *pv injection* in upper layer
       q1_sp(i,j,2) = q1_sp(i,j,1) &
         - dt*(23.*adv1_sp(i,j,3) - 16.*adv1_sp(i,j,2) + 5.*adv1_sp(i,j,1))/12. &

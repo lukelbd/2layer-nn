@@ -1,18 +1,20 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Global variables
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 module global_variables
+  use mkl_dfti
   implicit none
   !----------------------------------------------------------------------------!
-  !    ---- Initial stuff/stuff that has to be hard-coded ----
-  real, parameter :: pi=3.141592653589793
-  complex :: one_r = (1.,0.), one_i = (0.,1.), zero = (0.,0.)
-  integer :: day, t   ! time tracker
-  real :: energy, cfl ! for monitoring integration
-  ! Timing
-  integer, parameter :: tstart=0
+  !    ---- Initial params that has to be hard-coded ----
+  real :: day
+  complex :: one_r=(1.,0.), one_i=(0.,1.), zero=(0.,0.)
+  integer :: t, tstart=0, nctime=1 ! nctime is time index on the arrays that we save
+  real, parameter :: pi=3.141592653589793 ! pi
   ! Grid resolution (number of cells)
   ! Probably want approx 1:1 aspect ratio, then add one cell to y because
   ! top and bottom boundary aren't same point (whereas left/right boundary are)
   ! Without 1:1 aspect ratio PV injection is more complicated
-  integer, parameter :: imax=256, jmax=256+1 ! we want a point exactly at y=0
+  integer, parameter :: imax=512, jmax=256+1 ! we want a point exactly at y=0
   ! Number complex coefficients for cyclic DFT in x-direction
   ! Signal is real, so need only N/2-1 complex coeffs plus the A_0 and A_(N/2) coeffs
   ! For y sine transform, coefficients are all real; need all <jmax> of them plus the constant offset
@@ -24,21 +26,42 @@ module global_variables
   integer, parameter :: itrunc=170, jtrunc=170
   ! integer, parameter :: itrunc=85, jtrunc=170
 
-  !    ---- To be calculated in subroutine below ----
+  !    ---- To be supplied by namelist ----
+  ! Timing
+  integer :: dt=1200, td=21600 ! (s) integration time step and data-save timestep steps
+  real :: tend=300.0, tds=0.0  ! (days) integration time and 'spinup' time before which no data is saved
+  ! Spatial
+  real :: width=72.e3, wlength=36.e3 ! (km) channel width, channel length
+  real :: rd=800.0                   ! (km) radius of deformation
+  ! Background
+  real :: shear=3.0    ! (m/s) basic state shear
+  real :: beta=1.6e-11 ! (1/(m*s)) background state
+  ! Basic damping
+  real :: tau_r=30.0, tau_f=6.0, tau_sp=1.0 ! (days) radiation, friction, sponge (at the edge) damping timescales
+  real :: y_sp=0.2                          ! (unitless) percentage of top half/bottom half that we want covered by sponge layer
+  integer :: ndeg=6                         ! (unitless) degree of hyperdifussion (must be *even*)
+  real :: visc = 0.04                       ! (m^ndeg/s) viscocity coefficient (probably best not to touch this one)
+  ! PV injection
+  real :: amp_i=3.0e-8            ! (1/s^2) amplitude of dq/dt injections
+  real :: tau_i=60.0              ! (s) forcing correlation timescale, currently unused
+  real :: sigma_i=2.0             ! (rossby radii) e-folding width of injection band in y
+  integer :: wmin_i=41, wmax_i=46 ! (unitless) min and max injection wavenumbers
+  ! Stochastic forcing parameters Sam, Momme, and Luke came up with
+  ! Consider implementing in future; some of the above
+  ! real :: amp_i = 1.e-5, ! (1/s) amplitude of pv injections
+  ! real :: tau_i = 1.,    ! (days) injection timecale, CDF of binomial distribution characterizing the <yes/no> trials for whether we inject
+  ! integer :: center_l = 50, ! (unitless) central injection wavenumber
+  ! integer :: center_k = 50,
+  ! real :: sigma_l = 5.,  ! (unitless) amplitude decay away from central wavenumber
+  ! real :: sigma_k = 5.,
+  ! Initial low-level forcing
+  logical :: ll_seed_on=.true. ! (logical) flags
+  real :: ll_seed_amp=1.0e-7   ! (s^-1) amplitude of initial injections
+  ! Derived from above namelist parameters
   real :: damp, dx, dy, el, rk
 
-  !    ---- To be supplied by namelist ----
-  logical :: ll_seed_on                         ! flags
-  integer :: dt, td                             ! time steps
-  real :: tend, tchange, tds                    ! timing
-  real :: width, wlength                        ! channel width, channel length
-  real :: rd                                    ! radius of deformation
-  real :: tau_r, tau_f, tau_2, tau_sp           ! damping stuff
-  real :: y_sp                                  ! percentage of top half/bottom half that we want covered by sponge layer
-  real :: shear, beta                           ! background state
-  real :: amp_i, tau_i, sigma_i, wmin_i, wmax_i ! Noboru's stoshcastic forcing
-  real :: ll_seed_amp                           ! lower level forcing
-  real :: visc, ndeg                            ! hyperviscocity
+  !    ---- Scalars ----
+  real :: energy(1), umax(1), cfl(1)
 
   !    ---- Noboru's arrays ----
   ! Arrays storing Fourier coefficients from x-direction decomposition
@@ -77,49 +100,11 @@ module global_variables
           vorbar1_cart(jmax),  qbar1_cart(jmax),  ubar1_cart(jmax), &
           vorbar2_cart(jmax),  qbar2_cart(jmax),  ubar2_cart(jmax)
   ! Physical y coordinate, and masks for sponge and pv injection
-  real :: y_cart(jmax), mask_i(jmax), mask_sp(jmax), mask_sp_tt(jmax)
+  real :: x_cart(imax), y_cart(jmax), mask_i(jmax), mask_sp(jmax), mask_sp_tt(jmax)
 
-  contains
+  !    ---- Misc variables ----
+  type(dfti_descriptor), pointer :: hcr, hrc ! handles for real-to-complex and complex-to-real fourier transforms
+  integer :: file_id ! netcdf file descriptor
+  integer :: ret ! dummy variable for storing return value
 
-  subroutine read_namelist
-    implicit none
-    !    ---- Declare namelist ----
-    ! real :: tau_farray(jmax)
-    namelist /input_nml/ &
-      ll_seed_on, &
-      width, wlength, &
-      dt, td, &
-      tend, tchange, tds, &
-      tau_r, tau_f, tau_sp, tau_2, &
-      shear, beta, rd, &
-      amp_i, tau_i, sigma_i, wmin_i, wmax_i, &
-      ll_seed_amp, &
-      visc, ndeg
-    !    ---- Read namelist ----
-    open(1, file='input.nml', status='old', action='read') ! status='old' requires that file exists, wut
-    read(1, nml=input_nml)
-      ! note 'input.nml' is a filename, input_nml is a declared variable
-    close(1) ! close file
-
-    !    ---- In-place unit scaling ----
-    tend      = tend*3600.*24.    ! days to s
-    tchange   = tchange*3600.*14. ! days to s
-    tds       = tds*3600.*24.     ! days to s
-    tau_r     = tau_r*24.*3600.   ! days to s
-    tau_f     = tau_f*24.*3600.   ! days to s
-    tau_2     = tau_2*24.*3600.   ! days to s
-    tau_sp    = tau_sp*24.*3600.   ! days to s
-    rd        = rd*1.e3      ! km to m
-    width     = width*1.e3   ! km to m
-    wlength   = wlength*1.e3 ! km to m
-    sigma_i   = rd*sigma_i   ! 'rossby radii' to m
-
-    !    ---- Calculate dependent variables ----
-    dx = wlength/float(imax) ! (m) grid resolution in x
-    dy = width/float(jmax-1) ! (m) grid resolution in y; non-cyclic so use -1, or something
-    el = pi/width            ! (1/m) converts radians to meridional wavenums
-    rk = 2.*pi/wlength       ! (1/m) converts radians to zonal wavenums
-    damp = visc*(dx**ndeg)/(dt*(pi**ndeg))  ! (m**ndeg/s) hyperviscocity
-
-  end subroutine
 end module
