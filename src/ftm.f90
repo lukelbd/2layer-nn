@@ -31,8 +31,8 @@ complex(8) :: one_real=(1.,0.), one_imag=(0.,1.), zero_complex=(0.,0.)
 contains
 
 ! Forward trig transform
-! Usage: ftt(<input array>, <output array>, <transform type>, <array size>)
-! Transform type can be 0 (cosine transform) or 1 (sine transform)
+! Usage: ftt(<input array>, <output array>, <transform type>, <array size>, <trunc number>)
+! Transform type can be 0 (sine transform) or 1 (cosine transform)
 subroutine ftt(x_in, x_out, tt_type, nj, jtrunc)
   integer :: tt_type
   integer :: nj, jtrunc
@@ -122,7 +122,9 @@ subroutine crft(y, x, n, trunc, as, hx)
 end subroutine
 
 ! Forward Fourier transform and trig transform
-! Usage: ftt(<input array>, <output array>, <transform type>, <dim 1 size>, <dim 2 size>, <trunc number>)
+! Usage: ftt_rcft(<input array>, <output array>, <transform type>,
+!            <dim 1 size>, <dim 2 size>, <dim 1 trunc number>, <dim 2 trunc number>,
+!            <handle for abstract transform object>)
 subroutine ftt_rcft(x_in, x_out, tt_type, ni, nj, itrunc, jtrunc, hy)
   real    :: as
   integer :: tt_type

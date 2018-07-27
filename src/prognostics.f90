@@ -36,24 +36,28 @@ subroutine prog
       ! Note vorticity is del^2(psi)
       ! Note psi are *anomalous* relative to background shear, so want
       ! radiation to relax their *difference* to zero
-      visc1_sp(i,j) = -damp*((rkk**2 + ell**2)**3)*q1_sp(i,j,1) ! hyperdiffusion
-      visc2_sp(i,j) = -damp*((rkk**2 + ell**2)**3)*q2_sp(i,j,1)
-      rad1_sp(i,j)  = -(psi2_sp(i,j) - psi1_sp(i,j))/((rd*rd)*tau_r) ! radiation
-      rad2_sp(i,j)  = (psi2_sp(i,j) - psi1_sp(i,j))/((rd*rd)*tau_r)
-      fric2_sp(i,j)  = (rkk**2 + ell**2)*psi2_sp(i,j)/tau_f ! friction (equals negative of the vorticity anomaly)
+      rad1_sp(i,j)    = -(psi2_sp(i,j) - psi1_sp(i,j))/((rd*rd)*tau_r) ! radiation
+      rad2_sp(i,j)    =  (psi2_sp(i,j) - psi1_sp(i,j))/((rd*rd)*tau_r)
+      visc1_sp(i,j)   = -damp*((rkk**2 + ell**2)**3)*q1_sp(i,j,1) ! hyperdiffusion
+      visc2_sp(i,j)   = -damp*((rkk**2 + ell**2)**3)*q2_sp(i,j,1)
+      sponge1_sp(i,j) = -(rkk**2 + ell**2)*psi1_sp(i,j)*mask_sp_tt(j)/tau_sp ! sponge; LHS equals vorticity anomaly
+      sponge2_sp(i,j) = -(rkk**2 + ell**2)*psi2_sp(i,j)*mask_sp_tt(j)/tau_sp
+      fric2_sp(i,j)   = -(rkk**2 + ell**2)*psi2_sp(i,j)/tau_f ! friction; LHS equals vorticity anomaly
       ! fric2_sp(i,j) = fric2_sp(i,j)-q2_sp(i,j,3)/tau_2
       ! Apply *hyperdiffusion*, *radiation*, and *pv injection* in upper layer
       q1_sp(i,j,2) = q1_sp(i,j,1) &
         - dt*(23.*adv1_sp(i,j,3) - 16.*adv1_sp(i,j,2) + 5.*adv1_sp(i,j,1))/12. &
+        - dt*sponge1_sp(i,j) &
         + dt*visc1_sp(i,j) &
-        + dt*force1_sp(i,j) &
-        + dt*rad1_sp(i,j)
+        + dt*rad1_sp(i,j) &
+        + dt*force1_sp(i,j)
       ! Apply *hyperdiffusion*, *radiation*, and *friction* in lower layer
       q2_sp(i,j,2) = q2_sp(i,j,1) &
         - dt*(23.*adv2_sp(i,j,3) - 16.*adv2_sp(i,j,2) + 5.*adv2_sp(i,j,1))/12. &
+        - dt*sponge2_sp(i,j) &
+        - dt*fric2_sp(i,j) &
         + dt*visc2_sp(i,j) &
-        + dt*rad2_sp(i,j) &
-        + dt*fric2_sp(i,j)
+        + dt*rad2_sp(i,j)
     enddo
     !    ---- Prognostic meridional derivative of zonal mean pv ----
     ! Iterate, apply *hyperdiffusion* and *radiation* in upper layer

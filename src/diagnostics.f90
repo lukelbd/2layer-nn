@@ -32,8 +32,7 @@
 module diagnostics
 use global_variables
 use spectral ! includes utilities: srcft, scrft, ftt, btt, ftt_rcft, btt_crft
-use mkl_dfti            ! includes some boilerplate stuff, and Fourier transforms
-use mkl_trig_transforms ! includes trig transforms
+use mkl_dfti ! includes some boilerplate stuff, and Fourier transforms
 contains
 
 ! Get diagnostics
@@ -42,9 +41,10 @@ subroutine diag(hcr, hrc)
   ! Scalars
   implicit none
   type(dfti_descriptor), pointer :: hcr, hrc ! handles for real-to-complex and complex-to-real fourier transforms
-  real :: y, rkk, ell, fac, s, umax
+  real :: y, rkk, ell, fac, s, umax, qplus, qminus
   integer :: i, j, wcos, wsin
-  complex :: pb, pc ! temporary scalars during PV inversion
+  complex :: pb_sp, pc_sp ! temporary scalars during PV inversion
+  real    :: pb_tt, pc_tt
 
   ! For PV injection
   integer,allocatable :: iseed(:)
@@ -55,14 +55,12 @@ subroutine diag(hcr, hrc)
   ! Reset previous inverted data
   ! Is this necessary? Don't think so, consider deleting.
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ub_tt      = 0.
-  uc_tt      = 0.
-  ubar1_cart = 0.
-  ubar2_cart = 0.
   qbar1_tt   = 0.
   qbar2_tt   = 0.
   ubar1_tt   = 0.
   ubar2_tt   = 0.
+  vorbar1_tt = 0.
+  vorbar2_tt = 0.
   psi1_sp    = zero
   psi2_sp    = zero
   vor1_sp    = zero
@@ -83,12 +81,12 @@ subroutine diag(hcr, hrc)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   do j = 2,jtrunc
     ell = el*float(j-1) ! angular wavenumber
-    ub_tt(j) = (qybar1_tt(j,3) + qybar2_tt(j,3))/(ell*ell)
-    uc_tt(j) = (qybar1_tt(j,3) - qybar2_tt(j,3))/(ell*ell + (2./(rd*rd)))
+    pb_tt = (qybar1_tt(j,3) + qybar2_tt(j,3))/(ell*ell)
+    pc_tt = (qybar1_tt(j,3) - qybar2_tt(j,3))/(ell*ell + (2./(rd*rd)))
+    ubar1_tt(j) = 0.5*(pb_tt + pc_tt)
+    ubar2_tt(j) = 0.5*(pb_tt - pc_tt)
     qbar1_tt(j) = qybar1_tt(j,3)/ell ! d/dx(f(t)) = wavenum*F(wavenum) for sine transform (note wavenum is angular here)
     qbar2_tt(j) = qybar2_tt(j,3)/ell
-    ubar1_tt(j) = 0.5*(ub_tt(j) + uc_tt(j))
-    ubar2_tt(j) = 0.5*(ub_tt(j) - uc_tt(j))
     vorbar1_tt(j) = (ell*ell)*ubar1_tt(j) ! shear vorticity, e.g. due to jet
     vorbar2_tt(j) = (ell*ell)*ubar2_tt(j)
   enddo
@@ -105,12 +103,12 @@ subroutine diag(hcr, hrc)
     ell = el*float(j-1)
     do i = 2,itrunc
       rkk = rk*float(i-1)
-      pb  = -(q1_sp(i,j,3)+q2_sp(i,j,3))/(rkk**2 + ell**2)
-      pc  = -(q1_sp(i,j,3)-q2_sp(i,j,3))/(rkk**2 + ell**2  + (2./(rd*rd)))
-      psi1_sp(i,j)  = 0.5*(pb+pc)
-      psi2_sp(i,j)  = 0.5*(pb-pc)
-      vor1_sp(i,j) = -(rkk**2+ell**2)*psi1_sp(i,j)
-      vor2_sp(i,j) = -(rkk**2+ell**2)*psi2_sp(i,j)
+      pb_sp  = -(q1_sp(i,j,3) + q2_sp(i,j,3))/(rkk**2 + ell**2)
+      pc_sp  = -(q1_sp(i,j,3) - q2_sp(i,j,3))/(rkk**2 + ell**2  + (2./(rd*rd)))
+      psi1_sp(i,j)  = 0.5*(pb_sp + pc_sp)
+      psi2_sp(i,j)  = 0.5*(pb_sp - pc_sp)
+      vor1_sp(i,j) = -(rkk**2 + ell**2)*psi1_sp(i,j)
+      vor2_sp(i,j) = -(rkk**2 + ell**2)*psi2_sp(i,j)
       u1_sp(i,j)    = -ell*psi1_sp(i,j)
       u2_sp(i,j)    = -ell*psi2_sp(i,j)
       v1_sp(i,j)    = one_i*rkk*psi1_sp(i,j)
@@ -187,6 +185,10 @@ subroutine diag(hcr, hrc)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Stochastic forcing (small-scale narrow band)
   ! Inject cosines and sines onto the raw 2D data, with fixed memory 0.5
+  ! Why do this in cartesian space instead of spectral? Because
+  ! it would melt my brain trying to figure out what the trig transform
+  ! coefficients and complex Fourier coefficients represent
+  ! in terms of wavenumber. Keep things simple.
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   do j = 1,jmax
     ! Note this injects the *forcing*, not q anomalies themselves
@@ -218,8 +220,8 @@ subroutine diag(hcr, hrc)
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Get zonal advection and forcing
-  ! Also get some other stuff
-  ! Will have to transform u*q flux back to spectral space
+  ! Requires transforming u*q flux back to spectral space
+  ! Note advection is positive here, i.e. is on 'LHS' of dq/dt equation
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   tt_type=0
   do j = 1,jmax

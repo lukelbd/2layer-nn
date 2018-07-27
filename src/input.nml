@@ -33,11 +33,7 @@
   ! sigma_l = 5.,  ! amplitude decay away from central wavenumber, in wavenumber units
   ! sigma_k = 5.,
   ! tau_i = 1.,    ! (days) injection timecale, CDF of binomial distribution characterizing
-  !                ! the <yes/no> trials for whether we inject
-  ! Insert initial jet
-  init_jet = .false., ! jet on or off
-  sigma_jet = 2.,     ! (rossby radii) width of the jet
-  amp_jet = 5.,       ! (m/s) jet amplitude
+                   ! the <yes/no> trials for whether we inject
   ! Lower level initial random forcing
   ll_seed_on = .true., ! random seed in lower layer
   ll_seed_amp = 1.0e-7,  ! (1/s)  initial amplitude in vorticity lower layer

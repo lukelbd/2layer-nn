@@ -1,7 +1,7 @@
 module global_variables
   implicit none
   !----------------------------------------------------------------------------!
-  !    ---- Initial stuff, and dimensions that must be hard-coded ----
+  !    ---- Initial stuff/stuff that has to be hard-coded ----
   real, parameter :: pi=3.141592653589793
   complex :: one_r = (1.,0.), one_i = (0.,1.), zero = (0.,0.)
   integer :: day, t   ! time tracker
@@ -9,8 +9,10 @@ module global_variables
   ! Timing
   integer, parameter :: tstart=0
   ! Grid resolution (number of cells)
-  integer, parameter :: imax=512, jmax=256+1 ! we want a point exactly at y=0
-  ! integer, parameter :: imax=256, jmax=256
+  ! Probably want approx 1:1 aspect ratio, then add one cell to y because
+  ! top and bottom boundary aren't same point (whereas left/right boundary are)
+  ! Without 1:1 aspect ratio PV injection is more complicated
+  integer, parameter :: imax=256, jmax=256+1 ! we want a point exactly at y=0
   ! Number complex coefficients for cyclic DFT in x-direction
   ! Signal is real, so need only N/2-1 complex coeffs plus the A_0 and A_(N/2) coeffs
   ! For y sine transform, coefficients are all real; need all <jmax> of them plus the constant offset
@@ -26,30 +28,29 @@ module global_variables
   real :: damp, dx, dy, el, rk
 
   !    ---- To be supplied by namelist ----
-  logical :: ll_seed_on, init_jet         ! flags
-  integer :: dt, td                       ! time steps
-  real :: tend, tchange, tds              ! timing
-  real :: width, wlength                  ! channel width, channel length
-  real :: rd                              ! radius of deformation
-  real :: tau_r, tau_f, tau_2, tau_sp     ! damping stuff
-  real :: y_sp                            ! percentage of top half/bottom half that we want covered by sponge layer
-  real :: shear, beta                     ! background state
-  real :: amp_jet, sigma_jet              ! initial jet
+  logical :: ll_seed_on                         ! flags
+  integer :: dt, td                             ! time steps
+  real :: tend, tchange, tds                    ! timing
+  real :: width, wlength                        ! channel width, channel length
+  real :: rd                                    ! radius of deformation
+  real :: tau_r, tau_f, tau_2, tau_sp           ! damping stuff
+  real :: y_sp                                  ! percentage of top half/bottom half that we want covered by sponge layer
+  real :: shear, beta                           ! background state
   real :: amp_i, tau_i, sigma_i, wmin_i, wmax_i ! Noboru's stoshcastic forcing
-  real :: ll_seed_amp                     ! lower level forcing
-  real :: visc, ndeg                      ! hyperviscocity
+  real :: ll_seed_amp                           ! lower level forcing
+  real :: visc, ndeg                            ! hyperviscocity
 
   !    ---- Noboru's arrays ----
   ! Arrays storing Fourier coefficients from x-direction decomposition
   complex :: q1_sp(idft,jmax,2), adv1_sp(idft,jmax,3), &
          tmp1_sp(idft,jmax),  psi1_sp(idft,jmax), vor1_sp(idft,jmax), &
-         visc1_sp(idft,jmax), rad1_sp(idft,jmax), &
+         visc1_sp(idft,jmax), rad1_sp(idft,jmax), sponge1_sp(idft,jmax), &
          force1_sp(idft,jmax), &
          u1_sp(idft,jmax),    v1_sp(idft,jmax),   &
          qx1_sp(idft,jmax),   qy1_sp(idft,jmax)
   complex :: q2_sp(idft,jmax,2), adv2_sp(idft,jmax,3), &
          tmp2_sp(idft,jmax),  psi2_sp(idft,jmax), vor2_sp(idft,jmax), &
-         visc2_sp(idft,jmax), rad2_sp(idft,jmax), &
+         visc2_sp(idft,jmax), rad2_sp(idft,jmax), sponge2_sp(idft,jmax), &
          fric2_sp(idft,jmax), &
          u2_sp(idft,jmax),    v2_sp(idft,jmax),   &
          qx2_sp(idft,jmax),   qy2_sp(idft,jmax)
@@ -65,7 +66,7 @@ module global_variables
           psi2_cart(imax,jmax), vor2_cart(imax,jmax), &
           qx2_cart(imax,jmax),  qy2_cart(imax,jmax)
   ! Means in tt space
-  real :: ub_tt(jmax), uc_tt(jmax), tmp1_tt(jmax), tmp2_tt(jmax), &
+  real :: tmp1_tt(jmax), tmp2_tt(jmax), &
           qyyflux1_tt(jmax,3), qyyflux2_tt(jmax,3), &
           qybar1_tt(jmax,2), qybar2_tt(jmax,2), &
           vorbar1_tt(jmax), qbar1_tt(jmax), ubar1_tt(jmax), &
@@ -75,7 +76,7 @@ module global_variables
           vorbar1_cart(jmax), qbar1_cart(jmax),  ubar1_cart(jmax), &
           vorbar2_cart(jmax), qbar2_cart(jmax),  ubar2_cart(jmax)
   ! Physical y coordinate, and masks for sponge and pv injection
-  real :: y_cart(jmax), mask_i(jmax), mask_sp(jmax)
+  real :: y_cart(jmax), mask_i(jmax), mask_sp(jmax), mask_sp_tt(jmax)
 
   contains
 
@@ -84,13 +85,12 @@ module global_variables
     !    ---- Declare namelist ----
     ! real :: tau_farray(jmax)
     namelist /input_nml/ &
-      ll_seed_on, init_jet, &
+      ll_seed_on, &
       width, wlength, &
       dt, td, &
       tend, tchange, tds, &
       tau_r, tau_f, tau_sp, tau_2, &
       shear, beta, rd, &
-      amp_jet, sigma_jet, &
       amp_i, tau_i, sigma_i, wmin_i, wmax_i, &
       ll_seed_amp, &
       visc, ndeg
@@ -112,7 +112,6 @@ module global_variables
     width     = width*1.e3   ! km to m
     wlength   = wlength*1.e3 ! km to m
     sigma_i   = rd*sigma_i   ! 'rossby radii' to m
-    sigma_jet = rd*sigma_jet ! 'rossby radii' to m
 
     !    ---- Calculate dependent variables ----
     dx = wlength/float(imax) ! (m) grid resolution in x

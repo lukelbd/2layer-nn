@@ -4,24 +4,18 @@
 module initial
 contains
 subroutine init
+  use spectral
   use global_variables
   implicit none
-  integer :: n, k, tt_type
-  integer :: ir, ipar(128)
   integer :: i, j, jj
-  real :: y, yh,  yph, phi, sech2
-  real :: x, xph, rer, ell, aap
-  real :: offset, offset_sp, offset_wall, fact
-  real :: r(idft,jmax)
+  real :: y, fact, offset, offset_sp, offset_wll
+  real :: r(idft,jmax) ! for seeding
 
-  !    ---- Zonal mean pv ----
-  ! Since initially the mean PV is spatially uniform and equal to
-  ! beta +/- shear/(rd*rd), its initial meridional gradient is set to zero.
+  !    ---- Set initial anomalous mean-pv gradient to zero ----
   qybar1_tt = 0.0
   qybar2_tt = 0.0
 
-  !    ---- Anomalous pv ----
-  ! The initial pv is initially set to zero
+  !    ---- Set initial anomalous pv to zero ----
   q1_sp = zero
   q2_sp = zero
 
@@ -30,18 +24,14 @@ subroutine init
     y_cart(j) = float(j-1)*dy - 0.5*width 
   enddo
 
-  !    ---- Basic state jet ----
-  if (init_jet) then
-    do j = 1,jtrunc/2
-      jj = 2*j-1
-      ell = el * float(jj)
-      aap = ((-1)**(j+1))*exp(-ell*ell*sigma_jet*sigma_jet)
-      do i = 2,9
-        q1_sp(i,2*j,1) = one_r*amp_jet*aap/float(jtrunc/2)
-        q2_sp(i,2*j,1) = one_r*amp_jet*aap/float(jtrunc/2)
-      enddo
-    enddo
-  endif
+  !    ---- Initial jet ----
+  ! * If we want a perpetual jet background state, will have to create a new
+  !   variable *separate* from the tracked qybar array, and add advection
+  !   of vorticity due to the jet/extra wind from the jet when calculating
+  !   advective terms in diagnostics.f90 -- not trivial!
+  ! * Will want to define zonal jet wind on *cartesian* grid, then transform to
+  !   spectral space and un-invert the dqbar/dy equation to get the jet's contribution
+  !   to dqbar/dy (we already do this with zonal mean winds, so not too hard).
 
   !    ---- Random initial noise in lower layer ----
   ! Necessary to get eddies going, otherwise (without pv injection in
@@ -67,13 +57,19 @@ subroutine init
   !    ---- Mask for sponge layer ----
   ! Will be a quadratic scale factor up to each wall
   mask_sp(:) = 0.0
-  offset_sp   = float(jmax-1)*0.5*(1.0-y_sp) ! distance from center point in grid cell units
-  offset_wall = float(jmax-1)*0.5            ! the wall location
+  offset_sp  = float(jmax-1)*0.5*(1.0-y_sp) ! distance from center point in grid cell units
+  offset_wll = float(jmax-1)*0.5            ! the wall location
   do j = 1,jmax
     offset     = abs(float(j-1) - 0.5*float(jmax-1)) ! distance from center point (think about it, with jmax=5)
-    fact       = (offset-offset_sp) / (offset_wall-offset_sp)
+    fact       = (offset-offset_sp) / (offset_wll-offset_sp)
     mask_sp(j) = -(1.0/tau_sp)*fact*fact ! multiplier to apply to pv anomalies, in 1/seconds
   enddo
+
+  !    ---- Sponge layer in spectral space ----
+  ! Want a cosine transform, since mask at top/bottom boundary
+  ! is certainly not zero!
+  tt_type = 1 ! cosine
+  call ftt(mask_sp, mask_sp_tt, tt_type, jmax, jtrunc) ! jtrunc is ignored for now
 
   !    ---- Test ----
   ! do i = 6,6

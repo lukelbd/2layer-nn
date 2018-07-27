@@ -13,8 +13,7 @@ program main
   use forward
   use prognostics
   use diagnostics
-  use mkl_dfti            ! includes some boilerplate stuff, and Fourier transforms
-  use mkl_trig_transforms ! includes trig transforms
+  use mkl_dfti ! includes some boilerplate stuff, and Fourier transforms
   use io
   type(dfti_descriptor), pointer :: hcr, hrc ! handles for real-to-complex and complex-to-real fourier transforms
   integer :: ret, shp(1)

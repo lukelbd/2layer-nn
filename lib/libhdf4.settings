@@ -1,0 +1,40 @@
+	    SUMMARY OF THE HDF4 CONFIGURATION
+	    =================================
+
+General Information:
+-------------------
+		   HDF4 Version: 4.2.13
+		  Configured on: Thu Jun 14 00:57:15 CDT 2018
+		  Configured by: tanzh@midway2-login1.rcc.local
+		 Configure mode: production
+		    Host system: x86_64-unknown-linux-gnu
+              Uname information: Linux midway2-login1.rcc.local 3.10.0-693.11.6.el7.x86_64 #1 SMP Wed Jan 3 18:09:42 CST 2018 x86_64 x86_64 x86_64 GNU/Linux
+		      Libraries: 
+	     Installation point: /project2/rossby/models/2layer_nn/packages
+
+Compiling Options:
+------------------
+               Compilation Mode: production
+                     C compiler: /software/intel/parallel_studio_xe_2016_update3/bin/icc ( Intel(R) C Intel(R) 64 Compiler Version 16.0.3.210 Build 20160415)
+                         CFLAGS:  -O
+                       CPPFLAGS:  -I/project2/rossby/models/2layer_nn/packages/include -I/project2/rossby/models/2layer_nn/packages/include -DBIG_LONGS -DSWAP 
+               Shared Libraries: no
+               Static Libraries: yes
+  Statically Linked Executables: no
+                        LDFLAGS:  -L/project2/rossby/models/2layer_nn/packages/lib -L/project2/rossby/models/2layer_nn/packages/lib
+ 	 	Extra libraries: -ljpeg -lz 
+ 		       Archiver: ar
+ 		 	 Ranlib: ranlib
+
+Languages:
+----------
+                        Fortran: yes
+               Fortran Compiler: /software/intel/parallel_studio_xe_2016_update3/bin/ifort ( Intel(R) Fortran Intel(R) 64 Compiler Version 16.0.3.210 Build 20160415)
+                         FFLAGS:  
+
+                           Java: no
+
+Features:
+---------
+               SZIP compression: disabled
+   Support for netCDF API 2.3.2: yes
