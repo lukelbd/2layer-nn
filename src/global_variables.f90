@@ -72,9 +72,10 @@ module global_variables
           vorbar1_tt(jmax), qbar1_tt(jmax), ubar1_tt(jmax), &
           vorbar2_tt(jmax), qbar2_tt(jmax), ubar2_tt(jmax)
   ! Means in cartesian space
-  real :: qybar1_cart(jmax),  qybar2_cart(jmax), &
-          vorbar1_cart(jmax), qbar1_cart(jmax),  ubar1_cart(jmax), &
-          vorbar2_cart(jmax), qbar2_cart(jmax),  ubar2_cart(jmax)
+  real :: qybar1_cart(jmax),   qybar2_cart(jmax), &
+          qflux1_cart(jmax),   qflux2_cart(jmax), &
+          vorbar1_cart(jmax),  qbar1_cart(jmax),  ubar1_cart(jmax), &
+          vorbar2_cart(jmax),  qbar2_cart(jmax),  ubar2_cart(jmax)
   ! Physical y coordinate, and masks for sponge and pv injection
   real :: y_cart(jmax), mask_i(jmax), mask_sp(jmax), mask_sp_tt(jmax)
 

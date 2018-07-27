@@ -1,5 +1,5 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Modules for Fourier and trigonometric (sines/cosines only) transforms
+! Fourier (x-direction) and trigonometric (y-direction; sines/cosines only) transforms
 ! Uses MKL Intel libraries
 ! * Each of these accepts ***real*** arguments (want to store the 2D data single
 !   precision for memory concerns), but performs transforms on ***double*** data.
@@ -10,8 +10,6 @@
 ! * The ftt_rcft and btt_crft are convenient wrappers to transform 2D spectral
 !   data to fully cartesian coordinates, and vice versa. Does not create more
 !   arrays then before -- no copies are made in those functions.
-! * The j-direction truncation number is passed, but so far does nothing. May
-!   be used in future.
 ! * For more information on MKL libraries, see:
 !   https://scc.ustc.edu.cn/zlsc/sugon/intel/mkl/mkl_manual
 !   Note trig transform info is under "Partial Differential Equations support"
@@ -31,11 +29,11 @@ complex(8) :: one_real=(1.,0.), one_imag=(0.,1.), zero_complex=(0.,0.)
 contains
 
 ! Forward trig transform
-! Usage: ftt(<input array>, <output array>, <transform type>, <array size>, <trunc number>)
+! Usage: ftt(<input array>, <output array>, <transform type>, <array size>)
 ! Transform type can be 0 (sine transform) or 1 (cosine transform)
-subroutine ftt(x_in, x_out, tt_type, nj, jtrunc)
+subroutine ftt(x_in, x_out, tt_type, nj)
   integer :: tt_type
-  integer :: nj, jtrunc
+  integer :: nj
   ! real(8) :: dpar(3*n/2+2)
   real(8) :: dpar(5*nj/2+2) ! documentation says we need 5*
   real, dimension(nj)    :: x_in
@@ -51,9 +49,9 @@ end subroutine
 
 ! Backward trig transform
 ! Same syntax as forward version
-subroutine btt(x_in, x_out, tt_type, nj, jtrunc)
+subroutine btt(x_in, x_out, tt_type, nj)
   integer :: tt_type
-  integer :: nj, jtrunc
+  integer :: nj
   ! real :: dpar(3*n/2+2)
   real(8) :: dpar(5*nj/2+2) ! documentation says we need 5*
   real, dimension(nj)    :: x_in
@@ -70,9 +68,9 @@ end subroutine
 ! Forward transform, 'real to complex'
 ! Remember for real signal, the N/2-N coefficients are complex conjugates
 ! of the 1-N coefficients. We can combine them.
-subroutine rcft(x, y, n, trunc, as, hy)
+subroutine rcft(x, y, n, as, hy)
   real    :: as
-  integer :: n, trunc, i, iim, iip, l(1)
+  integer :: n, i, iim, iip, l(1)
   real    :: x(n)
   complex :: y(1+n/2)
   real(8) :: tmp1(n+2)
@@ -95,9 +93,9 @@ subroutine rcft(x, y, n, trunc, as, hy)
 end subroutine
 
 ! Inverse transform, 'complex to real'
-subroutine crft(y, x, n, trunc, as, hx)
+subroutine crft(y, x, n, as, hx)
   real :: as
-  integer :: n, trunc, i, k, iim, iip, l(1)
+  integer :: n, i, k, iim, iip, l(1)
   real    :: x(n)
   complex :: y(1+n/2)
   real(8) :: tmp1(n+2)
@@ -123,12 +121,11 @@ end subroutine
 
 ! Forward Fourier transform and trig transform
 ! Usage: ftt_rcft(<input array>, <output array>, <transform type>,
-!            <dim 1 size>, <dim 2 size>, <dim 1 trunc number>, <dim 2 trunc number>,
-!            <handle for abstract transform object>)
-subroutine ftt_rcft(x_in, x_out, tt_type, ni, nj, itrunc, jtrunc, hy)
+!                 <dim 1 size>, <dim 2 size>, <dim 1 trunc number>, <dft handle>)
+subroutine ftt_rcft(x_in, x_out, tt_type, ni, nj, trunc, hy)
   real    :: as
   integer :: tt_type
-  integer :: i, j, ni, nj, itrunc, jtrunc
+  integer :: i, j, ni, nj, trunc
   real, dimension(ni,nj)    :: x_in
   complex, dimension(ni,nj) :: x_out
   complex, dimension(ni)    :: dft_out
@@ -139,31 +136,26 @@ subroutine ftt_rcft(x_in, x_out, tt_type, ni, nj, itrunc, jtrunc, hy)
   as = 1./float(ni)
   tt_in   = zero_complex
   dft_out = zero_complex
-  do j = 1,nj
-    call rcft(x_in(:,j), dft_out, ni, itrunc, as, hy)
+  do j = 1,nj ! real-to-complex (y-direction is in cartesian units)
+    call rcft(x_in(:,j), dft_out, ni, as, hy)
     tt_in(:,j) = dft_out
   enddo
   ! Inverse trig transform
   x_out = zero_complex
   tt_r = 0.0
   tt_i = 0.0
-  do i = 1,itrunc ! handle truncation here? why not
-    call ftt( real(tt_in(i,:)), tt_r, tt_type, nj, jtrunc)
-    call ftt(aimag(tt_in(i,:)), tt_i, tt_type, nj, jtrunc)
-    if (i.eq.itrunc .or. i.eq.1) then
-      x_out(i,:) = one_real*tt_r
-    else
-      x_out(i,:) = 2.0*(one_real*tt_r + one_imag*tt_i)
-    end if
+  do i = 2,trunc ! trig transform the Fourier coefficients we care about (un-truncated ones)
+    call ftt( real(tt_in(i,:)), tt_r, tt_type, nj)
+    call ftt(aimag(tt_in(i,:)), tt_i, tt_type, nj)
+    x_out(i,:) = 2.0*(one_real*tt_r + one_imag*tt_i)
   enddo
 end subroutine
 
 ! Backward Fourier transform and trig transform
-! subroutine btt_crft(tt_type, x_in, xout_r, xout_i)
-subroutine btt_crft(x_in, x_out, tt_type, ni, nj, itrunc, jtrunc, hx)
+subroutine btt_crft(x_in, x_out, tt_type, ni, nj, trunc, hx)
   real    :: as
   integer :: tt_type
-  integer :: i, j, ni, nj, itrunc, jtrunc
+  integer :: i, j, ni, nj, trunc
   complex, dimension(ni,nj) :: x_in
   real, dimension(ni,nj)    :: x_out
   complex, dimension(ni,nj) :: dft_in
@@ -174,21 +166,17 @@ subroutine btt_crft(x_in, x_out, tt_type, ni, nj, itrunc, jtrunc, hx)
   dft_in = zero_complex
   tt_r = 0.0
   tt_i = 0.0
-  do i = 1,itrunc
-    call btt( real(x_in(i,:)), tt_r, tt_type, nj, jtrunc)
-    call btt(aimag(x_in(i,:)), tt_i, tt_type, nj, jtrunc)
-    if (i.eq.itrunc .or. i.eq.1) then
-      dft_in(i,:) = one_real*tt_r
-    else
-      dft_in(i,:) = 0.5*(one_real*tt_r + one_imag*tt_i)
-    end if
+  do i = 2,trunc ! trig transform the Fourier coefficients we care about (un-truncated ones)
+    call btt( real(x_in(i,:)), tt_r, tt_type, nj)
+    call btt(aimag(x_in(i,:)), tt_i, tt_type, nj)
+    dft_in(i,:) = 0.5*(one_real*tt_r + one_imag*tt_i)
   enddo
   ! Inverse Fourier transform
   as = 1.0
   x_out   = 0.0
   dft_out = 0.0
   do j = 1,nj
-    call crft(dft_in(:,j), dft_out, ni, itrunc, as, hx)
+    call crft(dft_in(:,j), dft_out, ni, as, hx)
     x_out(:,j) = dft_out
   enddo
 end subroutine

@@ -81,12 +81,12 @@ subroutine diag(hcr, hrc)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   do j = 2,jtrunc
     ell = el*float(j-1) ! angular wavenumber
-    pb_tt = (qybar1_tt(j,3) + qybar2_tt(j,3))/(ell*ell)
-    pc_tt = (qybar1_tt(j,3) - qybar2_tt(j,3))/(ell*ell + (2./(rd*rd)))
+    pb_tt = (qybar1_tt(j,2) + qybar2_tt(j,2))/(ell*ell)
+    pc_tt = (qybar1_tt(j,2) - qybar2_tt(j,2))/(ell*ell + (2./(rd*rd)))
     ubar1_tt(j) = 0.5*(pb_tt + pc_tt)
     ubar2_tt(j) = 0.5*(pb_tt - pc_tt)
-    qbar1_tt(j) = qybar1_tt(j,3)/ell ! d/dx(f(t)) = wavenum*F(wavenum) for sine transform (note wavenum is angular here)
-    qbar2_tt(j) = qybar2_tt(j,3)/ell
+    qbar1_tt(j) = qybar1_tt(j,2)/ell ! d/dx(f(t)) = wavenum*F(wavenum) for sine transform (note wavenum is angular here)
+    qbar2_tt(j) = qybar2_tt(j,2)/ell
     vorbar1_tt(j) = (ell*ell)*ubar1_tt(j) ! shear vorticity, e.g. due to jet
     vorbar2_tt(j) = (ell*ell)*ubar2_tt(j)
   enddo
@@ -103,68 +103,68 @@ subroutine diag(hcr, hrc)
     ell = el*float(j-1)
     do i = 2,itrunc
       rkk = rk*float(i-1)
-      pb_sp  = -(q1_sp(i,j,3) + q2_sp(i,j,3))/(rkk**2 + ell**2)
-      pc_sp  = -(q1_sp(i,j,3) - q2_sp(i,j,3))/(rkk**2 + ell**2  + (2./(rd*rd)))
-      psi1_sp(i,j)  = 0.5*(pb_sp + pc_sp)
-      psi2_sp(i,j)  = 0.5*(pb_sp - pc_sp)
+      qx1_sp(i,j)  = one_i*rkk*q1_sp(i,j,3)
+      qx2_sp(i,j)  = one_i*rkk*q2_sp(i,j,3)
+      qy1_sp(i,j)  = ell*q1_sp(i,j,3)
+      qy2_sp(i,j)  = ell*q2_sp(i,j,3)
+      pb_sp = -(q1_sp(i,j,2) + q2_sp(i,j,2))/(rkk**2 + ell**2)
+      pc_sp = -(q1_sp(i,j,2) - q2_sp(i,j,2))/(rkk**2 + ell**2  + (2./(rd*rd)))
+      psi1_sp(i,j) = 0.5*(pb_sp + pc_sp)
+      psi2_sp(i,j) = 0.5*(pb_sp - pc_sp)
       vor1_sp(i,j) = -(rkk**2 + ell**2)*psi1_sp(i,j)
       vor2_sp(i,j) = -(rkk**2 + ell**2)*psi2_sp(i,j)
-      u1_sp(i,j)    = -ell*psi1_sp(i,j)
-      u2_sp(i,j)    = -ell*psi2_sp(i,j)
-      v1_sp(i,j)    = one_i*rkk*psi1_sp(i,j)
-      v2_sp(i,j)    = one_i*rkk*psi2_sp(i,j)
-      qx1_sp(i,j)   = one_i*rkk*q1_sp(i,j,3)
-      qx2_sp(i,j)   = one_i*rkk*q2_sp(i,j,3)
-      qy1_sp(i,j)   = ell*q1_sp(i,j,3)
-      qy2_sp(i,j)   = ell*q2_sp(i,j,3)
+      u1_sp(i,j)   = -ell*psi1_sp(i,j)
+      u2_sp(i,j)   = -ell*psi2_sp(i,j)
+      v1_sp(i,j)   = one_i*rkk*psi1_sp(i,j)
+      v2_sp(i,j)   = one_i*rkk*psi2_sp(i,j)
     enddo
   enddo
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Transform zonal mean to cartesian space 
+  ! Transform zonal means to cartesian space 
   ! Also, after transforming mean qbar anomalies, add the basic-state
   ! qbar from background. Can be used to output data.
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Inverse sine transforms
   ! Suitable if edges are always small/zero
   tt_type=0
-  call btt(ubar1_tt, ubar1_cart, tt_type, jmax, jtrunc)
-  call btt(ubar2_tt, ubar2_cart, tt_type, jmax, jtrunc)
-  call btt(vorbar1_tt, vorbar1_cart, tt_type, jmax, jtrunc)
-  call btt(vorbar2_tt, vorbar2_cart, tt_type, jmax, jtrunc)
-  call btt(qybar1_tt(:,3), qybar1_cart, tt_type, jmax, jtrunc) ! needed for total advection
-  call btt(qybar2_tt(:,3), qybar2_cart, tt_type, jmax, jtrunc)
-
+  call btt(qybar1_tt(:,2), qybar1_cart, tt_type, jmax) ! needed for total advection
+  call btt(qybar2_tt(:,2), qybar2_cart, tt_type, jmax)
+  call btt(vorbar1_tt, vorbar1_cart, tt_type, jmax)
+  call btt(vorbar2_tt, vorbar2_cart, tt_type, jmax)
+  call btt(ubar1_tt, ubar1_cart, tt_type, jmax)
+  call btt(ubar2_tt, ubar2_cart, tt_type, jmax)
   ! Inverse cosine transforms
   ! Suitable if edges are always non-zero
   tt_type=1
-  call btt(qbar1_tt, qbar1_cart, tt_type, jmax, jtrunc)
-  call btt(qbar2_tt, qbar2_cart, tt_type, jmax, jtrunc)
+  call btt(qbar1_tt, qbar1_cart, tt_type, jmax)
+  call btt(qbar2_tt, qbar2_cart, tt_type, jmax)
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Transform 2D data to cartesian space
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Inverse sine transforms
-  ! Suitable if edges are always small/zero
   ! Note we are transforming the x-Fourier coefficients here
+  ! Note q is always stores in sines, so it seems we only do cosine
+  ! transforms where the parameter is proportional to an odd (d/dy, d^3/dy^3)
+  ! derivative of q in y, i.e. the sines were changed to cosines.
   tt_type=0
-  call btt_crft(v1_sp, v1_cart, tt_type, imax, jmax, itrunc, jtrunc, hcr)
-  call btt_crft(q1_sp, q1_cart, tt_type, imax, jmax, itrunc, jtrunc, hcr)
-  call btt_crft(qx1_sp, qx1_cart, tt_type, imax, jmax, itrunc, jtrunc, hcr)
-  call btt_crft(psi1_sp, psi1_cart, tt_type, imax, jmax, itrunc, jtrunc, hcr)
-  call btt_crft(vor1_sp, vor1_cart, tt_type, imax, jmax, itrunc, jtrunc, hcr)
-  call btt_crft(v2_sp, v2_cart, tt_type, imax, jmax, itrunc, jtrunc, hcr)
-  call btt_crft(q2_sp, q2_cart, tt_type, imax, jmax, itrunc, jtrunc, hcr)
-  call btt_crft(qx2_sp, qx2_cart, tt_type, imax, jmax, itrunc, jtrunc, hcr)
-  call btt_crft(psi2_sp, psi2_cart, tt_type, imax, jmax, itrunc, jtrunc, hcr)
-  call btt_crft(vor2_sp, vor2_cart, tt_type, imax, jmax, itrunc, jtrunc, hcr)
+  call btt_crft(q1_sp(:,:,2), q1_cart, tt_type, imax, jmax, itrunc, hcr)
+  call btt_crft(q2_sp(:,:,2), q2_cart, tt_type, imax, jmax, itrunc, hcr)
+  call btt_crft(qx1_sp, qx1_cart, tt_type, imax, jmax, itrunc, hcr)
+  call btt_crft(qx2_sp, qx2_cart, tt_type, imax, jmax, itrunc, hcr)
+  call btt_crft(vor1_sp, vor1_cart, tt_type, imax, jmax, itrunc, hcr)
+  call btt_crft(vor2_sp, vor2_cart, tt_type, imax, jmax, itrunc, hcr)
+  call btt_crft(psi1_sp, psi1_cart, tt_type, imax, jmax, itrunc, hcr)
+  call btt_crft(psi2_sp, psi2_cart, tt_type, imax, jmax, itrunc, hcr)
+  call btt_crft(v1_sp, v1_cart, tt_type, imax, jmax, itrunc, hcr)
+  call btt_crft(v2_sp, v2_cart, tt_type, imax, jmax, itrunc, hcr)
   ! Inverse cosine transforms
-  ! Suitble if edges are always non-zero
   tt_type=1
-  call btt_crft(u1_sp, u1_cart, tt_type, imax, jmax, itrunc, jtrunc, hcr)
-  call btt_crft(qy1_sp, qy1_cart, tt_type, imax, jmax, itrunc, jtrunc, hcr)
-  call btt_crft(u2_sp, u2_cart, tt_type, imax, jmax, itrunc, jtrunc, hcr)
-  call btt_crft(qy2_sp, qy2_cart, tt_type, imax, jmax, itrunc, jtrunc, hcr)
+  call btt_crft(u1_sp, u1_cart, tt_type, imax, jmax, itrunc, hcr)
+  call btt_crft(u2_sp, u2_cart, tt_type, imax, jmax, itrunc, hcr)
+  call btt_crft(qy1_sp, qy1_cart, tt_type, imax, jmax, itrunc, hcr)
+  call btt_crft(qy2_sp, qy2_cart, tt_type, imax, jmax, itrunc, hcr)
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Construct 'full' values from anomalous values
@@ -220,34 +220,45 @@ subroutine diag(hcr, hrc)
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Get zonal advection and forcing
-  ! Requires transforming u*q flux back to spectral space
+  ! Have to transform u*q flux back to spectral space
   ! Note advection is positive here, i.e. is on 'LHS' of dq/dt equation
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   tt_type=0
   do j = 1,jmax
     adv1_cart(:,j) = qx1_cart(:,j)*(u1_cart(:,j) + ubar1_cart(j) + shear) &
-                 + v1_cart(:,j)*(qy1_cart(:,j) + beta + (shear/(rd*rd)) + qybar1_cart(j))
+       + v1_cart(:,j)*(qy1_cart(:,j) + beta + (shear/(rd*rd)) + qybar1_cart(j))
     adv2_cart(:,j) = qx2_cart(:,j)*(u2_cart(:,j) + ubar2_cart(j)) &
-                 + v2_cart(:,j)*(qy2_cart(:,j) + beta - (shear/(rd*rd)) + qybar2_cart(j))
+       + v2_cart(:,j)*(qy2_cart(:,j) + beta - (shear/(rd*rd)) + qybar2_cart(j))
   enddo
-  call ftt_rcft(force1_cart(:,:,2), force1_sp, tt_type, imax, jmax, itrunc, jtrunc, hrc)
-  call ftt_rcft(adv1_cart, tmp1_sp, tt_type, imax, jmax, itrunc, jtrunc, hrc)
-  call ftt_rcft(adv2_cart, tmp2_sp, tt_type, imax, jmax, itrunc, jtrunc, hrc)
-  adv1_sp(:,:,3) = tmp1_sp(:,:)
-  adv2_sp(:,:,3) = tmp2_sp(:,:)
+  call ftt_rcft(force1_cart(:,:,2), force1_sp, tt_type, imax, jmax, itrunc, hrc)
+  call ftt_rcft(adv1_cart, tmp1_sp, tt_type, imax, jmax, itrunc, hrc)
+  call ftt_rcft(adv2_cart, tmp2_sp, tt_type, imax, jmax, itrunc, hrc)
+  do i=2,itrunc ! put the assignments in a loop just for clarity -- we always truncate!
+    do j=2,jtrunc
+      adv1_sp(i,j,3) = tmp1_sp(i,j)
+      adv2_sp(i,j,3) = tmp2_sp(i,j)
+    enddo
+  enddo
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Get meridional q flux convergence
   ! Have to transform back to trig space
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   tt_type=0
-  call ftt(sum(v1_cart*q1_cart,1)/float(imax), tmp1_tt, tt_type, jmax, jtrunc)
-  call ftt(sum(v2_cart*q2_cart,1)/float(imax), tmp2_tt, tt_type, jmax, jtrunc)
+  qflux1_cart = sum(v1_cart*q1_cart,1)/float(imax)
+  qflux2_cart = sum(v2_cart*q2_cart,1)/float(imax)
+  call ftt(qflux1_cart, tmp1_tt, tt_type, jmax)
+  call ftt(qflux2_cart, tmp2_tt, tt_type, jmax)
   do j = 2,jtrunc
     ell = el*float(j-1)
     qyyflux1_tt(j,3) = -ell*ell*tmp1_tt(j) ! these are 2nd derivatives
     qyyflux2_tt(j,3) = -ell*ell*tmp2_tt(j) ! convergence of the flux?
   enddo
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Eddy kinetic energy
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  energy = 0.5*sum(v1_cart**2 + v2_cart**2 + u1_cart**2 + u2_cart**2)/float(imax*jmax)
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Print diagnostic output, useful for monitoring the situation
@@ -256,13 +267,12 @@ subroutine diag(hcr, hrc)
   if(mod(int(t),int(dt)*1000).eq.1) then
     write(*,*) 'Printing zonal mean diagnostics.'
     do j = 1,jmax
-      write(*,*) j, 'ubar1 = ', ubar1_tt(j)+shear, 'qbar1 = ', qbar1_tt(j)
+      write(*,*) j, 'ubar1 = ', ubar1_cart(j)+shear, 'qbar1 = ', qbar1_cart(j)
     enddo
   endif
   day    = float(t)/(3600.*24.)
-  cfl    = umax*dt/dx
   umax   = max(maxval(ufull1_cart),maxval(ufull2_cart))
-  energy = 0.5*sum(v1_cart**2 + v2_cart**2 + u1_cart**2 + u2_cart**2)/float(imax*jmax)
+  cfl    = umax*dt/dx
   write(*,677) day, energy, umax, cfl
   677 format("days = ", 1f8.3, " eke = ", 1p1e13.5, " umax = ", 1f3.3, " cfl = ", 1f3.3)
   ! 1p ensures non-zero digit to left of decimal

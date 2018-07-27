@@ -69,7 +69,7 @@ subroutine init
   ! Want a cosine transform, since mask at top/bottom boundary
   ! is certainly not zero!
   tt_type = 1 ! cosine
-  call ftt(mask_sp, mask_sp_tt, tt_type, jmax, jtrunc) ! jtrunc is ignored for now
+  call ftt(mask_sp, mask_sp_tt, tt_type, jmax)
 
   !    ---- Test ----
   ! do i = 6,6

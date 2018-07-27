@@ -14,8 +14,8 @@ subroutine iterate
   implicit none
   q1_sp(:,:,1)     = q1_sp(:,:,2)
   q2_sp(:,:,1)     = q2_sp(:,:,2)
-  qybar1_tt(:,1) = qybar1_tt(:,2)
-  qybar2_tt(:,1) = qybar2_tt(:,2)
+  qybar1_tt(:,1)   = qybar1_tt(:,2)
+  qybar2_tt(:,1)   = qybar2_tt(:,2)
   adv1_sp(:,:,1)   = adv1_sp(:,:,2)
   adv1_sp(:,:,2)   = adv1_sp(:,:,3)
   adv2_sp(:,:,1)   = adv2_sp(:,:,2)
