@@ -9,14 +9,14 @@ subroutine ncwrite
   implicit none
   integer :: s4d(4), s3d(3), s1d(1)
   integer :: x_id, y_id, z_id, t_id
-  integer :: q_id, u_id, v_id, f_id, vor_id, psi_id, eke_id
+  integer :: q_id, u_id, v_id, f_id, vor_id, psi_id, eke_id, cfl_id
   integer :: xdim_id, ydim_id, zdim_id, tdim_id
   !    ---- Create netcdf file and initialze variables ----
   ! Probably makes sense to put this here instead of in initialize.f90, because
   ! perhaps we want to run the model without saving any data -- just want to read
   ! some print statements/play with it.
-  if (nctime.eq.0) then
-    ! Create file
+  if (nctime.eq.1) then
+    ! Create file (also 'opens' it and turns on 'defmode'; no need to call those functions)
     ret = nf90_create(path='data.nc', cmode=nf90_clobber, ncid=file_id)
     ! Define dimensions
     ret = nf90_def_dim(file_id, 'x', imax, xdim_id)
@@ -41,6 +41,7 @@ subroutine ncwrite
     ret = nf90_def_var(file_id, 'f',   nf90_float, s3d, f_id)   ! forcing perturbations
     s1d = (/tdim_id/)
     ret = nf90_def_var(file_id, 'eke', nf90_float, s1d, eke_id)
+    ret = nf90_def_var(file_id, 'cfl', nf90_float, s1d, cfl_id)
     ! Global attributes
     ret = nf90_put_att(file_id, nf90_global, 'title', '2-layer QG model results')
     ! Dimension attributes
@@ -61,16 +62,17 @@ subroutine ncwrite
     ret = nf90_put_att(file_id, vor_id, 'long_name', 'total relative vorticity')
     ret = nf90_put_att(file_id, f_id,   'long_name', 'total potential vorticity forcing in upper layer')
     ret = nf90_put_att(file_id, eke_id, 'long_name', 'total eddy kinetic energy')
+    ret = nf90_put_att(file_id, cfl_id, 'long_name', 'cfl number')
     ! Finished defining
     ret = nf90_enddef(file_id)
   endif
 
   !    ---- Save data ----
-  ! Add current day to time variable
-  ret = nf90_put_var(file_id, t_id, (/day/), start=(/nctime/), count=(/1/))
-  ! If we are past spinup 'tds', and we are on the data save interval, save
   ! Note if you mess up the dimensionality of input arrays, error message will be mysterious:
   ! "There is no matching specific function for this generic function reference."
+  ! Add current day to time variable
+  ret = nf90_put_var(file_id, t_id, (/day/), start=(/nctime/), count=(/1/))
+  ! Add model data
   ret = nf90_put_var(file_id, q_id, qfull1_cart, start=(/1,1,1,nctime/), count=(/imax,jmax,1,1/))
   ret = nf90_put_var(file_id, q_id, qfull2_cart, start=(/1,1,2,nctime/), count=(/imax,jmax,1,1/))
   ret = nf90_put_var(file_id, u_id, ufull1_cart, start=(/1,1,1,nctime/), count=(/imax,jmax,1,1/))
@@ -81,6 +83,7 @@ subroutine ncwrite
   ret = nf90_put_var(file_id, vor_id, vorfull2_cart, start=(/1,1,2,nctime/), count=(/imax,jmax,1,1/))
   ret = nf90_put_var(file_id, f_id, force1_cart(:,:,1), start=(/1,1,nctime/), count=(/imax,jmax,1/))
   ret = nf90_put_var(file_id, eke_id, energy, start=(/nctime/), count=(/1/))
+  ret = nf90_put_var(file_id, cfl_id, cfl, start=(/nctime/), count=(/1/))
 
   !    ---- Increment save time ----
   nctime = nctime+1

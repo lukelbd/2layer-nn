@@ -1,14 +1,13 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Invert u from dq/dy
+! Not currently used; but perhaps useful as a *reference*
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 program basic
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Invert u from dq/dy
-  ! Not currently used; but perhaps useful as a *reference*
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   integer, parameter :: jmax = 801
   common /array/  dqdy1(jmax),dqdy2(jmax)
   common /brray/  u1(jmax),u2(jmax),ub(jmax),uc(jmax)
   common /crray/  al(jmax),gam(jmax),zeta(jmax),eta(jmax)
   common /drray/  pb(jmax),pc(jmax)
-
   eld = 800000.  !(m)
   beta = 1.7e-11 
   width = 80000000.   !(m)
@@ -16,10 +15,8 @@ program basic
   bwidth = 1000000. !(m)
   pi = acos(-1.)
   const = 1.5e-4/(bwidth*sqrt(2.*pi))
-
-  !  dd = 500000. !(m)
   dd = 0.
-
+  ! dd = 500000. !(m)
   do j =1,jmax
     y = dy*float(j-1)
     y1 = y-0.5*width-dd
@@ -32,7 +29,6 @@ program basic
     pc(j) = -(dqdy1(j)-dqdy2(j))
     write(*,*) j,y,dqdy1(j),dqdy2(j),dqdy1(j)-dqdy2(j)
   enddo
-
   al(jmax-1) = 0.
   gam(jmax-1) = 0.
   zeta(jmax-1) = 0.

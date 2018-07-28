@@ -20,7 +20,8 @@ program main
   !    ---- Initialize fields and other stuff ----
   call init ! (initial.f90)
   ! Printout; should definitely add this
-  ! print *, y0, tend, tds, tau_r, tau_f, rd, width, wlength, sigma_jet
+  write(*,687) dt, td, tend
+  687 format("time step = ", i8, " io step = ", i8, " final time = ", f12.3)
 
   !    ---- Integration ----
   write(*,*) "Starting integration."
@@ -36,14 +37,15 @@ program main
     call iterate ! (forward.f90) time forwarding
 
     !    ---- Save data ----
+    ! If we are past spinup 'tds', and we are on the data save interval, save
     if (t.ge.int(tds) .and. mod(t,td).eq.0) then 
       write(*,*) "Writing data."
       call ncwrite ! (io.f90) save data; if this is first time, will initialize handles
     endif
 
     !    ---- Print diagnostic output ----
-    if(mod(int(t),int(dt)*1000).eq.1) then
-      write(*,*) 'Printing zonal mean diagnostics.'
+    if (mod(int(t),int(dt)*1000) .eq. 1) then
+      write(*,*) 'Printing upper level zonal means.'
       do j = 1,jmax
         write(*,*) j, 'ubar1 = ', ubar1_cart(j)+shear, 'qbar1 = ', qbar1_cart(j)
       enddo

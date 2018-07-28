@@ -2,6 +2,7 @@
 scratch
 mod
 packages
+f90learn
 
 # Ignore compiled source, and some other stuff
 .session.vim

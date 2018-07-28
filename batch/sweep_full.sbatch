@@ -5,14 +5,20 @@
 #SBATCH --error=logs/sbatch_sweep.err
 #SBATCH --output=logs/sbatch_sweep.out
 #SBATCH --job-name=run_exp
+# For rossby:
+# SBATCH --account=rossby
+# SBATCH --partition=broadwl
+# Sam's account:
+# SBATCH --partition=kite
 
 # Initial stuff
 module purge
-module load mkl/11.3
 module load parallel
-# module load Anaconda2
-# srun="srun --exclusive -N1 -n16 -c1" # complex
+module load intel/16.0
+module load mkl/11.3
+module load netcdf-fortran/4.4.4+intel-16.0
 srun="srun --exclusive -N1 -n1 -c1"    # simple
+# srun="srun --exclusive -N1 -n16 -c1" # complex
 # srun="" # srun not even necessary, perhaps
 parallel="parallel --delay .2 -j $SLURM_NTASKS --joblog run_sweep.log"
 

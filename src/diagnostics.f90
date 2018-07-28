@@ -72,9 +72,7 @@ subroutine diag
   qy2_sp     = zero
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Invert d/dy zonal mean PV equation to get zonal mean u
-  ! Also integrate d/dy zonal mean PV to get zonal mean PV
-  ! Note we truncate in j here
+  ! Invert d/dy zonal mean PV equation to get zonal mean u, vor, and pv
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   do j = 2,jtrunc
     ell = el*float(j-1) ! angular wavenumber
@@ -89,8 +87,7 @@ subroutine diag
   enddo
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Invert PV equation to get streamfunction
-  ! Also obtain u/v, and q derivatives in x/y (derivative in spectral coordinates)
+  ! Invert PV equation to get u, v, streamfunction, vorticity, and q gradient
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Transform eddy into cartesian space
   ! Used to just assign (1,:) and (:,1) zero but am fairly certain
@@ -119,11 +116,8 @@ subroutine diag
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Transform zonal means to cartesian space 
-  ! Also, after transforming mean qbar anomalies, add the basic-state
-  ! qbar from background. Can be used to output data.
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Inverse sine transforms
-  ! Suitable if edges are always small/zero
+  ! Inverse sine transforms (suitable for (d/dy)^n of qybar, n *even*)
   tt_type=0
   call btt(qybar1_tt(:,2), qybar1_cart, tt_type, jmax) ! needed for total advection
   call btt(qybar2_tt(:,2), qybar2_cart, tt_type, jmax)
@@ -131,8 +125,7 @@ subroutine diag
   call btt(vorbar2_tt, vorbar2_cart, tt_type, jmax)
   call btt(ubar1_tt, ubar1_cart, tt_type, jmax)
   call btt(ubar2_tt, ubar2_cart, tt_type, jmax)
-  ! Inverse cosine transforms
-  ! Suitable if edges are always non-zero
+  ! Inverse cosine transforms (suitable for (d/dy)^n of dqbardy, n *odd*)
   tt_type=1
   call btt(qbar1_tt, qbar1_cart, tt_type, jmax)
   call btt(qbar2_tt, qbar2_cart, tt_type, jmax)
@@ -140,11 +133,8 @@ subroutine diag
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Transform 2D data to cartesian space
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Inverse sine transforms
+  ! Inverse sine transforms (suitable for (d/dy)^n of q, n *even*)
   ! Note we are transforming the x-Fourier coefficients here
-  ! Note q is always stores in sines, so it seems we only do cosine
-  ! transforms where the parameter is proportional to an odd (d/dy, d^3/dy^3)
-  ! derivative of q in y, i.e. the sines were changed to cosines.
   tt_type=0
   call btt_crft(q1_sp(:,:,2), q1_cart, tt_type, imax, jmax, itrunc, hcr)
   call btt_crft(q2_sp(:,:,2), q2_cart, tt_type, imax, jmax, itrunc, hcr)
@@ -156,7 +146,7 @@ subroutine diag
   call btt_crft(psi2_sp, psi2_cart, tt_type, imax, jmax, itrunc, hcr)
   call btt_crft(v1_sp, v1_cart, tt_type, imax, jmax, itrunc, hcr)
   call btt_crft(v2_sp, v2_cart, tt_type, imax, jmax, itrunc, hcr)
-  ! Inverse cosine transforms
+  ! Inverse cosine transforms (suitable for (d/dy)^n of q, n *odd*)
   tt_type=1
   call btt_crft(u1_sp, u1_cart, tt_type, imax, jmax, itrunc, hcr)
   call btt_crft(u2_sp, u2_cart, tt_type, imax, jmax, itrunc, hcr)
@@ -230,7 +220,7 @@ subroutine diag
   call ftt_rcft(force1_cart(:,:,2), force1_sp, tt_type, imax, jmax, itrunc, hrc)
   call ftt_rcft(adv1_cart, tmp1_sp, tt_type, imax, jmax, itrunc, hrc)
   call ftt_rcft(adv2_cart, tmp2_sp, tt_type, imax, jmax, itrunc, hrc)
-  do i=2,itrunc ! put the assignments in a loop just for clarity -- we always truncate!
+  do i=2,itrunc
     do j=2,jtrunc
       adv1_sp(i,j,3) = tmp1_sp(i,j)
       adv2_sp(i,j,3) = tmp2_sp(i,j)
@@ -254,6 +244,7 @@ subroutine diag
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Scalars, including eke
+  ! Store in arrays so they can be saved easily
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   energy(1) = 0.5*sum(v1_cart**2 + v2_cart**2 + u1_cart**2 + u2_cart**2)/float(imax*jmax)
   umax(1)   = max(maxval(ufull1_cart),maxval(ufull2_cart))

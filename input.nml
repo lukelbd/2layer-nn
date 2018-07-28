@@ -1,8 +1,8 @@
 !------------------------------------------------------------------------------!
-! Namelist for stochastic forcing parameters
-! Not necessary to supply every single variable! Just put the most
-! important ones that you expect to change for different experiments here.
-! To read the full list of default values, check out global_variables.f90
+! Default namelist for 2 layer qg model
+! * Not necessary to supply every single variable! Just decided to put the most
+!   important ones here, so they are explicitly set every time.
+! * Default values for other variables can be found in global_variables.f90
 &input_nml
   ! Timing
   dt = 1200,   ! (s) integration time increment
@@ -14,7 +14,7 @@
   tau_f = 6.0,  ! (days) fricional damping timescale, or Rek Ekman damping
   tau_sp = 1.0, ! (days) damping rate at edge of layer
   ! Basic flow parameters
-  shear = 3.0, ! (m/s) background (uniform) shear
+  shear = 3.0,  ! (m/s) background (uniform) shear
   ! PV injections
   wmin_i = 41,    ! min injection wavenum
   wmax_i = 46,    ! max injection wavenum
@@ -22,4 +22,3 @@
   tau_i = 60.0,   ! (s) forcing correlation timescale, currently not used in code
   amp_i = 3.0e-8, ! (1/s*s) forcing amplitude
 /
-

@@ -17,16 +17,21 @@
 # scratch=/scratch/midway2/t-970c07 # Momme's folder
 prefix=sweep # prefix for experiment directories
 templates=experiments.txt # location of experiment templates
-case $HOSTNAME in
-  midway*) scratch=/scratch/midway2/holo ;; # Sam's folder
-  uriah*)  scratch=$(pwd)/scratch ;;
-  *) echo "Error: Unknown host $HOSTNAME. Edit this script to add a scratch location." && exit 1
-esac
+scratch=/scratch/midway2/holo     # Sam's folder
+scratch=/scratch/midway2/t-9841aa # Luke's temporary folder
 exe=2layer.x  # executable compiled name
 nml=input.nml # nanmelist file name
 cwd="$(pwd)"  # directory this script was called in
 [ ! -x "$exe" ]     && echo "Error: Executable \"$exe\" does not exist, or is not executable." && exit 1
 [ ! -d "$scratch" ] && echo "Error: Scratch directory \"$scratch\" does not exist." && exit 1
+
+#------------------------------------------------------------------------------#
+# Required modules
+# Consider commenting out if you are running from sbatch
+module purge 2>/dev/null # always prints some errors
+module load intel/16.0
+module load mkl/11.3
+module load netcdf-fortran/4.4.4+intel-16.0
 
 #------------------------------------------------------------------------------#
 # Parse input
@@ -50,11 +55,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 updates="$(echo $updates | tr ',' ' ')" # allow comment separation
-if ! $ppoff && ! python -c "import xarray" &>/dev/null; then # i.e. import failed
-  echo "Error: XArray unavailable. Conda environments do not seem to work" \
-    "inside sbatch subissions; try using pip install --user xarray instead."
-  exit 1
-fi
 
 #------------------------------------------------------------------------------#
 # Two different options for running the model here
@@ -80,7 +80,8 @@ elif ! $pponly; then
   # WARNING: Assignments cannot have spaces!
   echo "Using template \"$expname\" for namelist modification."
   [ ! -r "$templates" ] && echo "Error: Experiments file \"$templates\" available." && exit 1
-  updates="$(cat $templates | sed '/^'"$expname"':/,/^[[:space:]]*$/!d;//d' | tr -d ' \t')"
+  updates="$(cat $templates | sed 's/#.*$//g' | \
+             sed '/^'"$expname"':/,/^[ \t]*$/!d;//d' | tr -d ' \t')"
   [ -z "$updates" ] && echo "Error: Unknown project identifier \"$expname\"." && exit 1
 fi
 
@@ -105,7 +106,7 @@ else
   fi
 fi
 
-chmod 777 $rundir
+# chmod 777 $rundir
 cp $exe $rundir
 cp $nml $rundir
 cd $rundir
@@ -116,15 +117,15 @@ cd $rundir
 # Need sed to actually to the replacement
 # Annoyingly they both have different regex syntaxes
 if [ ! -z "$updates" ]; then
+  newsection=false
   echo "Overriding default input.nml with these parameters: $(echo $updates | xargs)"
   for string in $updates; do
     if ! grep '^\s*'${string%=*}'\b' $nml &>/dev/null; then
-      echo "Error: Param \"${string%=*}\" not found in namelist."
-      rm -r $rundir
-      exit 1
+      $newsection && sed -i 's/^[ \t]*\/[ \t]*$/! Other params\n\//' $nml && newsection=false
+      sed -i 's/^[ \t]*\/[ \t]*$/'$string',\n\//' $nml
     else
-      sed -i 's/^\([[:space:]]*\)'${string%=*}'\W.*$/\1'$string', /g' $nml
-    fi # sed -i 's/^\([[:space:]]*\)'${string%=*}'\(.*\)$/\1'$string'\2/g' $nml
+      sed -i 's/^\([ \t]*\)'${string%=*}'\W.*$/\1'$string',/g' $nml
+    fi # sed -i 's/^\([ \t]*\)'${string%=*}'\(.*\)$/\1'$string'\2/g' $nml
   done
 fi
 
@@ -132,24 +133,17 @@ fi
 # Run experiment; i.e. compiled code
 if ! $pponly; then
   echo "Running model."
-  sleep 3
   ./$exe
+  [ $? -ne 0 ] && echo "Error: Model run failed." && exit 1
 else echo "Using existing model results."
 fi
 
 #------------------------------------------------------------------------------#
 # Post-process results
+# TODO: Have since switched from .df files to .netcdf, don't really need
+# much post-processing. Perhaps add to this block in future.
 if ! $ppoff; then
-  echo "Running python post-processing."
-  sleep 3
-  # These lines should just be in sbatch
-  # I tried processing those parameter sweeps with Momme's new .py script
-  # and it crashed/ran out of memory. I copied your old version from the git history
-  # into the _simple.py file; tried running it overnight.
-  module load Anaconda2
-  source activate /project2/rossby/group07/.conda
-  # python $cwd/convert_netcdf.py $rundir
-  python $cwd/convert_netcdf_simple.py $rundir
-  echo "Post-processing finished."
-else echo "Skipping post-processing."
+  echo "No post-processing step implemented."
+else
+  echo "Skipping post-processing."
 fi

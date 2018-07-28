@@ -23,12 +23,12 @@ module global_variables
   ! Truncation of y-sine ft and x-dft to resolve (avoid aliasing) quadratic terms
   ! See: 10.1098/rsta.2013.0289
   ! Requirement is: imax >= (3*xtrunc+1), jmax >= (3*ytrunc+1)/2
-  integer, parameter :: itrunc=170, jtrunc=170
-  ! integer, parameter :: itrunc=85, jtrunc=170
+  integer, parameter :: itrunc=170, jtrunc=170 ! for 512 by 256
+  ! integer, parameter :: itrunc=85, jtrunc=170 ! for 256 by 256
 
   !    ---- To be supplied by namelist ----
-  ! Timing
-  integer :: dt=1200, td=21600 ! (s) integration time step and data-save timestep steps
+  ! Temporal
+  integer :: dt=300, td=21600 ! (s) integration time step and data-save timestep steps
   real :: tend=300.0, tds=0.0  ! (days) integration time and 'spinup' time before which no data is saved
   ! Spatial
   real :: width=72.e3, wlength=36.e3 ! (km) channel width, channel length
