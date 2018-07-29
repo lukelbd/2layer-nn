@@ -4,12 +4,10 @@
 module global_variables
   use mkl_dfti
   implicit none
-  !----------------------------------------------------------------------------!
-  !    ---- Initial params that has to be hard-coded ----
-  real :: day
-  complex :: one_r=(1.,0.), one_i=(0.,1.), zero=(0.,0.)
-  integer :: t, tstart=0, nctime=1 ! nctime is time index on the arrays that we save
+  complex :: one_r=(1.,0.), one_i=(0.,1.), zero=(0.,0.) ! helpful constants
   real, parameter :: pi=3.141592653589793 ! pi
+  !----------------------------------------------------------------------------!
+  !    ---- Important spacing params that have to be hard-coded ----
   ! Grid resolution (number of cells)
   ! Probably want approx 1:1 aspect ratio, then add one cell to y because
   ! top and bottom boundary aren't same point (whereas left/right boundary are)
@@ -26,10 +24,11 @@ module global_variables
   integer, parameter :: itrunc=170, jtrunc=170 ! for 512 by 256
   ! integer, parameter :: itrunc=85, jtrunc=170 ! for 256 by 256
 
-  !    ---- To be supplied by namelist ----
+  !    ---- Namelist accessible params ----
   ! Temporal
-  integer :: dt=300, td=21600 ! (s) integration time step and data-save timestep steps
-  real :: tend=300.0, tds=0.0  ! (days) integration time and 'spinup' time before which no data is saved
+  integer :: dt=300, dt_io=21600 ! (s) integration time step and data-save timestep steps
+  real :: days=100.0      ! (days) total integration time
+  real :: days_spinup=0.0 ! (days) 'spinup' time before which no data is saved; useful to save disk space/ignore useless data
   ! Spatial
   real :: width=72.e3, wlength=36.e3 ! (km) channel width, channel length
   real :: rd=800.0                   ! (km) radius of deformation
@@ -46,6 +45,9 @@ module global_variables
   real :: tau_i=60.0              ! (s) forcing correlation timescale, currently unused
   real :: sigma_i=2.0             ! (rossby radii) e-folding width of injection band in y
   integer :: wmin_i=41, wmax_i=46 ! (unitless) min and max injection wavenumbers
+  ! Initial low-level forcing
+  logical :: ll_seed_on=.true. ! (logical) flags
+  real :: ll_seed_amp=1.0e-7   ! (s^-1) amplitude of initial injections
   ! Stochastic forcing parameters Sam, Momme, and Luke came up with
   ! Consider implementing in future; some of the above
   ! real :: amp_i = 1.e-5, ! (1/s) amplitude of pv injections
@@ -54,11 +56,11 @@ module global_variables
   ! integer :: center_k = 50,
   ! real :: sigma_l = 5.,  ! (unitless) amplitude decay away from central wavenumber
   ! real :: sigma_k = 5.,
-  ! Initial low-level forcing
-  logical :: ll_seed_on=.true. ! (logical) flags
-  real :: ll_seed_amp=1.0e-7   ! (s^-1) amplitude of initial injections
-  ! Derived from above namelist parameters
-  real :: damp, dx, dy, el, rk
+
+  !    ---- Other params ----
+  ! Some derived from above namelist parameters
+  integer :: t, t_start=0, t_end, t_io=1, t_spinup
+  real :: day, damp, dx, dy, el, rk
 
   !    ---- Scalars ----
   real :: energy(1), umax(1), cfl(1)
@@ -102,7 +104,7 @@ module global_variables
   ! Physical y coordinate, and masks for sponge and pv injection
   real :: x_cart(imax), y_cart(jmax), mask_i(jmax), mask_sp(jmax), mask_sp_tt(jmax)
 
-  !    ---- Misc variables ----
+  !    ---- Misc ----
   type(dfti_descriptor), pointer :: hcr, hrc ! handles for real-to-complex and complex-to-real fourier transforms
   integer :: file_id ! netcdf file descriptor
   integer :: ret ! dummy variable for storing return value

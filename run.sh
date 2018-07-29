@@ -28,10 +28,15 @@ cwd="$(pwd)"  # directory this script was called in
 #------------------------------------------------------------------------------#
 # Required modules
 # Consider commenting out if you are running from sbatch
-module purge 2>/dev/null # always prints some errors
-module load intel/16.0
-module load mkl/11.3
-module load netcdf-fortran/4.4.4+intel-16.0
+which ifort &>/dev/null || module load intel/16.0
+[ -n "$MKLROOT" ]       || module load mkl/11.3
+[ -n "$NETCDFF_DIR" ]   || module load netcdf-fortran/4.4.4+intel-16.0
+
+#------------------------------------------------------------------------------#
+# Rebuild in case anything changed (should be fast if you just changed
+# one file)
+./make.sh
+[ $? -ne 0 ] && echo "Error: Compilation failed." && exit 1
 
 #------------------------------------------------------------------------------#
 # Parse input

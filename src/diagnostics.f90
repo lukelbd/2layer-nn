@@ -31,7 +31,7 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 module diagnostics
 use global_variables
-use spectral ! includes utilities: srcft, scrft, ftt, btt, ftt_rcft, btt_crft
+use transforms ! includes utilities: srcft, scrft, ftt, btt, ftt_rcft, btt_crft
 use mkl_dfti ! includes some boilerplate stuff, and Fourier transforms
 contains
 

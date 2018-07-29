@@ -16,7 +16,7 @@ subroutine prog
   real    :: ell, rkk, kkk, filter
 
   !    ---- Populate older positions with current position ----
-  if (t.eq.tstart) then
+  if (t.eq.t_start) then
     adv1_sp(:,:,2) = adv1_sp(:,:,3)
     adv1_sp(:,:,1) = adv1_sp(:,:,2)
     adv2_sp(:,:,2) = adv2_sp(:,:,3)

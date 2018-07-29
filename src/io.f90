@@ -15,7 +15,7 @@ subroutine ncwrite
   ! Probably makes sense to put this here instead of in initialize.f90, because
   ! perhaps we want to run the model without saving any data -- just want to read
   ! some print statements/play with it.
-  if (nctime.eq.1) then
+  if (t_io.eq.1) then
     ! Create file (also 'opens' it and turns on 'defmode'; no need to call those functions)
     ret = nf90_create(path='data.nc', cmode=nf90_clobber, ncid=file_id)
     ! Define dimensions
@@ -71,22 +71,22 @@ subroutine ncwrite
   ! Note if you mess up the dimensionality of input arrays, error message will be mysterious:
   ! "There is no matching specific function for this generic function reference."
   ! Add current day to time variable
-  ret = nf90_put_var(file_id, t_id, (/day/), start=(/nctime/), count=(/1/))
+  ret = nf90_put_var(file_id, t_id, (/day/), start=(/t_io/), count=(/1/))
   ! Add model data
-  ret = nf90_put_var(file_id, q_id, qfull1_cart, start=(/1,1,1,nctime/), count=(/imax,jmax,1,1/))
-  ret = nf90_put_var(file_id, q_id, qfull2_cart, start=(/1,1,2,nctime/), count=(/imax,jmax,1,1/))
-  ret = nf90_put_var(file_id, u_id, ufull1_cart, start=(/1,1,1,nctime/), count=(/imax,jmax,1,1/))
-  ret = nf90_put_var(file_id, u_id, ufull2_cart, start=(/1,1,2,nctime/), count=(/imax,jmax,1,1/))
-  ret = nf90_put_var(file_id, v_id, v1_cart, start=(/1,1,1,nctime/), count=(/imax,jmax,1,1/))
-  ret = nf90_put_var(file_id, v_id, v2_cart, start=(/1,1,2,nctime/), count=(/imax,jmax,1,1/))
-  ret = nf90_put_var(file_id, vor_id, vorfull1_cart, start=(/1,1,1,nctime/), count=(/imax,jmax,1,1/))
-  ret = nf90_put_var(file_id, vor_id, vorfull2_cart, start=(/1,1,2,nctime/), count=(/imax,jmax,1,1/))
-  ret = nf90_put_var(file_id, f_id, force1_cart(:,:,1), start=(/1,1,nctime/), count=(/imax,jmax,1/))
-  ret = nf90_put_var(file_id, eke_id, energy, start=(/nctime/), count=(/1/))
-  ret = nf90_put_var(file_id, cfl_id, cfl, start=(/nctime/), count=(/1/))
+  ret = nf90_put_var(file_id, q_id, qfull1_cart, start=(/1,1,1,t_io/), count=(/imax,jmax,1,1/))
+  ret = nf90_put_var(file_id, q_id, qfull2_cart, start=(/1,1,2,t_io/), count=(/imax,jmax,1,1/))
+  ret = nf90_put_var(file_id, u_id, ufull1_cart, start=(/1,1,1,t_io/), count=(/imax,jmax,1,1/))
+  ret = nf90_put_var(file_id, u_id, ufull2_cart, start=(/1,1,2,t_io/), count=(/imax,jmax,1,1/))
+  ret = nf90_put_var(file_id, v_id, v1_cart, start=(/1,1,1,t_io/), count=(/imax,jmax,1,1/))
+  ret = nf90_put_var(file_id, v_id, v2_cart, start=(/1,1,2,t_io/), count=(/imax,jmax,1,1/))
+  ret = nf90_put_var(file_id, vor_id, vorfull1_cart, start=(/1,1,1,t_io/), count=(/imax,jmax,1,1/))
+  ret = nf90_put_var(file_id, vor_id, vorfull2_cart, start=(/1,1,2,t_io/), count=(/imax,jmax,1,1/))
+  ret = nf90_put_var(file_id, f_id, force1_cart(:,:,1), start=(/1,1,t_io/), count=(/imax,jmax,1/))
+  ret = nf90_put_var(file_id, eke_id, energy, start=(/t_io/), count=(/1/))
+  ret = nf90_put_var(file_id, cfl_id, cfl, start=(/t_io/), count=(/1/))
 
   !    ---- Increment save time ----
-  nctime = nctime+1
+  t_io = t_io+1
 
 end subroutine
 end module

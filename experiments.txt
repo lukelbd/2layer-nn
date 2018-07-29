@@ -1,34 +1,30 @@
 default:
 
 quick:
-  dt   = 100
-  td   = 500
-  tend = .1
+  dt    = 100
+  dt_io = 500
+  days  = 0.1
 
 fastwinds:
-  dt   = 200
-  td   = 432000
-  tend = 20.0
-  tds  = 0.0
-  u0   = 10
+  dt          = 200
+  dt_io       = 432000
+  days        = 20.0
+  u0          = 10
 
 highdamping:
-  dt    = 300
-  td    = 20000
-  tend  = 500.0
-  tds   = 0.0
-  u0    = 3
+  dt          = 300
+  dt_io       = 20000
+  days        = 500.0
+  u0          = 3
 
 lowdamping:
-  dt    = 300
-  td    = 20000
-  tend  = 500.0
-  tds   = 0.0
-  u0    = 3
+  dt          = 300
+  dt_io       = 20000
+  days        = 500.0
+  u0          = 3
 
 long_run:
-  dt    = 300
-  td    = 10000
-  tend  = 500.0
-  tds   = 0.0
-  u0    = 10
+  dt          = 300
+  dt_io       = 10000
+  days        = 500.0
+  u0          = 10

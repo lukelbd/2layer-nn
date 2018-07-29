@@ -6,9 +6,9 @@
 module initial
 contains
 subroutine init
-  use spectral
-  use mkl_dfti
   use global_variables
+  use transforms
+  use mkl_dfti
   implicit none
   integer :: i, j, l(1)
   real :: x, y, fact, offset, offset_sp, offset_wll
@@ -18,7 +18,7 @@ subroutine init
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !    ---- Declare namelist ----
   namelist /input_nml/ &
-    dt, td, tend, tds, &
+    dt, dt_io, days, days_spinup, &
     width, wlength, rd, shear, beta, &
     tau_f, tau_r, tau_sp, y_sp, &
     ndeg, visc, &
@@ -32,15 +32,17 @@ subroutine init
   close(1) ! close file
 
   !    ---- In-place unit scaling ----
-  tend    = tend*3600.*24.   ! days to s
-  tds     = tds*3600.*24.    ! days to s
-  tau_r   = tau_r*24.*3600.  ! days to s
-  tau_f   = tau_f*24.*3600.  ! days to s
-  tau_sp  = tau_sp*24.*3600. ! days to s
-  rd      = rd*1.e3          ! km to m
-  width   = width*1.e3       ! km to m
-  wlength = wlength*1.e3     ! km to m
-  sigma_i = rd*sigma_i       ! 'rossby radii' to m
+  ! Note want time steps to be integer because we iterate over them
+  ! and test for equality sometimes
+  t_end    = int(days*3600.*24.)        ! days to s
+  t_spinup = int(days_spinup*3600.*24.) ! days to s
+  tau_r    = tau_r*24.*3600.            ! days to s
+  tau_f    = tau_f*24.*3600.            ! days to s
+  tau_sp   = tau_sp*24.*3600.           ! days to s
+  rd       = rd*1.e3                    ! km to m
+  width    = width*1.e3                 ! km to m
+  wlength  = wlength*1.e3               ! km to m
+  sigma_i  = rd*sigma_i                 ! 'rossby radii' to m
 
   !    ---- Calculate dependent variables ----
   dx = wlength/float(imax) ! (m) grid resolution in x
