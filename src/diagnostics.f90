@@ -97,10 +97,10 @@ subroutine diag
     ell = el*float(j-1)
     do i = 2,itrunc
       rkk = rk*float(i-1)
-      qx1_sp(i,j)  = one_i*rkk*q1_sp(i,j,3)
-      qx2_sp(i,j)  = one_i*rkk*q2_sp(i,j,3)
-      qy1_sp(i,j)  = ell*q1_sp(i,j,3)
-      qy2_sp(i,j)  = ell*q2_sp(i,j,3)
+      qx1_sp(i,j)  = one_i*rkk*q1_sp(i,j,2)
+      qx2_sp(i,j)  = one_i*rkk*q2_sp(i,j,2)
+      qy1_sp(i,j)  = ell*q1_sp(i,j,2)
+      qy2_sp(i,j)  = ell*q2_sp(i,j,2)
       pb_sp = -(q1_sp(i,j,2) + q2_sp(i,j,2))/(rkk**2 + ell**2)
       pc_sp = -(q1_sp(i,j,2) - q2_sp(i,j,2))/(rkk**2 + ell**2  + (2./(rd*rd)))
       psi1_sp(i,j) = 0.5*(pb_sp + pc_sp)
@@ -228,7 +228,8 @@ subroutine diag
   enddo
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Get meridional q flux convergence
+  ! Get meridional q flux convergence for each zonal band
+  ! Note this is the only way the q' array communicates with the dqbar/dy array
   ! Have to transform back to trig space
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   tt_type=0

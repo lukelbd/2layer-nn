@@ -17,6 +17,7 @@ subroutine prog
 
   !    ---- Populate older positions with current position ----
   if (t.eq.t_start) then
+    write(*,*) 'Initializing fancy advection arrays.'
     adv1_sp(:,:,2) = adv1_sp(:,:,3)
     adv1_sp(:,:,1) = adv1_sp(:,:,2)
     adv2_sp(:,:,2) = adv2_sp(:,:,3)
@@ -51,6 +52,14 @@ subroutine prog
         + dt*visc1_sp(i,j) &
         + dt*rad1_sp(i,j) &
         + dt*force1_sp(i,j)
+      ! q1_sp(i,j,2) = q1_sp(i,j,1) &
+      !   - dt*(23.*adv1_sp(i,j,3) - 16.*adv1_sp(i,j,2) + 5.*adv1_sp(i,j,1))/12.
+      ! q1_sp(i,j,2) = q1_sp(i,j,1) &
+      !   - dt*(23.*adv1_sp(i,j,3) - 16.*adv1_sp(i,j,2) + 5.*adv1_sp(i,j,1))/12. &
+      !   - dt*sponge1_sp(i,j) &
+      !   + dt*visc1_sp(i,j) &
+      !   + dt*rad1_sp(i,j) &
+      !   + dt*force1_sp(i,j)
       ! Apply *hyperdiffusion*, *radiation*, and *friction* in lower layer
       q2_sp(i,j,2) = q2_sp(i,j,1) &
         - dt*(23.*adv2_sp(i,j,3) - 16.*adv2_sp(i,j,2) + 5.*adv2_sp(i,j,1))/12. &
@@ -58,6 +67,14 @@ subroutine prog
         - dt*fric2_sp(i,j) &
         + dt*visc2_sp(i,j) &
         + dt*rad2_sp(i,j)
+      ! q2_sp(i,j,2) = q2_sp(i,j,1) &
+      !   - dt*(23.*adv2_sp(i,j,3) - 16.*adv2_sp(i,j,2) + 5.*adv2_sp(i,j,1))/12.
+      ! q2_sp(i,j,2) = q2_sp(i,j,1) &
+      !   - dt*(23.*adv2_sp(i,j,3) - 16.*adv2_sp(i,j,2) + 5.*adv2_sp(i,j,1))/12. &
+      !   - dt*sponge2_sp(i,j) &
+      !   - dt*fric2_sp(i,j) &
+      !   + dt*visc2_sp(i,j) &
+      !   + dt*rad2_sp(i,j)
     enddo
     !    ---- Prognostic meridional derivative of zonal mean pv ----
     ! Iterate, apply *hyperdiffusion* and *radiation* in upper layer
@@ -74,19 +91,18 @@ subroutine prog
   enddo
 
   !    ---- Apply truncation ----
-  ! Is this really necessary? Never read from those positions anyway.
   ! Didn't we already do this?
   ! And why are we only truncating mean data in y? What gives yo?
   ! Maybe small waves with small frequency in y can have big frequency in x, so
   ! don't want to truncate those?
-  q1_sp(1,j,2) = zero
-  q2_sp(1,j,2) = zero
-  q1_sp(itrunc+1:idft,j,2) = zero
-  q2_sp(itrunc+1:idft,j,2) = zero
-  q1_sp(:,jtrunc+1:jmax,2) = zero
-  q2_sp(:,jtrunc+1:jmax,2) = zero
-  qybar1_tt(jtrunc+1:jmax,2) = 0.
-  qybar2_tt(jtrunc+1:jmax,2) = 0.
+  ! q1_sp(1,j,2) = zero
+  ! q2_sp(1,j,2) = zero
+  ! q1_sp(itrunc+1:idft,j,2) = zero
+  ! q2_sp(itrunc+1:idft,j,2) = zero
+  ! q1_sp(:,jtrunc+1:jmax,2) = zero
+  ! q2_sp(:,jtrunc+1:jmax,2) = zero
+  ! qybar1_tt(jtrunc+1:jmax,2) = 0.
+  ! qybar2_tt(jtrunc+1:jmax,2) = 0.
 
   return
 end subroutine

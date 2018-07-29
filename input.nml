@@ -5,9 +5,9 @@
 ! * Default values for other variables can be found in global_variables.f90
 &input_nml
   ! Timing
-  dt    = 1200,  ! (s) integration time increment
-  dt_io = 21600, ! (s) dataio timestep
-  days  = 300.,  ! (days) terminating model after this many days
+  dt    = 600,  ! (s) integration time increment
+  dt_io = 21600, ! (s) dataio timestep (21600s is 6 hours)
+  days  = 10,  ! (days) terminating model after this many days
   days_spinup = 0.0, ! (days) start saving data after this many days (sometimes might want to throw out 'spinup' data)
   ! Background flow
   shear = 3.0,  ! (m/s) background (uniform) shear

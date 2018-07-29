@@ -19,9 +19,31 @@ program main
 
   !    ---- Initialize fields and other stuff ----
   call init ! (initial.f90)
-  ! Printout; should definitely add this
-  write(*,687) dt, dt_io, t_end
-  687 format("time step = ", i8, " io step = ", i8, " final time = ", i12)
+
+  !    ---- Printout ----
+  ! write(*,400,advance='no') mask_sp
+  write(*,*) "sponge mask = "
+  do j=1,jmax
+    if (mod(j,10).eq.0) then
+      write(*,'(f6.3)',advance='yes') mask_sp(j)
+    else
+      write(*,'(f6.3)',advance='no') mask_sp(j)
+    end if
+  enddo
+  write(*,*)
+  write(*,*) "inject mask = "
+  do j=1,jmax
+    if (mod(j,10).eq.0) then
+      write(*,'(f6.3)',advance='yes') mask_i(j)
+    else
+      write(*,'(f6.3)',advance='no') mask_i(j)
+    end if
+  enddo
+  write(*,*)
+  write(*,100) dt, dt_io, t_end
+  100 format("time step = ", i8, " io step = ", i8, " final time = ", i12)
+  write(*,200) tau_f, tau_r, tau_sp
+  200 format("friction = ", f12.1, " radiation = ", f12.1, " sponge = ", f12.1)
 
   !    ---- Integration ----
   write(*,*) "Starting integration."
@@ -39,7 +61,8 @@ program main
     !    ---- Save data ----
     ! If we are past spinup 'days_spinup', and we are on the data save interval, save
     if (t.ge.t_spinup .and. mod(t,dt_io).eq.0) then 
-      write(*,*) "Writing data."
+      write(*,400) t_io
+      400 format(" Writing data on index:", i4)
       call ncwrite ! (io.f90) save data; if this is first time, will initialize handles
     endif
 
@@ -50,8 +73,8 @@ program main
         write(*,*) j, 'ubar1 = ', ubar1_cart(j)+shear, 'qbar1 = ', qbar1_cart(j)
       enddo
     endif
-    write(*,677) day, energy(1), umax(1), cfl(1)
-    677 format("days = ", 1f8.3, " eke = ", 1p1e13.5, " umax = ", 1f3.3, " cfl = ", 1f3.3)
+    write(*,300) day, energy(1), umax(1), cfl(1)
+    300 format("days = ", f8.3, " eke = ", e13.5, " umax = ", f8.3, " cfl = ", f8.3)
     ! 1p ensures non-zero digit to left of decimal
   enddo
 

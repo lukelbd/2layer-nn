@@ -75,19 +75,19 @@ subroutine rcft(x_r, x_c, n, as, h)
   complex, intent(out) :: x_c(1+n/2)
   real(8) :: tmp1(n+2)
   real(8) :: tmp2(n)
-  integer :: i, iim, iip, l(1)
+  integer :: i, ir, ic, l(1)
   type(dfti_descriptor), pointer, intent(in) :: h
   l(1) = n
   ! Execute cartesian-->spectral transform
   tmp2(:) = x_r(:)
-  stat = dfticomputeforward(h, tmp2, tmp1)
+  stat = DftiComputeForward(h, tmp2, tmp1)
   ! Construct complex coefficients from real array
   ! call f2trf(n,tmp2,tmp2,wfftr) ! alternative FFTRB library, from Rogue Wave software
   x_c(1) = one_real*tmp1(1) ! back to single
   do i = 2,n/2
-    iim = 2*i-1
-    iip = 2*i
-    x_c(i) = one_real*tmp1(iim)+one_imag*tmp1(iip) ! back to single
+    ir = 2*i-1
+    ic = 2*i
+    x_c(i) = one_real*tmp1(ir)+one_imag*tmp1(ic) ! back to single
   enddo
   x_c(1+n/2) = one_real*tmp1(n+1) ! back to single
   x_c(:) = x_c(:)*as
@@ -101,23 +101,23 @@ subroutine crft(x_c, x_r, n, as, h)
   complex, intent(in) :: x_c(1+n/2)
   real(8) :: tmp1(n+2)
   real(8) :: tmp2(n)
-  integer :: i, k, iim, iip, l(1)
+  integer :: i, k, ir, ic, l(1)
   type(dfti_descriptor), pointer, intent(in) :: h
   l(1) = n
   ! Decompose complex coefficients into real array
   tmp1(1) = real(x_c(1))
   tmp1(2) = 0.
   do i = 2,n/2
-    iim = 2*i-1
-    iip = 2*i
-    tmp1(iim) = real(x_c(i))
-    tmp1(iip) = aimag(x_c(i))
+    ir = 2*i-1
+    ic = 2*i
+    tmp1(ir) = real(x_c(i))
+    tmp1(ic) = aimag(x_c(i))
   enddo
   tmp1(n+1) = real(x_c(1+n/2))
   tmp1(n+2) = 0.
   ! Execute spectral-->cartesian transform
   ! call f2trb(n,tmp1,tmp1,wfftr) ! alternative FFTRB library, from Rogue Wave software
-  stat = dfticomputebackward(h, tmp1, tmp2)
+  stat = DftiComputeBackward(h, tmp1, tmp2)
   x_r(:) = tmp2(:)*as ! back to single
 end subroutine
 
@@ -137,16 +137,16 @@ subroutine ftt_rcft(x_in, x_out, tt_type, ni, nj, trunc, h)
   ! Forward Fourier transform
   as = 1./float(ni)
   tt_in   = zero_complex
-  dft_out = zero_complex
   do j = 1,nj ! real-to-complex (y-direction is in cartesian units)
+    dft_out = zero_complex
     call rcft(x_in(:,j), dft_out, ni, as, h)
     tt_in(:,j) = dft_out
   enddo
   ! Inverse trig transform
   x_out = zero_complex
-  tt_r = 0.0
-  tt_i = 0.0
   do i = 2,trunc ! trig transform the Fourier coefficients we care about (un-truncated ones)
+    tt_r = 0.0
+    tt_i = 0.0
     call ftt( real(tt_in(i,:)), tt_r, tt_type, nj)
     call ftt(aimag(tt_in(i,:)), tt_i, tt_type, nj)
     x_out(i,:) = 2.0*(one_real*tt_r + one_imag*tt_i)
@@ -166,18 +166,18 @@ subroutine btt_crft(x_in, x_out, tt_type, ni, nj, trunc, h)
   type(dfti_descriptor), pointer, intent(in) :: h
   ! Inverse trig transform
   dft_in = zero_complex
-  tt_r = 0.0
-  tt_i = 0.0
   do i = 2,trunc ! trig transform the Fourier coefficients we care about (un-truncated ones)
+    tt_r = 0.0
+    tt_i = 0.0
     call btt( real(x_in(i,:)), tt_r, tt_type, nj)
     call btt(aimag(x_in(i,:)), tt_i, tt_type, nj)
     dft_in(i,:) = 0.5*(one_real*tt_r + one_imag*tt_i)
   enddo
   ! Inverse Fourier transform
   as = 1.0
-  x_out   = 0.0
-  dft_out = 0.0
+  x_out = 0.0
   do j = 1,nj
+    dft_out = 0.0
     call crft(dft_in(:,j), dft_out, ni, as, h)
     x_out(:,j) = dft_out
   enddo

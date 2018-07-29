@@ -86,6 +86,7 @@ subroutine init
   ! upper layer) will just stay symmetric forever
   if (ll_seed_on) then
     call random_number(r)
+    q1_sp(:,:,1) = q1_sp(:,:,1) + (r-0.5) * ll_seed_amp
     q2_sp(:,:,1) = q2_sp(:,:,1) + (r-0.5) * ll_seed_amp
   endif 
 
@@ -96,6 +97,7 @@ subroutine init
   do j = 1,jmax
     y_cart(j) = float(j-1)*dy - 0.5*width ! from channel center
   enddo
+  print *,y_cart
 
   !    ---- Mask for upper layer pv injection ----
   ! Simple Gaussian curve
@@ -114,14 +116,14 @@ subroutine init
   offset_wll = float(jmax-1)*0.5            ! the wall location
   do j = 1,jmax
     offset     = abs(float(j-1) - 0.5*float(jmax-1)) ! distance from center point (think about it, with jmax=5)
-    fact       = (offset-offset_sp) / (offset_wll-offset_sp)
-    mask_sp(j) = -(1.0/tau_sp)*fact*fact ! multiplier to apply to pv anomalies, in 1/seconds
+    fact       = max(0.0, (offset-offset_sp) / (offset_wll-offset_sp)) ! i.e. zero damping in center
+    mask_sp(j) = fact*fact ! multiplier to apply to pv anomalies, in 1/seconds
   enddo
 
   !    ---- Mask in spectral space ----
   ! Want a cosine transform, since mask at top/bottom boundary
   ! is certainly not zero!
-  tt_type = 1 ! cosine
+  tt_type = 1 ! cosines
   call ftt(mask_sp, mask_sp_tt, tt_type, jmax)
 
   !    ---- Test ----

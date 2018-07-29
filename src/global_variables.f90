@@ -34,10 +34,10 @@ module global_variables
   real :: rd=800.0                   ! (km) radius of deformation
   ! Background
   real :: shear=3.0    ! (m/s) basic state shear
-  real :: beta=1.6e-11 ! (1/(m*s)) background state
+  real :: beta=1.6e-11 ! (1/(m*s)) background state; default is value at 45deg latitude
   ! Basic damping
   real :: tau_r=30.0, tau_f=6.0, tau_sp=1.0 ! (days) radiation, friction, sponge (at the edge) damping timescales
-  real :: y_sp=0.2                          ! (unitless) percentage of top half/bottom half that we want covered by sponge layer
+  real :: y_sp=0.3                          ! (unitless) percentage of top half/bottom half that we want covered by sponge layer
   integer :: ndeg=6                         ! (unitless) degree of hyperdifussion (must be *even*)
   real :: visc = 0.04                       ! (m^ndeg/s) viscocity coefficient (probably best not to touch this one)
   ! PV injection
@@ -103,10 +103,17 @@ module global_variables
           vorbar2_cart(jmax),  qbar2_cart(jmax),  ubar2_cart(jmax)
   ! Physical y coordinate, and masks for sponge and pv injection
   real :: x_cart(imax), y_cart(jmax), mask_i(jmax), mask_sp(jmax), mask_sp_tt(jmax)
+  real :: rkks(idft), ells(jmax) ! will populate these with rkk and ell
 
   !    ---- Misc ----
+  ! Note netcdf handles ***have*** to be here or they will get overwritten every time!
   type(dfti_descriptor), pointer :: hcr, hrc ! handles for real-to-complex and complex-to-real fourier transforms
   integer :: file_id ! netcdf file descriptor
   integer :: ret ! dummy variable for storing return value
+  integer :: s4d(4), s3d(3), s1d(1)
+  integer :: x_id, y_id, z_id, t_id ! dimension variable descriptors
+  integer :: q_id, u_id, v_id, f_id, vor_id, psi_id
+  integer :: qx_id, qy_id, adv_id, eke_id, cfl_id ! data variable descriptors
+  integer :: xdim_id, ydim_id, zdim_id, tdim_id ! dimension descriptors
 
 end module
