@@ -80,14 +80,16 @@ subroutine prog
     ! Iterate, apply *hyperdiffusion* and *radiation* in upper layer
     qybar1_tt(j,2) = qybar1_tt(j,1) &
       - dt*(23.*qyyflux1_tt(j,3) - 16.*qyyflux1_tt(j,2) + 5.*qyyflux1_tt(j,1))/12. &
+      - dt*(ell*ell*ubar1_tt(j)*mask_sp_tt(j))/tau_sp &
       - dt*damp*(ell**6)*qybar1_tt(j,1) &
-      - dt*(ubar1_tt(j) - ubar2_tt(j))/(rd*rd*tau_r)
+      - dt*(ubar1_tt(j) - ubar2_tt(j))/(rd*rd*tau_r) &
     ! Iterate, apply *hyperdiffusion*, *radiation*, and *friction* in lower layer
     qybar2_tt(j,2) = qybar2_tt(j,1) &
       - dt*(23.*qyyflux2_tt(j,3) - 16.*qyyflux2_tt(j,2) + 5.*qyyflux2_tt(j,1))/12. &
+      - dt*(ell*ell*ubar2_tt(j)*mask_sp_tt(j))/tau_sp &
+      - dt*(ell*ell*ubar2_tt(j))/tau_f &
       - dt*damp*(ell**6)*qybar2_tt(j,1) &
-      + dt*(ubar1_tt(j) - ubar2_tt(j))/(rd*rd*tau_r) &
-      - dt*(ell*ell*ubar2_tt(j))/tau_f
+      + dt*(ubar1_tt(j) - ubar2_tt(j))/(rd*rd*tau_r)
   enddo
 
   !    ---- Apply truncation ----

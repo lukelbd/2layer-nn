@@ -181,9 +181,6 @@ subroutine diag
     ! Note this injects the *forcing*, not q anomalies themselves
     ! * Must appear here, because we have a real mask that limits appearence
     !   of PV perturbations into a narrow 'jet' band
-    ! * Below can be used to have arbitrary memory; just replace where you see 0.5
-    !   force1_cart(i) = exp(-dt/tau_i)*force1_cart(i,j,1)
-    !   + (1.-exp(-dt/tau_i))*amp_i*mask_i(j)*  &
     iseed = iseed*(idate(8)-500)
     call date_and_time(values=idate)
     call random_seed(size=isize)
@@ -191,13 +188,14 @@ subroutine diag
     call random_number(anglex)
     call random_number(angley)
     do i = 1,imax
-      force1_cart(i,j,2) = 0.5*force1_cart(i,j,1) ! initialize with previous state
+      force1_cart(i,j,2) = exp(-dt/tau_i)*force1_cart(i,j,1) ! initialize with previous state
       do wcos = wmin_i,wmax_i
         rkk = rk*float(wcos-1)
         do wsin = wmin_i,wmax_i
           ell = el*float(wsin-1)
           call random_number(amp_rand)
-          force1_cart(i,j,2) = force1_cart(i,j,2) + 0.5*amp_i*amp_rand*mask_i(j)  &
+          force1_cart(i,j,2) = force1_cart(i,j,2) &
+            + (1.0-exp(-dt/tau_i))*amp_i*amp_rand*mask_i(j) &
             * sin(ell*float(j-1)/float(jmax-1)+angley)  &
             * cos(rkk*float(i-1)/float(imax)+anglex)
         enddo

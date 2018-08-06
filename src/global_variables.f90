@@ -42,7 +42,7 @@ module global_variables
   real :: visc = 0.04                       ! (m^ndeg/s) viscocity coefficient (probably best not to touch this one)
   ! PV injection
   real :: amp_i=3.0e-8            ! (1/s^2) amplitude of dq/dt injections
-  real :: tau_i=60.0              ! (s) forcing correlation timescale, currently unused
+  real :: tau_i=600.0             ! (s) forcing correlation timescale
   real :: sigma_i=2.0             ! (rossby radii) e-folding width of injection band in y
   integer :: wmin_i=41, wmax_i=46 ! (unitless) min and max injection wavenumbers
   ! Initial low-level forcing

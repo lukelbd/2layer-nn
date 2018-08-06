@@ -9,13 +9,12 @@
 #   * If you *also* specify param1=value1 pairs, will *not* look up the experiment
 #     in experiments.txt for namelist modifications -- will just apply the namelist
 #     modifications passed by the user.
-# Flags:
+# Flags (now obsolete!):
 #   * -p: *Only* do post-processing -- i.e. do not run the model, just process
 #     existing results located in the expname directory.
 #   * -n: *Skip* post-processing -- i.e. just run the model.
 #------------------------------------------------------------------------------#
 # scratch=/scratch/midway2/t-970c07 # Momme's folder
-prefix=sweep # prefix for experiment directories
 templates=experiments.txt # location of experiment templates
 scratch=/scratch/midway2/holo     # Sam's folder
 scratch=/scratch/midway2/t-9841aa # Luke's temporary folder
@@ -92,11 +91,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # Prepare output location
-if [ -z "$prefix" ]; then
-  rundir="$scratch/$expname"
-else
-  rundir="$scratch/${prefix}_$expname"
-fi
+rundir="$scratch/$expname"
 if [ ! -d "$rundir" ]; then
   if $pponly; then
     echo "Error: Directory \"$rundir\" does not exist." && exit 1
