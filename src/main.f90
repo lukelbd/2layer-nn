@@ -40,10 +40,12 @@ program main
     end if
   enddo
   write(*,*)
+  write(*,500) shear, shear_phillips
+  500 format("background shear = ", f4.1, " unstable shear = ", f4.1)
+  write(*,200) tau_f, tau_r, tau_sp, tau_i
+  200 format("friction = ", f12.1, " radiation = ", f12.1, " sponge = ", f12.1, " forcing = ", f12.1)
   write(*,100) dt, dt_io, t_end
   100 format("time step = ", i8, " io step = ", i8, " final time = ", i12)
-  write(*,200) tau_f, tau_r, tau_sp
-  200 format("friction = ", f12.1, " radiation = ", f12.1, " sponge = ", f12.1)
 
   !    ---- Integration ----
   write(*,*) "Starting integration."
@@ -67,7 +69,7 @@ program main
     endif
 
     !    ---- Print diagnostic output ----
-    if (mod(t,dt*1000) .eq. 1) then
+    if (mod(t,dt*1000).eq.1) then
       write(*,*) 'Printing upper level zonal means.'
       do j = 1,jmax
         write(*,*) j, 'ubar1 = ', ubar1_cart(j)+shear, 'qbar1 = ', qbar1_cart(j)

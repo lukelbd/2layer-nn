@@ -24,6 +24,8 @@ subroutine iterate
   qyyflux1_tt(:,2)   = qyyflux1_tt(:,3)
   qyyflux2_tt(:,1)   = qyyflux2_tt(:,2)
   qyyflux2_tt(:,2)   = qyyflux2_tt(:,3)
-  force1_cart(:,:,1) = force1_cart(:,:,2)
+  if (contin_i) then
+    force1_cart(:,:,1) = force1_cart(:,:,2)
+  endif
 end subroutine
 end module

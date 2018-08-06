@@ -22,7 +22,7 @@ subroutine init
     width, wlength, rd, shear, beta, &
     tau_f, tau_r, tau_sp, y_sp, &
     ndeg, visc, &
-    amp_i, tau_i, y_i, wmin_i, wmax_i, &
+    amp_i, tau_i, y_i, wmin_i, wmax_i, contin_i, &
     ll_seed_on, ll_seed_amp
 
   !    ---- Read namelist ----
@@ -34,15 +34,20 @@ subroutine init
   !    ---- In-place unit scaling ----
   ! Note want time steps to be integer because we iterate over them
   ! and test for equality sometimes
+  dt_io    = dt*int(float(dt_io)/float(dt)) ! integer multiple of dt
   t_end    = int(days*3600.*24.)        ! days to s
   t_spinup = int(days_spinup*3600.*24.) ! days to s
   tau_r    = tau_r*24.*3600.            ! days to s
   tau_f    = tau_f*24.*3600.            ! days to s
+  tau_i    = tau_i*24.*3600.            ! days to s
   tau_sp   = tau_sp*24.*3600.           ! days to s
   rd       = rd*1.e3                    ! km to m
   width    = width*1.e3                 ! km to m
   wlength  = wlength*1.e3               ! km to m
   y_i      = 0.5*width*y_i              ! to m
+
+  !    ---- Phillips model instability ----
+  shear_phillips = beta*(rd*rd)
 
   !    ---- Calculate dependent variables ----
   dx = wlength/float(imax) ! (m) grid resolution in x
@@ -72,6 +77,51 @@ subroutine init
   q1_sp = zero
   q2_sp = zero
 
+  !    ---- Set initial forcing to zero ----
+  force1_cart = 0.0
+
+  !    ---- Vectors x/y in physical units ('zero' is center of channel/left boundary) ----
+  do i = 1,imax
+    x_cart(i) = float(i-1)*dx ! from left boundary
+  enddo
+  do j = 1,jmax
+    y_cart(j) = float(j-1)*dy - 0.5*width ! from channel center
+  enddo
+  print *,y_cart
+
+  !    ---- Upper layer pv injection ----
+  ! Simple Gaussian curve
+  do j = 1,jmax
+    y = y_cart(j) ! distance from center, in physical units
+    if (abs(y) >= 3*y_i) then
+      mask_i(j) = 0.0
+    else
+      mask_i(j) = exp(-y*y/(y_i*y_i)) ! weighting to apply to pv injection anomalies
+    endif
+  enddo
+  ! Use *constant* pv injection interval
+  dt_i = dt*int(tau_i/float(dt)) ! must be integer multiple of dt
+  ! 'p' for Bernoulli trials of whether to inject at this timestep, such
+  ! that average time-to-success is tau_i.
+  ! See wiki page for Geometric distribution; we want tau_i/dt trials to
+  ! average one success, which means tau_i/dt is equal to 1/p, where p is
+  ! the probability in our Bernoulli trials.
+  ! p = 1.0/(tau_i/dt)
+
+  !    ---- Mask for sponge layer ----
+  ! Will be a quadratic scale factor up to each wall
+  ! Also want a cosine transform, since mask at top/bottom boundary
+  ! is certainly not zero!
+  offset_sp  = float(jmax-1)*0.5*(1.0-y_sp) ! distance from center point in grid cell units
+  offset_wll = float(jmax-1)*0.5            ! the wall location
+  do j = 1,jmax
+    offset     = abs(float(j-1) - 0.5*float(jmax-1)) ! distance from center point (think about it, with jmax=5)
+    fact       = max(0.0, (offset-offset_sp) / (offset_wll-offset_sp)) ! i.e. zero damping in center
+    mask_sp(j) = fact*fact ! multiplier to apply to pv anomalies, in 1/seconds
+  enddo
+  tt_type = 1 ! cosines
+  call ftt(mask_sp, mask_sp_tt, tt_type, jmax)
+
   !    ---- Initial jet ----
   ! * If we want a perpetual jet background state, will have to create a new
   !   variable *separate* from the tracked qybar array, and add advection
@@ -90,50 +140,6 @@ subroutine init
     q2_sp(:,:,1) = q2_sp(:,:,1) + (r-0.5) * ll_seed_amp
   endif 
 
-  !    ---- Vectors x/y in physical units ('zero' is center of channel/left boundary) ----
-  do i = 1,imax
-    x_cart(i) = float(i-1)*dx ! from left boundary
-  enddo
-  do j = 1,jmax
-    y_cart(j) = float(j-1)*dy - 0.5*width ! from channel center
-  enddo
-  print *,y_cart
-
-  !    ---- Mask for upper layer pv injection ----
-  ! Simple Gaussian curve
-  do j = 1,jmax
-    y = y_cart(j) ! distance from center, in physical units
-    if (abs(y) >= 3*y_i) then
-      mask_i(j) = 0.0
-    else
-      mask_i(j) = exp(-y*y/(y_i*y_i)) ! weighting to apply to pv injection anomalies
-    endif
-  enddo
-
-  !    ---- Mask for sponge layer ----
-  ! Will be a quadratic scale factor up to each wall
-  offset_sp  = float(jmax-1)*0.5*(1.0-y_sp) ! distance from center point in grid cell units
-  offset_wll = float(jmax-1)*0.5            ! the wall location
-  do j = 1,jmax
-    offset     = abs(float(j-1) - 0.5*float(jmax-1)) ! distance from center point (think about it, with jmax=5)
-    fact       = max(0.0, (offset-offset_sp) / (offset_wll-offset_sp)) ! i.e. zero damping in center
-    mask_sp(j) = fact*fact ! multiplier to apply to pv anomalies, in 1/seconds
-  enddo
-
-  !    ---- Mask in spectral space ----
-  ! Want a cosine transform, since mask at top/bottom boundary
-  ! is certainly not zero!
-  tt_type = 1 ! cosines
-  call ftt(mask_sp, mask_sp_tt, tt_type, jmax)
-
-  !    ---- Test ----
-  ! do i = 6,6
-  !    do j = 2,2
-  !      q1_sp(i,j,:) = one_r*amp
-  !      q2_sp(i,j,:) = -one_r*amp
-  !    enddo
-  ! enddo
-  return
 end subroutine
 end module
 

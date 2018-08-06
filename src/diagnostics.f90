@@ -40,13 +40,13 @@ subroutine diag
   ! Scalars
   implicit none
   real :: y, rkk, ell, fac, s, qplus, qminus
-  integer :: i, j, wcos, wsin
+  integer :: i, j, wx_i, wy_i
   complex :: pb_sp, pc_sp ! temporary scalars during PV inversion
   real    :: pb_tt, pc_tt
   ! For PV injection
   integer,allocatable :: iseed(:)
-  integer             :: isize,idate(8)
-  real                :: anglex,angley,amp_rand
+  integer             :: isize, idate(8)
+  real                :: fact, ang_x, ang_y, amp_rand
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Reset previous inverted data
@@ -171,41 +171,60 @@ subroutine diag
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Stochastic forcing (small-scale narrow band)
-  ! Inject cosines and sines onto the raw 2D data, with fixed memory 0.5
-  ! Why do this in cartesian space instead of spectral? Because
-  ! it would melt my brain trying to figure out what the trig transform
-  ! coefficients and complex Fourier coefficients represent
-  ! in terms of wavenumber. Keep things simple.
+  ! Inject cosines and sines onto the raw 2D data, with some autocorrelation timescale.
+  ! * Note this injects the *forcing*, not q anomalies themselves
+  ! * Why do this in cartesian space instead of spectral? Slightly easier
+  !   since the mask is also cartesian.
+  ! * Below version used forcing with memory at every timestep; was way too
+  !   often and generated totally weird zonal winds.
+  ! force1_cart(:,:,2) = exp(-dt/tau_i)*force1_cart(:,:,1) ! with autocorrelation
+  ! + (1.0-exp(-dt/tau_i))*amp_i*amp_rand*mask_i(j) & ! with autocorrelation
+  ! call random_number(trial)
+  ! if (t.eq.0 .or. trial.le.p) then
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  do j = 1,jmax
-    ! Note this injects the *forcing*, not q anomalies themselves
-    ! * Must appear here, because we have a real mask that limits appearence
-    !   of PV perturbations into a narrow 'jet' band
-    iseed = iseed*(idate(8)-500)
-    call date_and_time(values=idate)
-    call random_seed(size=isize)
-    call random_seed(put=iseed)
-    call random_number(anglex)
-    call random_number(angley)
-    do i = 1,imax
-      force1_cart(i,j,2) = exp(-dt/tau_i)*force1_cart(i,j,1) ! initialize with previous state
-      do wcos = wmin_i,wmax_i
-        rkk = rk*float(wcos-1)
-        do wsin = wmin_i,wmax_i
-          ell = el*float(wsin-1)
-          call random_number(amp_rand)
-          force1_cart(i,j,2) = force1_cart(i,j,2) &
-            + (1.0-exp(-dt/tau_i))*amp_i*amp_rand*mask_i(j) &
-            * sin(ell*float(j-1)/float(jmax-1)+angley)  &
-            * cos(rkk*float(i-1)/float(imax)+anglex)
+  force1_sp = zero ! initialize spectral forcing array
+  call date_and_time(values=idate)
+  iseed = iseed*(idate(8)-500) ! initialize with pseudo-random 'seed'
+  call random_seed(size=isize)
+  call random_seed(put=iseed)
+  if (contin_i .or. mod(t,dt_i).eq.0) then
+    ! Initialize; the interval-inject version has no memory
+    if (contin_i) then
+      force1_cart(:,:,2) = exp(-dt/tau_i)*force1_cart(:,:,1) ! with autocorrelation
+      fact = (1.0-exp(-dt/tau_i))
+    else
+      force1_cart(:,:,2) = 0.0
+      fact = 1.0
+    endif
+    do wx_i = wmin_i,wmax_i
+      do wy_i = wmin_i,wmax_i
+        ! Assign random phase/amplitude to this particular zonal/meridional wavenumber
+        call random_number(ang_x)
+        call random_number(ang_y)
+        call random_number(amp_rand)
+        ! Apply waves to Cartesian grid
+        ! print *, 'wavenums', wx_i, wy_i
+        ! do j = 1,jmax
+        !   print *, 'y', sin(wy_i*2*pi*(float(j-1)/float(jmax-1)+ang_y))
+        ! enddo
+        ! do i = 1,imax
+        !   print *, 'x', sin(wx_i*2*pi*(float(i-1)/float(imax)+ang_x))
+        ! enddo
+        do j = 1,jmax
+          do i = 1,imax
+            force1_cart(i,j,2) = force1_cart(i,j,2) &
+              + fact*amp_i*amp_rand*mask_i(j) &
+              * sin(wy_i*2*pi*(float(j-1)/float(jmax-1)+ang_y))  &
+              * sin(wx_i*2*pi*(float(i-1)/float(imax)+ang_x))
+          enddo
         enddo
       enddo
     enddo
-  enddo
+    call ftt_rcft(force1_cart(:,:,2), force1_sp, tt_type, imax, jmax, itrunc, hrc)
+  endif
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Get zonal advection and forcing
-  ! Have to transform u*q flux back to spectral space
+  ! Get advection terms in spectral space
   ! Note advection is positive here, i.e. is on 'LHS' of dq/dt equation
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   tt_type=0
@@ -215,7 +234,6 @@ subroutine diag
     adv2_cart(:,j) = qx2_cart(:,j)*(u2_cart(:,j) + ubar2_cart(j)) &
        + v2_cart(:,j)*(qy2_cart(:,j) + beta - (shear/(rd*rd)) + qybar2_cart(j))
   enddo
-  call ftt_rcft(force1_cart(:,:,2), force1_sp, tt_type, imax, jmax, itrunc, hrc)
   call ftt_rcft(adv1_cart, tmp1_sp, tt_type, imax, jmax, itrunc, hrc)
   call ftt_rcft(adv2_cart, tmp2_sp, tt_type, imax, jmax, itrunc, hrc)
   do i=2,itrunc

@@ -84,9 +84,9 @@ elif ! $pponly; then
   # WARNING: Assignments cannot have spaces!
   echo "Using template \"$expname\" for namelist modification."
   [ ! -r "$templates" ] && echo "Error: Experiments file \"$templates\" available." && exit 1
+  ! grep "${expname}:" "$templates" &>/dev/null && echo "Error: Unknown project identifier \"$expname\"." && exit 1
   updates="$(cat $templates | sed 's/#.*$//g' | \
              sed '/^'"$expname"':/,/^[ \t]*$/!d;//d' | tr -d ' \t')"
-  [ -z "$updates" ] && echo "Error: Unknown project identifier \"$expname\"." && exit 1
 fi
 
 #------------------------------------------------------------------------------#

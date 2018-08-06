@@ -26,25 +26,26 @@ module global_variables
 
   !    ---- Namelist accessible params ----
   ! Temporal
-  integer :: dt=300, dt_io=21600 ! (s) integration time step and data-save timestep steps
+  integer :: dt=600, dt_io=3600*6 ! (s) integration time step and data-save timestep steps; default dt_io is 6 hours
   real :: days=100.0      ! (days) total integration time
   real :: days_spinup=0.0 ! (days) 'spinup' time before which no data is saved; useful to save disk space/ignore useless data
   ! Spatial
   real :: width=72.e3, wlength=36.e3 ! (km) channel width, channel length
-  real :: rd=800.0                   ! (km) radius of deformation
   ! Background
-  real :: shear=3.0    ! (m/s) basic state shear
-  real :: beta=1.6e-11 ! (1/(m*s)) background state; default is value at 45deg latitude
+  real :: rd=800.0       ! (km) radius of deformation
+  real :: shear=5.0      ! (m/s) basic state shear
+  real :: beta=1.6e-11   ! (1/(m*s)) background state; default is value at 45deg latitude
   ! Basic damping
   real :: tau_r=30.0, tau_f=6.0, tau_sp=1.0 ! (days) radiation, friction, sponge (at the edge) damping timescales
-  real :: y_sp=0.3                          ! (unitless) percentage of top half/bottom half of channel that we want covered by sponge layer
-  real :: visc = 0.04                       ! (m^ndeg/s) viscocity coefficient (probably best not to touch this one)
+  real :: y_sp=0.5                          ! (unitless) percentage of top half/bottom half of channel that we want covered by sponge layer
+  real :: visc = 0.4                        ! (m^ndeg/s) viscocity coefficient (probably best not to touch this one)
   integer :: ndeg=6                         ! (unitless) degree of hyperdifussion (must be *even*)
   ! PV injection
-  real :: y_i=0.15                ! (unitless) e-folding width of injection band, as percentage of top/bottom half of channel
-  real :: amp_i=3.0e-8            ! (1/s^2) amplitude of dq/dt injections
-  real :: tau_i=600.0             ! (s) forcing correlation timescale
   integer :: wmin_i=41, wmax_i=46 ! (unitless) min and max injection wavenumbers
+  real :: y_i=0.15     ! (unitless) e-folding width of injection band, as percentage of top/bottom half of channel
+  real :: amp_i=1.0e-8 ! (1/s^2) amplitude of dq/dt injections
+  real :: tau_i=2.0    ! (days) time to injection, or injectino autocorrelation
+  logical :: contin_i=.false. ! inject continuously, with some memory, or only periodically?
   ! Initial low-level forcing
   logical :: ll_seed_on=.true. ! (logical) flags
   real :: ll_seed_amp=1.0e-7   ! (s^-1) amplitude of initial injections
@@ -59,8 +60,8 @@ module global_variables
 
   !    ---- Other params ----
   ! Some derived from above namelist parameters
-  integer :: t, t_start=0, t_end, t_io=1, t_spinup
-  real :: day, damp, dx, dy, el, rk
+  integer :: dt_i, t, t_start=0, t_end, t_io=1, t_spinup
+  real :: day, damp, dx, dy, el, rk, p, shear_phillips
 
   !    ---- Scalars ----
   real :: energy(1), umax(1), cfl(1)
