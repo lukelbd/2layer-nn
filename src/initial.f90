@@ -42,7 +42,7 @@ subroutine init
   rd       = rd*1.e3                    ! km to m
   width    = width*1.e3                 ! km to m
   wlength  = wlength*1.e3               ! km to m
-  y_i      = width*y_i                 ! 'rossby radii' to m
+  y_i      = 0.5*width*y_i              ! to m
 
   !    ---- Calculate dependent variables ----
   dx = wlength/float(imax) ! (m) grid resolution in x

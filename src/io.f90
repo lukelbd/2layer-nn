@@ -106,7 +106,7 @@ subroutine ncwrite
   ! ret = nf90_put_var(file_id, qx_id, qx2_cart, start=(/1,1,2,t_io/), count=(/imax,jmax,1,1/))
   ! ret = nf90_put_var(file_id, qy_id, qy1_cart, start=(/1,1,1,t_io/), count=(/imax,jmax,1,1/))
   ! ret = nf90_put_var(file_id, qy_id, qy2_cart, start=(/1,1,2,t_io/), count=(/imax,jmax,1,1/))
-  ret = nf90_put_var(file_id, f_id, force1_cart(:,:,1), start=(/1,1,t_io/), count=(/imax,jmax,1/))
+  ret = nf90_put_var(file_id, f_id, force1_cart(:,:,2), start=(/1,1,t_io/), count=(/imax,jmax,1/))
   ret = nf90_put_var(file_id, eke_id, energy, start=(/t_io/), count=(/1/))
   ret = nf90_put_var(file_id, cfl_id, cfl, start=(/t_io/), count=(/1/))
 
