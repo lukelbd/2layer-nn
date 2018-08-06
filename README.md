@@ -23,4 +23,4 @@ The namelist file is meant to tune the  model timing, background state, and forc
   * `wmin_i` and `wmax_i` are the minimum and maximum integer wavenumbers for the pv injections.
   * `amp_i` is the maximum amplitude of the pv injections, in units 1/s^2 (remember we inject pv *tendencies*).
   * `shear` and `beta` control the background state.
-  * `rd` is the Rossby radius of deformation; implies some reasonable 'height' for each layer.
+  * `rd` is the Rossby radius of deformation; it is a function of `beta`, gravity, and layer height.
