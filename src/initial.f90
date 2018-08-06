@@ -86,7 +86,7 @@ subroutine init
   ! upper layer) will just stay symmetric forever
   if (ll_seed_on) then
     call random_number(r)
-    q1_sp(:,:,1) = q1_sp(:,:,1) + (r-0.5) * ll_seed_amp
+    ! q1_sp(:,:,1) = q1_sp(:,:,1) + (r-0.5) * ll_seed_amp ! upper layer seed
     q2_sp(:,:,1) = q2_sp(:,:,1) + (r-0.5) * ll_seed_amp
   endif 
 

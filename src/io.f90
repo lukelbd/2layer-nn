@@ -1,5 +1,16 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! File for 
+! File for saving model output
+! List of current variables saved:
+! * q (total pv)
+! * u (total zonal wind)
+! * v (total meridional wind)
+! * vor (total vorticity)
+! * adv (total advection)
+! * qx  (zonal eddy pv gradient)
+! * qy  (meridional eddy pv gradient)
+! * f   (pv forcing in upper layer)
+! * eke (eddy kinetic energy)
+! * cfl (cfl number)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 module io
 use netcdf
@@ -63,8 +74,8 @@ subroutine ncwrite
     ret = nf90_put_att(file_id, vor_id, 'long_name', 'total relative vorticity')
     ret = nf90_put_att(file_id, f_id,   'long_name', 'potential vorticity forcing in upper layer')
     ret = nf90_put_att(file_id, adv_id, 'long_name', 'eddy advection')
-    ret = nf90_put_att(file_id, qx_id, 'long_name',      'eddy zonal pv gradient')
-    ret = nf90_put_att(file_id, qy_id, 'long_name',      'eddy meridional pv gradient')
+    ret = nf90_put_att(file_id, qx_id, 'long_name',  'eddy zonal pv gradient')
+    ret = nf90_put_att(file_id, qy_id, 'long_name',  'eddy meridional pv gradient')
     ret = nf90_put_att(file_id, eke_id, 'long_name', 'eddy kinetic energy')
     ret = nf90_put_att(file_id, cfl_id, 'long_name', 'cfl number')
     ! Finished defining

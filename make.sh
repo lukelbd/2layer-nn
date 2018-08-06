@@ -1,7 +1,8 @@
 #!/bin/sh
 #------------------------------------------------------------------------------#
 # Wrapper that calls make on src/Makefile
-# Loads module environmental variables so the Makefile can read them
+# Loads module environmental variables so the Makefile commands have
+# access to them
 #------------------------------------------------------------------------------#
 echo "Loading shell modules."
 which ifort &>/dev/null || module load intel/16.0

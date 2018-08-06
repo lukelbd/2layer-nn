@@ -74,7 +74,7 @@ program main
       enddo
     endif
     write(*,300) day, energy(1), umax(1), cfl(1)
-    300 format("days = ", f8.3, " eke = ", e13.5, " umax = ", f8.3, " cfl = ", f8.3)
+    300 format("days = ", f6.3, " eke = ", e12.5, " umax = ", f6.3, " cfl = ", f5.3)
     ! 1p ensures non-zero digit to left of decimal
   enddo
 
