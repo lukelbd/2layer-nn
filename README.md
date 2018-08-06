@@ -10,7 +10,7 @@ The model is forced in five ways:
   1. "Radiation": Relaxation of the upper and lower-layer winds toward an "equilibrium", spatially uniform shear (the value "shear" provided in the namelist).
   2. "Friction": Relaxation of the lower-layer relative vorticity toward zero.
   3. "Diffusion": Damping of potential vorticity proportional to its n'th spatial derivative; defaults to the 6th derivative. 
-  4. Sponge: Relaxation of the lower and upper-layer relative vorticity toward zero, in the exact same way as friction.
+  4. Sponge: Relaxation of the lower and upper-layer relative vorticity toward zero, in the exact same way as friction, near the top/bottom "edges" of the channel.
   5. PV Injection: Application of PV *tendency* anomalies in narrow spectral band, localized to center of channel and with e-folding timescale of the autocorrelation specified by an "injection timescale".
 
 ## Namelist
