@@ -38,8 +38,8 @@ module global_variables
   ! Basic damping
   real :: tau_r=30.0, tau_f=6.0, tau_sp=1.0 ! (days) radiation, friction, sponge (at the edge) damping timescales
   real :: y_sp=0.3                          ! (unitless) percentage of top half/bottom half of channel that we want covered by sponge layer
-  integer :: ndeg=6                         ! (unitless) degree of hyperdifussion (must be *even*)
   real :: visc = 0.04                       ! (m^ndeg/s) viscocity coefficient (probably best not to touch this one)
+  integer :: ndeg=6                         ! (unitless) degree of hyperdifussion (must be *even*)
   ! PV injection
   real :: amp_i=3.0e-8            ! (1/s^2) amplitude of dq/dt injections
   real :: tau_i=600.0             ! (s) forcing correlation timescale
