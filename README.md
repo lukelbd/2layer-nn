@@ -14,7 +14,7 @@ The model is forced in five ways:
   5. PV Injection: Application of PV *tendency* anomalies in narrow spectral band, localized to center of channel and with e-folding timescale of the autocorrelation specified by an "injection timescale".
 
 ## Namelist
-The namelist file is meant to tune the  model timing, background state, and forcing schemes. See the default namelist file `input.nml` and the global variables file `global_variables.f90` for details. Here are a few explanations:
+The model can read a namelist file to tune the model timing, background state, and forcing schemes. See the default namelist file `input.nml` and the global variables file `global_variables.f90` for details. Here are a few explanations:
 
   * `y_sp` controls the proportion of each top/bottom "half" of the channel covered by sponge damping.
   * `y_i` controls the width of the pv injection region, same units as above; weighting of the injection is specified by the Gaussian weight `exp(-(y-0.5*width)^2/(y_i)^2)`.
