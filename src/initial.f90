@@ -22,7 +22,7 @@ subroutine init
     width, wlength, rd, shear, beta, &
     tau_f, tau_r, tau_sp, y_sp, &
     ndeg, visc, &
-    amp_i, tau_i, sigma_i, wmin_i, wmax_i, &
+    amp_i, tau_i, y_i, wmin_i, wmax_i, &
     ll_seed_on, ll_seed_amp
 
   !    ---- Read namelist ----
@@ -42,7 +42,7 @@ subroutine init
   rd       = rd*1.e3                    ! km to m
   width    = width*1.e3                 ! km to m
   wlength  = wlength*1.e3               ! km to m
-  sigma_i  = rd*sigma_i                 ! 'rossby radii' to m
+  y_i      = width*y_i                 ! 'rossby radii' to m
 
   !    ---- Calculate dependent variables ----
   dx = wlength/float(imax) ! (m) grid resolution in x
@@ -103,10 +103,10 @@ subroutine init
   ! Simple Gaussian curve
   do j = 1,jmax
     y = y_cart(j) ! distance from center, in physical units
-    if (abs(y) >= 3*sigma_i) then
+    if (abs(y) >= 3*y_i) then
       mask_i(j) = 0.0
     else
-      mask_i(j) = exp(-y*y/(sigma_i*sigma_i)) ! weighting to apply to pv injection anomalies
+      mask_i(j) = exp(-y*y/(y_i*y_i)) ! weighting to apply to pv injection anomalies
     endif
   enddo
 
