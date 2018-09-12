@@ -193,6 +193,7 @@ subroutine diag
       force1_cart(:,:,2) = exp(-dt/tau_i)*force1_cart(:,:,1) ! with autocorrelation
       fact = (1.0-exp(-dt/tau_i))
     else
+      print *, 'Injecting pv.'
       force1_cart(:,:,2) = 0.0
       fact = 1.0
     endif

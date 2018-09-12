@@ -38,13 +38,13 @@ module global_variables
   ! Basic damping
   real :: tau_r=30.0, tau_f=6.0, tau_sp=1.0 ! (days) radiation, friction, sponge (at the edge) damping timescales
   real :: y_sp=0.5                          ! (unitless) percentage of top half/bottom half of channel that we want covered by sponge layer
-  real :: visc = 0.4                        ! (m^ndeg/s) viscocity coefficient (probably best not to touch this one)
+  real :: visc = 0.04                       ! (m^ndeg/s) viscocity coefficient (bigger is more damping)
   integer :: ndeg=6                         ! (unitless) degree of hyperdifussion (must be *even*)
   ! PV injection
   integer :: wmin_i=41, wmax_i=46 ! (unitless) min and max injection wavenumbers
   real :: y_i=0.15     ! (unitless) e-folding width of injection band, as percentage of top/bottom half of channel
   real :: amp_i=1.0e-8 ! (1/s^2) amplitude of dq/dt injections
-  real :: tau_i=2.0    ! (days) time to injection, or injectino autocorrelation
+  real :: tau_i=2.0    ! (days) time to injection, or injection autocorrelation
   logical :: contin_i=.false. ! inject continuously, with some memory, or only periodically?
   ! Initial low-level forcing
   logical :: ll_seed_on=.true. ! (logical) flags
