@@ -1,86 +1,145 @@
-! ***** initial **********
-!       Initializes the flow field
-
-module INITIAL
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Read namelist and transform units
+! Initialize Fourier descriptor handles
+! Initial flow field
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+module initial
 contains
-  subroutine init_data
+subroutine init
+  use global_variables
+  use transforms
+  use mkl_dfti
+  implicit none
+  integer :: i, j, l(1)
+  real :: x, y, fact, offset, offset_sp, offset_wll
+  real :: r(idft,jmax) ! for seeding
+  l(1) = imax ! array specifying length
 
-    use GLOBAL_VARIABLES
-    use mkl_dfti
-    use mkl_trig_transforms
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !    ---- Declare namelist ----
+  namelist /input_nml/ &
+    dt, dt_io, days, days_spinup, &
+    width, wlength, rd, shear, beta, &
+    tau_f, tau_r, tau_sp, y_sp, &
+    ndeg, visc, &
+    amp_i, tau_i, y_i, wmin_i, wmax_i, contin_i, &
+    ll_seed_on, ll_seed_amp
 
-    implicit none
+  !    ---- Read namelist ----
+  ! Will overwrite the above defaults **only if** the variables appear there
+  open(1, file='input.nml', status='old', action='read') ! status='old' requires that file exists, wut
+  read(1, nml=input_nml) ! note 'input.nml' is a filename, input_nml is a declared variable
+  close(1) ! close file
 
-    integer n, k, tt_type
-    integer ir, ipar(128)
-    integer :: i,j,jj
-    real :: y,yh,yph,phi,sech2
-    real :: x,xph,rer,ell,aap 
+  !    ---- In-place unit scaling ----
+  ! Note want time steps to be integer because we iterate over them
+  ! and test for equality sometimes
+  dt_io    = dt*int(float(dt_io)/float(dt)) ! integer multiple of dt
+  t_end    = int(days*3600.*24.)        ! days to s
+  t_spinup = int(days_spinup*3600.*24.) ! days to s
+  tau_r    = tau_r*24.*3600.            ! days to s
+  tau_f    = tau_f*24.*3600.            ! days to s
+  tau_i    = tau_i*24.*3600.            ! days to s
+  tau_sp   = tau_sp*24.*3600.           ! days to s
+  rd       = rd*1.e3                    ! km to m
+  width    = width*1.e3                 ! km to m
+  wlength  = wlength*1.e3               ! km to m
+  y_i      = 0.5*width*y_i              ! to m
 
-    real :: r(imax,jmax+1)
-    double precision :: spar(3*jmax/2+2)
-    type(dfti_descriptor), pointer :: handle
+  !    ---- Phillips model instability ----
+  shear_phillips = beta*(rd*rd)
 
-    ! *** ymask will be used to weight forcing toward the center latitude ***
-    do j = 1,jmax+1
-    y = float(j-1)*dy-0.5*width
-    ymask(j) = exp(-y*y/(jet_sigma*jet_sigma))
-    enddo
+  !    ---- Calculate dependent variables ----
+  dx = wlength/float(imax) ! (m) grid resolution in x
+  dy = width/float(jmax-1) ! (m) grid resolution in y; non-cyclic so use -1, or something
+  el = pi/width            ! (1/m) converts radians to meridional wavenums
+  rk = 2.*pi/wlength       ! (1/m) converts radians to zonal wavenums
+  damp = visc*(dx**ndeg)/(dt*(pi**ndeg))  ! (m^ndeg*s^-1 hyperviscocity
 
-    ! *** Blow qymean1 and qymean2 are the part of zonal-mean PV gradient that 
-    ! excludes the uniform component, namely beta + u0/(rd*rd) and
-    ! beta - u0/(rd*rd).  Since initially the total mean PV gradient is
-    ! uniform and equal to beta + u0/(rd*rd) and beta - u0/(rd*rd), qymean1 and
-    ! qymean2 are set to zero. Departure from the initial condition will be
-    ! introduced later through eddy PV flux and forcing/damping.
-    qymean1(:,:) = 0.
-    qymean2(:,:) = 0.
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !    ---- Initialize handles for Fourier calls ----
+  ! Arg 1 is handle, Arg 2 is precision of transform, Arg 3 is
+  ! 'forward domain' (i.e. the 'forward' transform takes place on only
+  ! real-valued sequences), Arg 4/5 are the number of dims/dimension lengths
+  ret = DftiCreateDescriptor(hcr, dfti_double, dfti_real, 1, l)
+  ret = DftiSetValue(hcr, dfti_placement, dfti_not_inplace)
+  ret = DftiCommitDescriptor(hcr)
+  ret = DftiCreateDescriptor(hrc, dfti_double, dfti_real, 1, l)
+  ret = DftiSetValue(hrc, dfti_placement, dfti_not_inplace)
+  ret = DftiCommitDescriptor(hrc)
 
-    ! *** Below eddy streamfunction psi_1 and psi_2 and eddy PV vort_1 and vort_2
-    ! will be initialized to zero. Eddy will be introduced later through stochastic
-    ! forcing. 
-    psi_1 = zero
-    vort_1 = zero
-    psi_2 = zero
-    vort_2 = zero
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !    ---- Set initial anomalous mean-pv gradient to zero ----
+  qybar1_tt = 0.0
+  qybar2_tt = 0.0
 
+  !    ---- Set initial anomalous pv to zero ----
+  q1_sp = zero
+  q2_sp = zero
 
-    !   *** flow (uniform PV perturbation, symmetric mode only) ****
-    if(init_jet) then
+  !    ---- Set initial forcing to zero ----
+  force1_cart = 0.0
 
-      do j = 1,nmax/2
-      jj = 2*j-1
-      ell = el * float(jj)
-      aap = ((-1)**(j+1))*exp(-ell*ell*jet_sigma*jet_sigma)
-      do i = 2,9
-      vort_1(i,2*j,1) = ur*jet_amp*aap/float(nmax/2)
-      vort_2(i,2*j,1) = ur*jet_amp*aap/float(nmax/2)
-      enddo
-      enddo
+  !    ---- Vectors x/y in physical units ('zero' is center of channel/left boundary) ----
+  do i = 1,imax
+    x_cart(i) = float(i-1)*dx ! from left boundary
+  enddo
+  do j = 1,jmax
+    y_cart(j) = float(j-1)*dy - 0.5*width ! from channel center
+  enddo
+  print *,y_cart
 
+  !    ---- Upper layer pv injection ----
+  ! Simple Gaussian curve
+  do j = 1,jmax
+    y = y_cart(j) ! distance from center, in physical units
+    if (abs(y) >= 3*y_i) then
+      mask_i(j) = 0.0
+    else
+      mask_i(j) = exp(-y*y/(y_i*y_i)) ! weighting to apply to pv injection anomalies
     endif
-    !   *** flow add random initial noise in lower layer ****
-    if(ll_seed_on) then
-      CALL RANDOM_NUMBER(r)
-      vort_2(:,:,1)= vort_2(:,:,1) + (r-0.5) * ll_seed_amp
-    endif 
+  enddo
+  ! Use *constant* pv injection interval
+  dt_i = dt*int(tau_i/float(dt)) ! must be integer multiple of dt
+  ! 'p' for Bernoulli trials of whether to inject at this timestep, such
+  ! that average time-to-success is tau_i.
+  ! See wiki page for Geometric distribution; we want tau_i/dt trials to
+  ! average one success, which means tau_i/dt is equal to 1/p, where p is
+  ! the probability in our Bernoulli trials.
+  ! p = 1.0/(tau_i/dt)
 
-    vort_1(:,:,2) = vort_1(:,:,1)
-    vort_1(:,:,3) = vort_1(:,:,1)
+  !    ---- Mask for sponge layer ----
+  ! Will be a quadratic scale factor up to each wall
+  ! Also want a cosine transform, since mask at top/bottom boundary
+  ! is certainly not zero!
+  offset_sp  = float(jmax-1)*0.5*(1.0-y_sp) ! distance from center point in grid cell units
+  offset_wll = float(jmax-1)*0.5            ! the wall location
+  do j = 1,jmax
+    offset     = abs(float(j-1) - 0.5*float(jmax-1)) ! distance from center point (think about it, with jmax=5)
+    fact       = max(0.0, (offset-offset_sp) / (offset_wll-offset_sp)) ! i.e. zero damping in center
+    mask_sp(j) = fact*fact ! multiplier to apply to pv anomalies, in 1/seconds
+  enddo
+  tt_type = 1 ! cosines
+  call ftt(mask_sp, mask_sp_tt, tt_type, jmax)
 
-    vort_2(:,:,2) = vort_2(:,:,1)
-    vort_2(:,:,3) = vort_2(:,:,1)
+  !    ---- Initial jet ----
+  ! * If we want a perpetual jet background state, will have to create a new
+  !   variable *separate* from the tracked qybar array, and add advection
+  !   of vorticity due to the jet/extra wind from the jet when calculating
+  !   advective terms in diagnostics.f90 -- not trivial!
+  ! * Will want to define zonal jet wind on *cartesian* grid, then transform to
+  !   spectral space and un-invert the dqbar/dy equation to get the jet's contribution
+  !   to dqbar/dy (we already do this with zonal mean winds, so not too hard).
 
+  !    ---- Random initial noise in lower layer ----
+  ! Necessary to get eddies going, otherwise (without pv injection in
+  ! upper layer) will just stay symmetric forever
+  if (ll_seed_on) then
+    call random_number(r)
+    ! q1_sp(:,:,1) = q1_sp(:,:,1) + (r-0.5) * ll_seed_amp ! upper layer seed
+    q2_sp(:,:,1) = q2_sp(:,:,1) + (r-0.5) * ll_seed_amp
+  endif 
 
-    !  test 
-    !do i = 6,6
-    !   do j = 2,2
-    !     vort_1(i,j,:) = ur*amp
-    !     vort_2(i,j,:) = -ur*amp
-    !   enddo
-    !enddo
-
-    return
-  end subroutine
+end subroutine
 end module
 

@@ -1,31 +1,31 @@
-!***** rearrange arrays forward of time *****
-
-module FORWARD
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Rearrange arrays forward in time
+! * Store the previous *two* advection timesteps for fancy schmancy
+!   advection algorithm.
+! * The model solves for q (zonal q anomalies) and qybar (the meridional
+!   gradient in zonal mean q); just need 'previous' and 'current' timesteps there.
+! * Zonal means are trangular transforms in y, and 2D resolution are 
+!   Fourier transformed and triangular transformed.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+module forward
 contains
-  subroutine forward1
-    use GLOBAL_VARIABLES
-    implicit none
-    vort_1(:,:,1) = vort_1(:,:,2)
-    vort_1(:,:,2) = vort_1(:,:,3)
-    vort_1(:,:,3) = vort_1(:,:,4)
-    vort_2(:,:,1) = vort_2(:,:,2)
-    vort_2(:,:,2) = vort_2(:,:,3)
-    vort_2(:,:,3) = vort_2(:,:,4)
-    qymean1(:,1) = qymean1(:,2)
-    qymean1(:,2) = qymean1(:,3)
-    qymean1(:,3) = qymean1(:,4)
-    qymean2(:,1) = qymean2(:,2)
-    qymean2(:,2) = qymean2(:,3)
-    qymean2(:,3) = qymean2(:,4)
-    adv_1(:,:,1) = adv_1(:,:,2)
-    adv_1(:,:,2) = adv_1(:,:,3)
-    adv_2(:,:,1) = adv_2(:,:,2)
-    adv_2(:,:,2) = adv_2(:,:,3)
-    vqm_1(:,1) = vqm_1(:,2)
-    vqm_1(:,2) = vqm_1(:,3)
-    vqm_2(:,1) = vqm_2(:,2)
-    vqm_2(:,2) = vqm_2(:,3)
-
-    return
-  end subroutine
+subroutine iterate
+  use global_variables
+  implicit none
+  q1_sp(:,:,1)       = q1_sp(:,:,2)
+  q2_sp(:,:,1)       = q2_sp(:,:,2)
+  qybar1_tt(:,1)     = qybar1_tt(:,2)
+  qybar2_tt(:,1)     = qybar2_tt(:,2)
+  adv1_sp(:,:,1)     = adv1_sp(:,:,2)
+  adv1_sp(:,:,2)     = adv1_sp(:,:,3)
+  adv2_sp(:,:,1)     = adv2_sp(:,:,2)
+  adv2_sp(:,:,2)     = adv2_sp(:,:,3)
+  qyyflux1_tt(:,1)   = qyyflux1_tt(:,2)
+  qyyflux1_tt(:,2)   = qyyflux1_tt(:,3)
+  qyyflux2_tt(:,1)   = qyyflux2_tt(:,2)
+  qyyflux2_tt(:,2)   = qyyflux2_tt(:,3)
+  if (contin_i) then
+    force1_cart(:,:,1) = force1_cart(:,:,2)
+  endif
+end subroutine
 end module

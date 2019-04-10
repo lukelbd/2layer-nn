@@ -1,81 +1,33 @@
+test:
+
+default:
+
 quick:
-  dt=100
-  td=500
-  tend=.1
-
-test1:
-  dt=1500
-  tend=.5
-
-noboru_standard:
-  dt=500
-  td=21000
-  tend=300.0
-  tds=0.0
-  u0=2
-  famp=3.0e-8
-  tau_2=10
-
-noboru_standard2:
-  dt=1000
-  td=21000
-  tend=300.0
-  tds=0.0
-  u0=1
-  famp=3.0e-8
-  tau_2=10
-
-noboru_standard3:
-  dt=1000
-  td=21000
-  tend=90.0
-  tds=0.0
-  u0=5
-  famp=3.0e-8
-  tau_2=10
-
-test2:
-  dt=200
-  td=432000
-  tend=20.0
-  tds=0.0
-  u0=0.1
+  dt    = 100
+  dt_io = 500
+  tau_i = 200
+  days  = 0.1
 
 fastwinds:
-  dt=200
-  td=432000
-  tend=20.0
-  tds=0.0
-  u0=10
+  dt    = 200
+  dt_io = 432000
+  days  = 20.0
+  u0    = 10
 
 highdamping:
-  dt=300
-  td=20000
-  tend=500.0
-  tds=0.0
-  u0=3
-  tau_2=3
+  dt    = 300
+  dt_io = 20000
+  days  = 500.0
+  u0    = 3
 
 lowdamping:
-  dt=300
-  td=20000
-  tend=500.0
-  tds=0.0
-  u0=3
-  tau_2=30
+  dt    = 300
+  dt_io = 20000
+  days  = 500.0
+  u0    = 3
 
 long_run:
-  dt=300
-  td=5000
-  tend=360.0
-  tds=0.0
-  tau_2=5
-  u0=5
-
-long_run_2:
-  dt=300
-  td=10000
-  tend=500.0
-  tds=0.0
-  tau_2=5
-  u0=10
+  dt    = 300
+  dt_io = 10000
+  days  = 500.0
+  u0    = 10

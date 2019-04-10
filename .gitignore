@@ -5,9 +5,14 @@ packages
 
 # Ignore compiled source, and some other stuff
 .session.vim
+.vimsession
   # my vim sessions
 *.pyc
   # python compiled
+*.mod
+*.so
+*.o
+  # fortran compiled
 *.log
 *.out
 *.err

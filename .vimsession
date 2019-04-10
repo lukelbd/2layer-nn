@@ -9,20 +9,11 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +1 run.sh
-badd +1 .gitignore
-badd +1 experiments.txt
-badd +1 make3
-badd +15 make3o
+badd +0 .gitignore
 argglobal
 silent! argdel *
-$argadd run.sh
-set stal=2
-tabnew
-tabnew
-tabnew
-tabnext -3
-edit run.sh
+$argadd .gitignore
+edit .gitignore
 set splitbelow splitright
 wincmd t
 set winminheight=0
@@ -37,97 +28,20 @@ setlocal fdi=#
 setlocal fdl=99
 setlocal fml=1
 setlocal fdn=10
-setlocal nofen
+setlocal fen
 silent! normal! zE
-let s:l = 18 - ((11 * winheight(0) + 11) / 22)
+let s:l = 9 - ((8 * winheight(0) + 25) / 51)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-18
-normal! 012|
-lcd ~/2layer_nn
-tabnext
-edit ~/2layer_nn/make3
-set splitbelow splitright
-wincmd t
-set winminheight=0
-set winheight=1
-set winminwidth=0
-set winwidth=1
-argglobal
-setlocal fdm=manual
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=10
-setlocal nofen
-silent! normal! zE
-let s:l = 3 - ((2 * winheight(0) + 25) / 50)
-if s:l < 1 | let s:l = 1 | endif
-exe s:l
-normal! zt
-3
-normal! 0
-lcd ~/2layer_nn
-tabnext
-edit ~/2layer_nn/experiments.txt
-set splitbelow splitright
-wincmd t
-set winminheight=0
-set winheight=1
-set winminwidth=0
-set winwidth=1
-argglobal
-setlocal fdm=manual
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=10
-setlocal nofen
-silent! normal! zE
-let s:l = 2 - ((1 * winheight(0) + 25) / 50)
-if s:l < 1 | let s:l = 1 | endif
-exe s:l
-normal! zt
-2
-normal! 0
-lcd ~/2layer_nn
-tabnext
-edit ~/2layer_nn/.gitignore
-set splitbelow splitright
-wincmd t
-set winminheight=0
-set winheight=1
-set winminwidth=0
-set winwidth=1
-argglobal
-setlocal fdm=manual
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=10
-setlocal nofen
-silent! normal! zE
-let s:l = 2 - ((1 * winheight(0) + 11) / 22)
-if s:l < 1 | let s:l = 1 | endif
-exe s:l
-normal! zt
-2
+9
 normal! 07|
-lcd ~/2layer_nn
-tabnext 2
-set stal=1
+tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0
   silent exe 'bwipe ' . s:wipebuf
 endif
 unlet! s:wipebuf
-set winheight=1 winwidth=20 shortmess=filnxtToO
+set winheight=1 winwidth=20 shortmess=a
 set winminheight=1 winminwidth=1
 let s:sx = expand("<sfile>:p:r")."x.vim"
 if file_readable(s:sx)

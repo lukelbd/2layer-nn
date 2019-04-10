@@ -1,0 +1,25 @@
+!------------------------------------------------------------------------------!
+! Default namelist for 2 layer qg model
+! * Not necessary to supply every single variable! Just decided to put the most
+!   important ones here, so they are explicitly set every time.
+! * Default values for other variables can be found in global_variables.f90
+&input_nml
+  ! Timing
+  dt    = 600,   ! (s) integration time increment
+  dt_io = 21600, ! (s) dataio timestep (21600s is 6 hours)
+  days  = 5,     ! (days) terminating model after this many days
+  days_spinup = 0.0, ! (days) start saving data after this many days (sometimes might want to throw out 'spinup' data)
+  ! Background flow
+  shear = 5.0,  ! (m/s) background (uniform) shear
+  ! Damping
+  tau_r  = 30.0, ! (days) radiative damping timescale
+  tau_f  = 6.0,  ! (days) fricional damping timescale, or Rek Ekman damping
+  tau_sp = 1.0,  ! (days) damping rate at edge of layer
+  ! PV injections
+  y_i     = 0.15,    ! (unitless) e-folding width of injection band, as percentage of top/bottom half-widths of channel
+  wmin_i  = 41,      ! min injection wavenum
+  wmax_i  = 46,      ! max injection wavenum
+  amp_i   = 1.0e-8,  ! (1/s*s) forcing amplitude
+  tau_i   = 1.0,     ! (days) forcing correlation timescale, or injection interval
+  contin_i = .false., ! inject continuously with autocorrelation, or at discrete intervals?
+/
