@@ -1,4 +1,4 @@
-# A 2-Layer Forced Quasi-Geostrophic Channel Model
+# A 2-layer forced quasi-geostrophic channel model
 This model simulates a simple 2-layer system governed by quasi-geostrophic physics by solving two prognostic equations: 1) tendency of the mean background potential vorticity gradient "dq_bar/dy" and 2) tendency of the anomalous "eddy" potential vorticity "q". 
 The current `make.sh` and `Makefile` compile the source code for the University of Chicago's "Midway" supercomputer.
 
